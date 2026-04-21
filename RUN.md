@@ -41,6 +41,8 @@ Frontend будет доступен по адресу: `http://localhost:4200`.
 Из корня проекта:
 
 1. Создайте `.env` на основе шаблона `.env.example`.
+   - Для production-сборки frontend оставьте `FRONTEND_BUILD_CONFIGURATION=production`.
+   - Для dev-сборки frontend в Docker укажите `FRONTEND_BUILD_CONFIGURATION=development` (в этом режиме будут видны dev-значения из `environment.ts`, включая автозаполнение тестового логина).
 2. Запустите контейнеры:
 
 ```bash

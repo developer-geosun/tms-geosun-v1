@@ -24,6 +24,7 @@
       "noAccount": "No account yet?",
       "error401": "Invalid email or password",
       "error403": "You do not have enough permissions",
+      "errorEmailNotVerified": "Access is available only after email confirmation",
       "errorGeneric": "Sign in failed, please try again"
     },
     "register": {

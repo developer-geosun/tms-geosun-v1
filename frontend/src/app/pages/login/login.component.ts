@@ -10,6 +10,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '../../core/services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -37,12 +38,12 @@ export class LoginComponent {
 
   readonly isLoading = signal(false);
   readonly hasSuccess = signal(false);
-  readonly errorCode = signal<'401' | '403' | 'generic' | null>(null);
+  readonly errorCode = signal<'401' | '403' | 'email_not_verified' | 'generic' | null>(null);
   readonly isPasswordVisible = signal(false);
 
   readonly form = this.formBuilder.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    email: [environment.production ? '' : environment.testLogin.email, [Validators.required, Validators.email]],
+    password: [environment.production ? '' : environment.testLogin.password, [Validators.required, Validators.minLength(8)]]
   });
 
   submit(): void {
@@ -61,18 +62,21 @@ export class LoginComponent {
         this.hasSuccess.set(true);
         this.router.navigate(['/main']);
       },
-      error: (error: { status?: number }) => {
+      error: (error: { status?: number; error?: { code?: string } }) => {
         this.isLoading.set(false);
-        this.errorCode.set(this.mapErrorCode(error.status));
+        this.errorCode.set(this.mapErrorCode(error));
       }
     });
   }
 
-  private mapErrorCode(status?: number): '401' | '403' | 'generic' {
-    if (status === 401) {
+  private mapErrorCode(error: { status?: number; error?: { code?: string } }): '401' | '403' | 'email_not_verified' | 'generic' {
+    if (error.status === 403 && error.error?.code === 'EMAIL_NOT_VERIFIED') {
+      return 'email_not_verified';
+    }
+    if (error.status === 401) {
       return '401';
     }
-    if (status === 403) {
+    if (error.status === 403) {
       return '403';
     }
     return 'generic';

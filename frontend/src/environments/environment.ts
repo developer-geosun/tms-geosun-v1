@@ -3,6 +3,10 @@ export const environment = {
   production: false,
   apiUrl: 'http://localhost:8080',
   appName: 'Transport Management System by GeoSun',
-  version: '1.0.0'
+  version: '1.0.0',
+  testLogin: {
+    email: 'test@test.ua',
+    password: 'q1234567'
+  }
 };
 

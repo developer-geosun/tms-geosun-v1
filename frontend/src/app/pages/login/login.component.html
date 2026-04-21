@@ -46,6 +46,12 @@
           <span>{{ 'pages.login.error403' | translate }}</span>
         </p>
       }
+      @if (errorCode() === 'email_not_verified') {
+        <p class="error-text">
+          <mat-icon fontIcon="error_outline" aria-hidden="true"></mat-icon>
+          <span>{{ 'pages.login.errorEmailNotVerified' | translate }}</span>
+        </p>
+      }
       @if (errorCode() === 'generic') {
         <p class="error-text">
           <mat-icon fontIcon="error_outline" aria-hidden="true"></mat-icon>
