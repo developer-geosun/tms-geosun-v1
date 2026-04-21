@@ -23,6 +23,17 @@ docker compose up --build
 - Health: `http://localhost:8080/actuator/health`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 
+## Frontend integration
+
+- Backend auth prefix: `/api/v1/auth`
+- Main auth endpoints:
+  - `POST /api/v1/auth/login`
+  - `POST /api/v1/auth/refresh`
+  - `POST /api/v1/auth/logout`
+  - `GET /api/v1/auth/me`
+- Base URL for frontend local integration: `http://localhost:8080`
+- API contracts can be inspected in Swagger UI: `http://localhost:8080/swagger-ui.html`
+
 ## Tests and coverage
 
 - Run all tests: `mvn test`

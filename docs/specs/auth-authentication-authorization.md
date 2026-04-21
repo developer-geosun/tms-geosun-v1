@@ -11,10 +11,10 @@
 - **Expected outcome / Ожидаемый результат:** Пользователь может войти в систему, получать доступ только к разрешенным функциям и безопасно завершать сессию.
 
 ## 2) Context / Контекст
-- **Project/module / Проект/модуль:** `frontend` (Angular 21) + `backend` (Google Apps Script API layer).
-- **Current behavior / Текущее поведение:** На backend реализован только базовый `doGet` health-check, auth-поток с ролями и refresh-сессиями отсутствует.
-- **Related docs / Связанные документы:** `docs/system.md`, `docs/templates/specs/_template.md`.
-- **Environment constraints / Ограничения окружения:** Должно быть совместимо с текущей архитектурой (`frontend/`, `backend/src/Code.gs`, `backend/appsscript.json`), без обязательного добавления новых библиотек на этапе MVP.
+- **Project/module / Проект/модуль:** `frontend` (Angular 21) + `backend` (Java 21, Spring Boot 3).
+- **Current behavior / Текущее поведение:** На backend уже реализованы auth endpoint-ы `/api/v1/auth/*` и soft-delete `/api/v1/users/{id}`. Этот документ синхронизирован с фактической реализацией backend v1.
+- **Related docs / Связанные документы:** `docs/system.md`, `backend/TECHNICAL_SPECIFICATION_API_SERVER_v1.0.md`.
+- **Environment constraints / Ограничения окружения:** Frontend должен работать с REST backend по base URL (`http://localhost:8080` локально) и префиксу `/api/v1`.
 
 ## 3) Scope (In) / Scope (входит в задачу)
 - Реализация входа пользователя по email/password.
@@ -49,7 +49,7 @@
   - Пароли хранятся только в виде хеша (минимум salted hash; предпочтительно `bcrypt`/`argon2` если позволяет платформа).
   - Токены не логируются в чистом виде.
   - Ограничение попыток входа (rate limit/throttling).
-- **Performance / Производительность:** `POST /auth/login` p95 <= 500 ms при целевой нагрузке MVP.
+- **Performance / Производительность:** `POST /api/v1/auth/login` p95 <= 500 ms при целевой нагрузке MVP.
 - **Reliability / Надежность:** При ошибке refresh пользователь переводится на login без падения приложения.
 - **Logging/Monitoring / Логирование и мониторинг:** События `login_success`, `login_failed`, `refresh_failed`, `logout`.
 - **Accessibility/UX / Доступность и UX:** Понятные тексты ошибок, корректная работа состояния загрузки.
@@ -63,12 +63,12 @@
 
 ### 8.2 Output Data / Выходные данные
 - **Format / Формат:** JSON.
-- **Errors / Ошибки:** `400`, `401`, `403`, `429`, `500`.
+- **Errors / Ошибки:** `400`, `401`, `403`, `404`, `409`, `429`, `503`.
 
 ### 8.3 Endpoints (if any) / Эндпоинты (если есть)
-> Примечание: в текущем состоянии системы существует только `GET /` через GAS `doGet`. Эндпоинты ниже являются целевыми для реализации этой фичи.
+> Примечание: endpoint-ы ниже уже реализованы на backend Spring Boot и являются источником истины для frontend-интеграции.
 
-- `POST /auth/login` - аутентификация пользователя.
+- `POST /api/v1/auth/login` - аутентификация пользователя.
   - Request:
     ```json
     {
@@ -81,16 +81,17 @@
     {
       "accessToken": "jwt-or-signed-token",
       "refreshToken": "opaque-or-jwt",
+      "tokenType": "Bearer",
       "expiresIn": 900,
       "user": {
         "id": "u_123",
         "email": "user@example.com",
-        "roles": ["user"]
+        "role": "USER"
       }
     }
     ```
 
-- `POST /auth/refresh` - обновление access token.
+- `POST /api/v1/auth/refresh` - обновление токенов.
   - Request:
     ```json
     {
@@ -101,26 +102,33 @@
     ```json
     {
       "accessToken": "new-token",
-      "expiresIn": 900
+      "refreshToken": "new-refresh-token",
+      "tokenType": "Bearer",
+      "expiresIn": 900,
+      "user": {
+        "id": "u_123",
+        "email": "user@example.com",
+        "role": "USER"
+      }
     }
     ```
 
-- `POST /auth/logout` - завершение сессии.
-  - Request:
+- `POST /api/v1/auth/logout` - завершение сессии (по bearer access token).
+  - Response 200:
     ```json
     {
-      "refreshToken": "token-value"
+      "success": true,
+      "message": "Logged out successfully"
     }
     ```
-  - Response 204.
 
-- `GET /auth/me` - профиль текущего пользователя.
+- `GET /api/v1/auth/me` - профиль текущего пользователя.
   - Response 200:
     ```json
     {
       "id": "u_123",
       "email": "user@example.com",
-      "roles": ["user"]
+      "role": "USER"
     }
     ```
 

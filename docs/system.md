@@ -9,12 +9,12 @@
 
 - Frontend на Angular 21 с маршрутизацией, i18n и MVP auth-слоем (`AuthService`, `AuthGuard`, `AuthInterceptor`, login-page).
 - Поддержка i18n через `@ngx-translate/core` (язык по умолчанию: `uk`).
-- Backend на Google Apps Script с auth-router (`doGet` + `doPost`) и базовыми auth endpoint-ами.
+- Backend на Java 21 + Spring Boot 3 с JWT auth, refresh token rotation и RBAC.
 - Деплой frontend на GitHub Pages через GitHub Actions (`main`/`master`).
 
 ## Как работает (высокоуровнево)
 
-Пользователь -> Angular frontend -> Backend API (Google Apps Script / future API layer) -> Данные -> Ответ пользователю.
+Пользователь -> Angular frontend -> Backend API (Spring Boot, `/api/v1`) -> Данные -> Ответ пользователю.
 
 ## Основные сущности
 
@@ -25,11 +25,11 @@
 
 ## Основные API (текущее состояние)
 
-- `GET /` — health-check/базовый ответ сервиса.
-- `POST /auth/login` — вход пользователя (`access token` + `refresh token` + профиль).
-- `POST /auth/refresh` — обновление `access token`.
-- `POST /auth/logout` — завершение refresh-сессии.
-- `GET /auth/me` — профиль текущего пользователя (требует `Authorization: Bearer <access token>`).
+- `GET /actuator/health` — health-check.
+- `POST /api/v1/auth/login` — вход пользователя (`access token` + `refresh token` + профиль).
+- `POST /api/v1/auth/refresh` — обновление пары токенов (rotation).
+- `POST /api/v1/auth/logout` — завершение текущей refresh-сессии.
+- `GET /api/v1/auth/me` — профиль текущего пользователя (требует `Authorization: Bearer <access token>`).
 
 ### Поведение auth в MVP
 - Пароли валидируются по email/password, backend хранит password hash и роли пользователя.
@@ -40,7 +40,7 @@
 ## Структура проекта
 
 - `frontend/` — Angular приложение.
-- `backend/` — Google Apps Script код и манифест (`appsscript.json`).
+- `backend/` — Spring Boot backend (Maven, `src/main/java`, `src/main/resources`).
 - `docs/specs/` — ТЗ по фичам.
 - `docs/templates/` — шаблоны ТЗ и промптов для LLM.
 
@@ -51,13 +51,11 @@
   - `npm install`
   - `npm start`
   - app URL: `http://localhost:4200/`
-- Backend (GAS):
-  - работа через `clasp` и `backend/src/Code.gs`
-  - деплой как Web App в Google Apps Script (при необходимости)
-  - для MVP auth нужно:
-    - задать Script Property `AUTH_SECRET`
-    - подготовить таблицы `users` и `refresh_sessions` (или дать скрипту создать их автоматически)
-    - заполнить `users` тестовыми пользователями (`id`, `email`, `passwordHash`, `roles`, `status`)
+- Backend (Spring Boot):
+  - `cd backend`
+  - `mvn spring-boot:run`
+  - Swagger UI: `http://localhost:8080/swagger-ui.html`
+  - Health: `http://localhost:8080/actuator/health`
 
 ## Важные правила разработки
 
@@ -71,7 +69,7 @@
 
 - `frontend/src/app/app.config.ts` — глобальные провайдеры, роутинг, i18n-конфигурация.
 - `.github/workflows/deploy.yml` — логика деплоя на GitHub Pages.
-- `backend/appsscript.json` — настройки runtime/логирования для GAS.
-- `backend/src/Code.gs` — публичные web endpoint-функции (`doGet` и будущие `doPost`-роуты).
- - `backend/src/Code.gs` — публичные endpoint-функции и auth/security-логика (token, refresh-сессии, RBAC, throttling).
+- `backend/src/main/resources/application*.yml` — профильные настройки окружений и безопасности.
+- `backend/src/main/java/com/geosun/tms/auth/security/` — JWT/security-конфигурация.
+- `backend/src/main/java/com/geosun/tms/auth/api/` — публичные auth/admin endpoint-ы.
 

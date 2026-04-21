@@ -15,7 +15,7 @@ describe('AuthService', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ConfigService, useValue: { environment: { apiUrl: '/api' } } }
+        { provide: ConfigService, useValue: { environment: { apiUrl: 'http://localhost:8080' } } }
       ]
     });
 
@@ -34,16 +34,17 @@ describe('AuthService', () => {
       emittedEmail = user.email;
     });
 
-    const request = httpMock.expectOne('/api?route=/auth/login');
+    const request = httpMock.expectOne('http://localhost:8080/api/v1/auth/login');
     expect(request.request.method).toBe('POST');
     request.flush({
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
+      tokenType: 'Bearer',
       expiresIn: 900,
       user: {
         id: 'u1',
         email: 'user@example.com',
-        roles: ['user']
+        role: 'user'
       }
     });
 
@@ -54,21 +55,22 @@ describe('AuthService', () => {
 
   it('clears session when refresh fails', () => {
     service.login({ email: 'user@example.com', password: 'password123' }).subscribe();
-    httpMock.expectOne('/api?route=/auth/login').flush({
+    httpMock.expectOne('http://localhost:8080/api/v1/auth/login').flush({
       accessToken: 'access-token',
       refreshToken: 'refresh-token',
+      tokenType: 'Bearer',
       expiresIn: 900,
       user: {
         id: 'u1',
         email: 'user@example.com',
-        roles: ['user']
+        role: 'user'
       }
     });
 
     service.refreshAccessToken().subscribe({
       error: () => {}
     });
-    httpMock.expectOne('/api?route=/auth/refresh').flush({ message: 'invalid' }, { status: 401, statusText: 'Unauthorized' });
+    httpMock.expectOne('http://localhost:8080/api/v1/auth/refresh').flush({ message: 'invalid' }, { status: 401, statusText: 'Unauthorized' });
 
     expect(service.isAuthenticated()).toBeFalse();
     expect(service.accessToken()).toBeNull();
@@ -83,11 +85,9 @@ describe('AuthService', () => {
       }
     });
 
-    httpMock.expectOne('/api?route=/auth/login').flush({
-      error: {
-        code: 401,
-        message: 'Invalid email or password'
-      }
+    httpMock.expectOne('http://localhost:8080/api/v1/auth/login').flush({
+      status: 401,
+      message: 'Invalid email or password'
     });
 
     expect(status).toBe(401);

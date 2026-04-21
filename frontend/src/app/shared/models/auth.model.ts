@@ -3,7 +3,7 @@ export type UserRole = 'admin' | 'manager' | 'user';
 export interface AuthUser {
   id: string;
   email: string;
-  roles: UserRole[];
+  role: UserRole;
 }
 
 export interface LoginRequest {
@@ -14,14 +14,12 @@ export interface LoginRequest {
 export interface LoginResponse {
   accessToken: string;
   refreshToken: string;
+  tokenType: string;
   expiresIn: number;
   user: AuthUser;
 }
 
-export interface RefreshResponse {
-  accessToken: string;
-  expiresIn: number;
-}
+export type RefreshResponse = LoginResponse;
 
 export interface AuthState {
   accessToken: string | null;

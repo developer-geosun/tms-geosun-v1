@@ -17,7 +17,10 @@ export class AuthService {
   readonly user = computed(() => this.state().user);
   readonly accessToken = computed(() => this.state().accessToken);
   readonly isAuthenticated = computed(() => Boolean(this.state().accessToken && this.state().user));
-  readonly roles = computed(() => this.state().user?.roles ?? []);
+  readonly roles = computed<UserRole[]>(() => {
+    const role = this.state().user?.role;
+    return role ? [role] : [];
+  });
 
   private refreshInFlight$: Observable<string> | null = null;
 
@@ -71,7 +74,7 @@ export class AuthService {
 
     this.refreshInFlight$ = this.http.post<RefreshResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/refresh'), { refreshToken }).pipe(
       map((response) => this.ensureSuccessResponse_(response)),
-      tap((response) => this.setAccessToken(response.accessToken)),
+      tap((response) => this.setSession(response.accessToken, response.refreshToken, response.user)),
       map((response) => response.accessToken),
       catchError((error) => {
         this.clearSession();
@@ -108,8 +111,8 @@ export class AuthService {
 
   private toApiUrl(path: string): string {
     const baseUrl = this.configService.environment.apiUrl;
-    const sanitizedBase = baseUrl.replace(/\?+$/, '');
-    return `${sanitizedBase}?route=${path}`;
+    const sanitizedBase = baseUrl.replace(/\/+$/, '');
+    return `${sanitizedBase}/api/v1${path}`;
   }
 
   private loadInitialState(): AuthState {
@@ -144,9 +147,9 @@ export class AuthService {
   private ensureSuccessResponse_<T>(response: T | ApiErrorEnvelope): T {
     if (isApiErrorEnvelope_(response)) {
       throw new HttpErrorResponse({
-        status: response.error.code,
-        statusText: response.error.message,
-        error: response.error
+        status: response.status,
+        statusText: response.message,
+        error: response
       });
     }
     return response;
@@ -154,16 +157,14 @@ export class AuthService {
 }
 
 interface ApiErrorEnvelope {
-  error: {
-    code: number;
-    message: string;
-  };
+  status: number;
+  message: string;
 }
 
 function isApiErrorEnvelope_(value: unknown): value is ApiErrorEnvelope {
   if (!value || typeof value !== 'object') {
     return false;
   }
-  const candidate = value as { error?: { code?: unknown; message?: unknown } };
-  return typeof candidate.error?.code === 'number' && typeof candidate.error?.message === 'string';
+  const candidate = value as { status?: unknown; message?: unknown };
+  return typeof candidate.status === 'number' && typeof candidate.message === 'string';
 }
