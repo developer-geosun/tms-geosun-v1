@@ -11,7 +11,8 @@
       "welcome": "Welcome to the main page!",
       "signedInAs": "Signed in as",
       "managerSection": "Manager section is available",
-      "adminSection": "Admin section is available"
+      "adminSection": "Admin section is available",
+      "freightCalculationLink": "Go to freight calculation"
     },
     "login": {
       "title": "Sign in",
@@ -52,6 +53,11 @@
       "message": "Technical work in progress",
       "subMessage": "We are working on improving the service",
       "tryLater": "Please try again later"
+    },
+    "freightCalculation": {
+      "title": "Freight calculation",
+      "description": "A page to launch the freight cost calculation tool.",
+      "openTool": "Open calculation tool"
     }
   },
   "theme": {
