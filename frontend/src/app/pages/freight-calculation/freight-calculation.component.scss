@@ -25,9 +25,10 @@
   min-width: 0;
   padding: 12px;
   border-right: 1px solid #e2e8f0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
+  overflow: hidden;
   background: #fff;
   /* Менший базовий шрифт у бічній панелі */
   font-size: 0.8125rem;
@@ -42,10 +43,9 @@
   margin: 0;
   color: #64748b;
 }
-.sidebar-actions { margin-top: 12px; }
 .sidebar-actions {
-  position: sticky;
-  top: 8px;
+  flex: 0 0 auto;
+  margin-top: 12px;
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -123,38 +123,35 @@
 .point-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px; margin: 0 0 8px; }
 .point-row.border { background: #f0fdf4; border-color: #86efac; }
 .point-row.selected { border-color: #2563eb; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15); }
-.point-lead {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  flex: 0 0 auto;
-}
-.point-move {
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  background: #f8fafc;
-  padding: 0;
-  width: 26px;
-  min-height: 22px;
+/* Номер на картці — як маркер на карті (createWaypointIcon) */
+.point-order {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
-  cursor: pointer;
-  font-size: 12px;
+  font-weight: 700;
+  font-size: 10px;
   line-height: 1;
+  color: #fff;
   box-sizing: border-box;
-  flex-shrink: 0;
+  border: none;
 }
-.point-move:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.point-order--regular {
+  background: #2563eb;
 }
-.point-move--spacer {
-  visibility: hidden;
-  pointer-events: none;
+.point-order--border {
+  background: #16a34a;
 }
-.point-order { flex: 0 0 26px; width: 26px; height: 26px; border-radius: 999px; background: #e2e8f0; color: #1e293b; display: grid; place-items: center; font-weight: 700; font-size: 11px; line-height: 1; }
+.point-row.selected .point-order--regular {
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);
+}
+.point-row.selected .point-order--border {
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);
+}
 .point-main { display: flex; flex-direction: column; gap: 2px; }
 .point-main { flex: 1 1 auto; min-width: 0; }
 .point-main small { color: #64748b; }
@@ -175,11 +172,20 @@
   min-height: 32px;
 }
 .point-actions button, .sidebar-actions__buttons button, .border-picker > button, .dialog-actions button { border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 6px 8px; cursor: pointer; }
-.point-move:hover:not(:disabled) {
-  border-color: #94a3b8;
-  background: #f1f5f9;
+/* Кнопка «Обрати прикордонний пункт» — ширина як у .point-row */
+.border-picker {
+  margin: 0 0 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
-.border-picker { margin: 0 0 8px; }
+.border-picker > button {
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+  border-radius: 10px;
+  padding: 8px 10px;
+  text-align: left;
+}
 .border-panel {
   margin-top: 8px;
   padding: 10px;
@@ -262,7 +268,16 @@
 .sidebar-actions__buttons button { flex: 1 1 0; }
 /* Поле додавання точки всередині липкого блоку — без додаткового верхнього відступу */
 .sidebar-actions .search-box { margin-top: 0; width: 100%; min-width: 0; }
-.points-list { margin-top: 12px; }
+/* Список точок під фіксованим блоком — лише тут вертикальний скролбар */
+.points-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 12px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-right: 2px;
+}
 .map {
   flex: 1 1 auto;
   align-self: stretch;
@@ -288,12 +303,11 @@
   }
   .sidebar {
     width: auto;
-    flex: 0 0 auto;
+    flex: 0 1 auto;
     max-height: min(52vh, 520px);
     border-right: 0;
     border-bottom: 1px solid #e2e8f0;
   }
-  .sidebar-actions { position: static; }
   .map {
     flex: 1 1 auto;
     min-height: 240px;

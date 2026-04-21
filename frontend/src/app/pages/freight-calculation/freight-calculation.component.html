@@ -46,32 +46,12 @@
     <div class="points-list">
       @for (point of waypoints(); track $index; let segmentIndex = $index) {
         <div class="point-row" [class.border]="point.isBorder" [class.selected]="$index === selectedWaypointIndex()" (click)="selectWaypoint($index)">
-          <div class="point-lead">
-            @if (!point.isBorder) {
-              <button
-                type="button"
-                class="point-move"
-                (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, -1)"
-                [disabled]="segmentIndex === 0"
-              >
-                ↑
-              </button>
-            } @else {
-              <span class="point-move point-move--spacer" aria-hidden="true"></span>
-            }
-            <div class="point-order">{{ $index + 1 }}</div>
-            @if (!point.isBorder) {
-              <button
-                type="button"
-                class="point-move"
-                (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, 1)"
-                [disabled]="segmentIndex === waypoints().length - 1"
-              >
-                ↓
-              </button>
-            } @else {
-              <span class="point-move point-move--spacer" aria-hidden="true"></span>
-            }
+          <div
+            class="point-order"
+            [class.point-order--regular]="!point.isBorder"
+            [class.point-order--border]="point.isBorder"
+          >
+            {{ $index + 1 }}
           </div>
           <div class="point-main">
             <strong>{{ getPointLabel($index) | translate }}</strong>

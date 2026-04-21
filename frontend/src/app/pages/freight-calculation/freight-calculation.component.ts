@@ -148,26 +148,6 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     await this.recalculateRoute();
   }
 
-  async moveWaypoint(index: number, delta: number): Promise<void> {
-    const nextIndex = index + delta;
-    const items = [...this.waypoints()];
-    if (!items[index] || !items[nextIndex] || items[index].isBorder) {
-      return;
-    }
-    [items[index], items[nextIndex]] = [items[nextIndex], items[index]];
-    this.waypoints.set(items);
-    this.selectedWaypointIndex.update((current) => {
-      if (current === index) {
-        return nextIndex;
-      }
-      if (current === nextIndex) {
-        return index;
-      }
-      return current;
-    });
-    await this.recalculateRoute();
-  }
-
   async clearAllPoints(): Promise<void> {
     this.waypoints.set([]);
     this.segmentDistances.set([]);
