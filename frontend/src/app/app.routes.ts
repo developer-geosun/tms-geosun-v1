@@ -23,6 +23,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/stop-service/stop-service.component').then((m) => m.StopServiceComponent)
   },
   {
+    path: 'freight-calculation',
+    canActivate: [serviceStopGuard, authGuard],
+    data: { roles: ['user'] },
+    loadComponent: () =>
+      import('./pages/freight-calculation/freight-calculation.component').then((m) => m.FreightCalculationComponent)
+  },
+  {
     path: '404',
     loadComponent: () => import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent)
   },

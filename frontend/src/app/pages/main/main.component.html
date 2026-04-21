@@ -12,5 +12,13 @@
   @if (canSeeAdminSection()) {
     <p>{{ 'pages.main.adminSection' | translate }}</p>
   }
+
+  @if (canSeeFreightCalculationLink()) {
+    <p>
+      <a href="" (click)="$event.preventDefault(); openFreightCalculation()">
+        {{ 'pages.main.freightCalculationLink' | translate }}
+      </a>
+    </p>
+  }
 </div>
 
