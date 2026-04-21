@@ -32,6 +32,8 @@
       "email": "Email",
       "password": "Password",
       "confirmPassword": "Confirm password",
+      "passwordRule": "Password must contain at least one letter and one digit",
+      "passwordMismatch": "Passwords do not match",
       "submit": "Sign up",
       "loading": "Creating account...",
       "success": "Account created successfully",
