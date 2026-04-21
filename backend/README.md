@@ -18,6 +18,25 @@ mvn spring-boot:run
 docker compose up --build
 ```
 
+## Full stack run (frontend + backend + mysql)
+
+From project root (`tms-geosun-v1`) run:
+
+1. Copy root env template and adjust values if needed:
+```bash
+cp .env.example .env
+```
+
+2. Start all services:
+```bash
+docker compose up --build
+```
+
+Available URLs:
+- Frontend: `http://localhost:4200`
+- Backend health: `http://localhost:8080/actuator/health`
+- Swagger UI: `http://localhost:8080/swagger-ui.html`
+
 ## Useful endpoints
 
 - Health: `http://localhost:8080/actuator/health`
