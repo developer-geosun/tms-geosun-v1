@@ -27,19 +27,21 @@ export class AuthService {
   login(payload: LoginRequest): Observable<AuthUser> {
     return this.http.post<LoginResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/login'), payload).pipe(
       map((response) => this.ensureSuccessResponse_(response)),
-      tap((response) => this.setSession(response.accessToken, response.refreshToken, response.user)),
-      map((response) => response.user)
+      tap((response) =>
+        this.setSession(response.accessToken, response.refreshToken, this.normalizeUser_(response.user))
+      ),
+      map((response) => this.normalizeUser_(response.user))
     );
   }
 
   logout(): Observable<void> {
-    const refreshToken = this.state().refreshToken;
-    if (!refreshToken) {
+    const accessToken = this.state().accessToken;
+    if (!accessToken) {
       this.clearSession();
       return of(void 0);
     }
 
-    return this.http.post<void | ApiErrorEnvelope>(this.toApiUrl('/auth/logout'), { refreshToken }).pipe(
+    return this.http.post<void | ApiErrorEnvelope>(this.toApiUrl('/auth/logout'), null).pipe(
       map((response) => this.ensureSuccessResponse_(response)),
       catchError(() => of(void 0)),
       tap(() => this.clearSession())
@@ -49,6 +51,7 @@ export class AuthService {
   getMe(): Observable<AuthUser> {
     return this.http.get<AuthUser | ApiErrorEnvelope>(this.toApiUrl('/auth/me')).pipe(
       map((response) => this.ensureSuccessResponse_(response)),
+      map((user) => this.normalizeUser_(user)),
       tap((user) => this.setUser(user))
     );
   }
@@ -74,7 +77,9 @@ export class AuthService {
 
     this.refreshInFlight$ = this.http.post<RefreshResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/refresh'), { refreshToken }).pipe(
       map((response) => this.ensureSuccessResponse_(response)),
-      tap((response) => this.setSession(response.accessToken, response.refreshToken, response.user)),
+      tap((response) =>
+        this.setSession(response.accessToken, response.refreshToken, this.normalizeUser_(response.user))
+      ),
       map((response) => response.accessToken),
       catchError((error) => {
         this.clearSession();
@@ -154,6 +159,11 @@ export class AuthService {
     }
     return response;
   }
+
+  private normalizeUser_(user: AuthUser): AuthUser {
+    const normalizedRole = normalizeRole_(user.role);
+    return { ...user, role: normalizedRole };
+  }
 }
 
 interface ApiErrorEnvelope {
@@ -167,4 +177,12 @@ function isApiErrorEnvelope_(value: unknown): value is ApiErrorEnvelope {
   }
   const candidate = value as { status?: unknown; message?: unknown };
   return typeof candidate.status === 'number' && typeof candidate.message === 'string';
+}
+
+function normalizeRole_(role: string): UserRole {
+  const normalized = role.trim().toLowerCase();
+  if (normalized === 'admin' || normalized === 'manager' || normalized === 'employee' || normalized === 'user') {
+    return normalized;
+  }
+  return 'user';
 }

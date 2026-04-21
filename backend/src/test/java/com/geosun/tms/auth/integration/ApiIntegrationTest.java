@@ -139,7 +139,6 @@ class ApiIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("null")
   void verify_then_login_me_logout_flow() throws Exception {
     mockMvc.perform(
         post("/api/v1/auth/register")
@@ -275,7 +274,6 @@ class ApiIntegrationTest {
   }
 
   @Test
-  @SuppressWarnings("null")
   void login_wrongPassword_then_rateLimited() throws Exception {
     mockMvc.perform(
         post("/api/v1/auth/register")
@@ -398,7 +396,6 @@ class ApiIntegrationTest {
         .andExpect(jsonPath("$.code").value("FORBIDDEN"));
   }
 
-  @SuppressWarnings("null")
   private void registerVerifyLogin(String email) throws Exception {
     mockMvc.perform(
         post("/api/v1/auth/register")
@@ -458,7 +455,6 @@ class ApiIntegrationTest {
     return Objects.requireNonNull(message.getText());
   }
 
-  @SuppressWarnings("null")
   @NonNull
   private static SimpleMailMessage anyMailMessage() {
     return (SimpleMailMessage) any(SimpleMailMessage.class);

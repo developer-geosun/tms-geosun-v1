@@ -11,7 +11,7 @@ export const routes: Routes = [
   {
     path: 'main',
     canActivate: [serviceStopGuard, authGuard],
-    data: { roles: ['admin', 'manager', 'user'] },
+    data: { roles: ['admin', 'manager', 'employee', 'user'] },
     loadComponent: () => import('./pages/main/main.component').then((m) => m.MainComponent)
   },
   {
