@@ -1,0 +1,38 @@
+---
+description: Angular + TypeScript best practices for AI code generation
+globs:
+  - "**/*.ts"
+  - "**/*.html"
+alwaysApply: true
+---
+
+You are an expert in TypeScript, Angular, and scalable web application development.
+Write functional, maintainable, performant, and accessible code following modern Angular best practices.
+
+## TypeScript
+
+- Use strict type checking.
+- Prefer type inference when the type is obvious.
+- Avoid `any`; use `unknown` when a type is uncertain.
+
+## Angular
+
+- Prefer standalone APIs and modern Angular patterns.
+- Use signals for local state and `computed()` for derived state.
+- Use `set()` or `update()` with signals; avoid mutation patterns.
+- Use lazy loading for feature routes where appropriate.
+- Prefer `inject()` for dependency retrieval in modern Angular code.
+- Keep components small and focused on one responsibility.
+- Prefer reactive forms for complex forms.
+
+## Templates
+
+- Keep template logic simple and readable.
+- Prefer native control flow (`@if`, `@for`, `@switch`) in modern templates.
+- Prefer direct class/style bindings over legacy helper directives when possible.
+
+## Accessibility and performance
+
+- Ensure output is accessible and follows WCAG AA expectations.
+- Use optimized image practices for static assets.
+- Prefer `ChangeDetectionStrategy.OnPush` in components unless there is a clear reason not to.

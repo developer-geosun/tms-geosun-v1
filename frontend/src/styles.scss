@@ -1,0 +1,228 @@
+/* You can add global styles to this file, and also import other style files */
+
+@use 'styles/theme';
+
+html, body { height: 100%; }
+body { 
+  margin: 0; 
+  font-family: Inter, Roboto, "Helvetica Neue", sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+// Базові кольори поверхні для світлих тем
+.theme-rose-red {
+  background-color: #ffffff;
+  color: #5d2842;
+}
+
+.theme-rose-red .mat-toolbar {
+  background-color: #e3c3cf;
+  color: #6f004a;
+}
+
+.theme-azure-blue {
+  background-color: #ffffff;
+  color: #20486d;
+}
+
+.theme-azure-blue .mat-toolbar {
+  background-color: #c6d1e8;
+  color: #0f467d;
+}
+
+// Базові кольори поверхні для темних тем
+.theme-magenta-violet,
+.theme-cyan-orange {
+  color-scheme: dark;
+  background-color: #121212;
+  color: #f5f5f5;
+}
+
+.theme-magenta-violet {
+  background-color: #140e17;
+  color: #f4e9f6;
+}
+
+.theme-magenta-violet .mat-toolbar {
+  background-color: #8d049d;
+  color: #f5e8f7;
+}
+
+.theme-cyan-orange {
+  background-color: #071015;
+  color: #def8f8;
+}
+
+.theme-cyan-orange .mat-toolbar {
+  background-color: #075f61;
+  color: #35f0ee;
+}
+
+// Стили для выбранных кнопок языков
+mat-button-toggle.ua-button.mat-button-toggle-checked {
+  background-color: #FFD700 !important;
+  color: #0000FF !important;
+  
+  .mat-button-toggle-button,
+  .mat-button-toggle-label-content {
+    background-color: #FFD700 !important;
+    color: #0000FF !important;
+  }
+}
+
+mat-button-toggle.en-button.mat-button-toggle-checked {
+  background-color: #0000FF !important;
+  color: #FFFFFF !important;
+  
+  .mat-button-toggle-button,
+  .mat-button-toggle-label-content {
+    background-color: #0000FF !important;
+    color: #FFFFFF !important;
+  }
+}
+
+mat-button-toggle.ru-button.mat-button-toggle-checked {
+  background-color: #FF0000 !important;
+  color: #FFFFFF !important;
+  
+  .mat-button-toggle-button,
+  .mat-button-toggle-label-content {
+    background-color: #FF0000 !important;
+    color: #FFFFFF !important;
+  }
+}
+
+mat-button-toggle.ua-button:not(.mat-button-toggle-checked),
+mat-button-toggle.en-button:not(.mat-button-toggle-checked),
+mat-button-toggle.ru-button:not(.mat-button-toggle-checked) {
+  background-color: #e6e6e6 !important;
+  color: #333333 !important;
+
+  .mat-button-toggle-button,
+  .mat-button-toggle-label-content,
+  .mat-mdc-button-toggle-button,
+  .mdc-button__label {
+    background-color: #e6e6e6 !important;
+    color: #333333 !important;
+  }
+}
+
+mat-button-toggle.ua-button:not(.mat-button-toggle-checked):hover,
+mat-button-toggle.en-button:not(.mat-button-toggle-checked):hover,
+mat-button-toggle.ru-button:not(.mat-button-toggle-checked):hover {
+  background-color: #d2d2d2 !important;
+
+  .mat-button-toggle-button,
+  .mat-button-toggle-label-content,
+  .mat-mdc-button-toggle-button,
+  .mdc-button__label {
+    background-color: #d2d2d2 !important;
+  }
+}
+
+// Приховуємо галочку в mat-button-toggle
+mat-button-toggle {
+  // Приховуємо всі іконки всередині toggle
+  mat-icon,
+  .mat-icon,
+  svg {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+  
+  .mat-button-toggle-label-content,
+  .mat-button-toggle-button {
+    mat-icon,
+    .mat-icon,
+    svg {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    // Приховуємо псевдоелементи
+    &::before,
+    &::after {
+      display: none !important;
+      content: none !important;
+    }
+  }
+  
+  // Специфічно для checked стану
+  &.mat-button-toggle-checked {
+    mat-icon,
+    .mat-icon,
+    svg {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    .mat-button-toggle-label-content,
+    .mat-button-toggle-button {
+      mat-icon,
+      .mat-icon,
+      svg {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+      
+      &::before,
+      &::after {
+        display: none !important;
+        content: none !important;
+      }
+    }
+  }
+}
+
+mat-button-toggle .mat-button-toggle-button,
+mat-button-toggle .mat-mdc-button-toggle-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+mat-button-toggle .mat-button-toggle-label-content,
+mat-button-toggle .mdc-button__label {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100%;
+  text-align: center !important;
+  line-height: normal !important;
+}
+
+.theme-preview--rose-red {
+  --preview-bg: #ffffff;
+  --preview-top: #f2d8e2;
+  --preview-bottom: #e9c4d3;
+}
+
+.theme-preview--azure-blue {
+  --preview-bg: #ffffff;
+  --preview-top: #d8e2f4;
+  --preview-bottom: #bdd0ee;
+}
+
+.theme-preview--magenta-violet {
+  --preview-bg: #150f17;
+  --preview-top: #9700aa;
+  --preview-bottom: #8d049d;
+}
+
+.theme-preview--cyan-orange {
+  --preview-bg: #081217;
+  --preview-top: #0a6a6c;
+  --preview-bottom: #04575a;
+}

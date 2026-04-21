@@ -1,0 +1,57 @@
+@use '@angular/material' as mat;
+
+// Теми Angular Material 3 (M3)
+// Базова тема за замовчуванням: Azure & Blue
+$azure-blue-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$azure-palette,
+    tertiary: mat.$blue-palette
+  )
+));
+
+@include mat.all-component-themes($azure-blue-theme);
+
+// Rose & Red
+$rose-red-theme: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$rose-palette,
+    tertiary: mat.$red-palette
+  )
+));
+
+// Magenta & Violet
+$magenta-violet-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$magenta-palette,
+    tertiary: mat.$violet-palette
+  )
+));
+
+// Cyan & Orange
+$cyan-orange-theme: mat.define-theme((
+  color: (
+    theme-type: dark,
+    primary: mat.$cyan-palette,
+    tertiary: mat.$orange-palette
+  )
+));
+
+.theme-rose-red {
+  @include mat.all-component-colors($rose-red-theme);
+}
+
+.theme-azure-blue {
+  @include mat.all-component-colors($azure-blue-theme);
+}
+
+.theme-magenta-violet {
+  @include mat.all-component-colors($magenta-violet-theme);
+}
+
+.theme-cyan-orange {
+  @include mat.all-component-colors($cyan-orange-theme);
+}
+

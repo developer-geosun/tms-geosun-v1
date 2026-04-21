@@ -1,0 +1,115 @@
+.app-footer {
+  background-color: var(--mat-toolbar-container-background-color, #3f51b5);
+  color: var(--mat-toolbar-container-text-color, #fff);
+  min-height: 80px;
+  padding: 16px 12px;
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+
+  .footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 1200px;
+
+    .footer-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+
+      p {
+        margin: 0;
+        font-size: 12px;
+        text-align: center;
+        width: 100%;
+        flex-basis: 100%;
+      }
+
+      app-social-icon {
+        margin: 0;
+      }
+    }
+  }
+}
+
+// Стилі для світлих кольорових тем
+:host-context(.theme-rose-red),
+:host-context(.theme-azure-blue) {
+  .app-footer {
+    background-color: #e0e0e0;
+    color: #424242;
+    --social-hover-color: #ffffff;
+  }
+
+  app-social-icon {
+    --background-color: #ffffff;
+    color: #424242;
+  }
+}
+
+// Стилі для темних кольорових тем
+:host-context(.theme-magenta-violet),
+:host-context(.theme-cyan-orange) {
+  .app-footer {
+    background-color: #1f1f1f;
+    color: #f1f1f1;
+    --social-hover-color: #121212;
+  }
+
+  app-social-icon {
+    --background-color: #2b2b2b;
+    color: #f1f1f1;
+  }
+}
+
+app-social-icon:hover {
+  ::ng-deep {
+    color: var(--social-hover-color, #ffffff) !important;
+
+    svg {
+      fill: var(--social-hover-color, #ffffff) !important;
+    }
+  }
+}
+
+// Планшеты и больше (от 600px)
+@media (min-width: 600px) {
+  .app-footer {
+    padding: 16px 20px;
+    min-height: 80px;
+
+    .footer-content {
+      gap: 15px;
+
+      .footer-section {
+        gap: 5px;
+        flex-wrap: nowrap;
+
+        p {
+          font-size: 14px;
+          width: auto;
+          flex-basis: auto;
+          text-align: left;
+        }
+      }
+    }
+  }
+}
+
+// Десктоп (от 768px)
+@media (min-width: 768px) {
+  .app-footer {
+    .footer-content {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+}
+

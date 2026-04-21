@@ -1,0 +1,62 @@
+{
+  "common": {
+    "geosun": "ООО  Геосан",
+    "allRightsReserved": "Все права защищены",
+    "returnToHome": "Вернуться на главную",
+    "designedBy": "Разработано Максимом Гореликовым (Ферматс)"
+  },
+  "pages": {
+    "main": {
+      "title": "Главная страница",
+      "welcome": "Добро пожаловать на главную страницу!",
+      "signedInAs": "Вы вошли как",
+      "managerSection": "Раздел менеджера доступен",
+      "adminSection": "Раздел администратора доступен"
+    },
+    "login": {
+      "title": "Вход в систему",
+      "subtitle": "Войдите по email и паролю",
+      "email": "Email",
+      "password": "Пароль",
+      "submit": "Войти",
+      "loading": "Вход...",
+      "success": "Успешный вход",
+      "error401": "Неверный email или пароль",
+      "error403": "Недостаточно прав доступа",
+      "errorGeneric": "Ошибка входа, попробуйте снова"
+    },
+    "notFound": {
+      "title": "404",
+      "message": "Страница не найдена"
+    },
+    "stopService": {
+      "title": "Сервис временно недоступен",
+      "message": "Проводятся технические работы",
+      "subMessage": "Мы работаем над улучшением сервиса",
+      "tryLater": "Пожалуйста, попробуйте позже"
+    }
+  },
+  "theme": {
+    "switchToDark": "Переключить на тёмную тему",
+    "switchToLight": "Переключить на светлую тему",
+    "darkTheme": "Тёмная тема",
+    "lightTheme": "Светлая тема"
+  },
+  "language": {
+    "select": "Выберите язык",
+    "ukrainian": "Украинский",
+    "english": "Английский",
+    "russian": "Русский"
+  },
+  "settings": {
+    "buttonLabel": "Настройки",
+    "languageSection": "Язык",
+    "themeSection": "Тема"
+  },
+  "auth": {
+    "register": "Регистрация",
+    "login": "Войти",
+    "logout": "Выйти"
+  }
+}
+

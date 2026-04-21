@@ -1,0 +1,311 @@
+mat-toolbar {
+  padding: .5rem !important;
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  height: auto !important;
+  min-height: auto !important;
+  // overflow не на тулбарі — інакше обрізається .logo-hover-icons під логотипом
+}
+
+.logo-icons-group,
+.logo-hover-icons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icons-group {
+  order: 1;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.logo-hover-icons {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  z-index: 20;
+  flex-direction: column;
+  padding: 4px;
+  margin: 0;
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  transform: translate(-50%, -10px);
+  transition: max-height .45s cubic-bezier(.2, .8, .2, 1), opacity .35s ease, transform .35s ease;
+}
+
+.logo-hover-icons > * {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: opacity .28s ease, transform .28s ease;
+}
+
+.logo-icons-group.is-open .logo-hover-icons,
+.logo-icons-group:hover .logo-hover-icons,
+.logo-icons-group:focus-within .logo-hover-icons {
+  max-height: 260px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+.logo-icons-group.is-open .logo-hover-icons > *,
+.logo-icons-group:hover .logo-hover-icons > *,
+.logo-icons-group:focus-within .logo-hover-icons > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+app-logo,
+app-social-icon {
+  flex-shrink: 0;
+}
+
+// Права частина тулбара (без overflow/скролу — випадаючі іконки під логотипом поза цим блоком)
+.toolbar-end {
+  order: 2;
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.spacer {
+  flex: 1 1 auto;
+  min-width: 8px;
+}
+
+// Група кнопок авторизації та налаштувань — без переносу та стиснення
+.toolbar-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+}
+
+.auth-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.auth-button {
+  flex-shrink: 0;
+  --mdc-fab-container-shape: 20px;
+  --mdc-fab-small-container-color: var(--mat-sys-secondary-container);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  opacity: .94;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.auth-button mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.auth-button:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .18);
+}
+
+.settings-button {
+  flex-shrink: 0;
+  --mdc-fab-container-shape: 20px;
+  --mdc-fab-small-container-color: var(--mat-sys-secondary-container);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-secondary-container);
+  opacity: .94;
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.settings-button mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.settings-button:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, .18);
+}
+
+a.company-site-button.mat-mdc-icon-button {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 0 !important;
+  border-radius: 50%;
+  background: var(--background-color, #e8edf2);
+  color: #3d4752;
+  border: 1px solid rgba(61, 71, 82, .25);
+  text-decoration: none;
+  transition: all .25s cubic-bezier(.4, 0, .2, 1);
+}
+
+a.company-site-button .mat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px !important;
+  height: 14px !important;
+  font-size: 14px !important;
+  line-height: 14px !important;
+  margin: 0 !important;
+}
+
+a.company-site-button:hover,
+a.company-site-button:focus-visible {
+  transform-origin: center;
+  transform: translateY(-2px) scale(1.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .15);
+  background: var(--hover-color, #006fa6);
+  color: #fff;
+}
+
+a.company-site-button:active {
+  transform: translateY(0) scale(1.05);
+}
+
+.settings-menu-panel .mat-mdc-menu-content {
+  padding: 0 !important;
+}
+
+.settings-menu-panel {
+  margin-right: 8px;
+}
+
+.settings-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 190px;
+  padding: 12px;
+}
+
+.settings-menu-section-title {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  opacity: .8;
+}
+
+.settings-menu-content mat-button-toggle-group {
+  display: flex;
+  width: 100%;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+.settings-menu-content mat-button-toggle {
+  flex: 1 1 0;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 28px;
+  min-width: 34px;
+  height: 28px;
+}
+
+.theme-options {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.theme-option {
+  width: 100%;
+  height: 40px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: inherit;
+  padding: 0 6px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color .2s ease;
+}
+
+.theme-option:hover {
+  background-color: rgba(255, 255, 255, .06);
+}
+
+.theme-option.selected {
+  background-color: rgba(255, 255, 255, .1);
+}
+
+.theme-option-radio {
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+}
+
+.theme-option-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.theme-option-preview {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, .12);
+  background-color: var(--preview-bg, #28252b);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .22);
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+}
+
+.theme-option-preview::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  top: 2px;
+  height: 5px;
+  border-radius: 3px;
+  background-color: var(--preview-top, #ffffff);
+}
+
+.theme-option-preview::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 5px;
+  height: 4px;
+  border-radius: 999px;
+  background-color: var(--preview-bottom, #c7c7c7);
+}
+
+@media (min-width: 600px) {
+  mat-toolbar {
+    gap: 8px;
+    min-height: 64px !important;
+  }
+
+  .toolbar-actions {
+    gap: 8px;
+  }
+}
+

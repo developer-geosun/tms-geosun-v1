@@ -1,0 +1,14 @@
+# Залежності та збірка (Angular після ініціалізації)
+node_modules/
+dist/
+.angular/
+
+# Локальна конфігурація clasp (скопіюйте з .clasp.json.example і додайте scriptId)
+backend/.clasp.json
+
+# IDE / ОС (лише корінь репо; frontend/.vscode залишається з шаблону Angular)
+.idea/
+/.vscode/
+*.log
+.DS_Store
+Thumbs.db

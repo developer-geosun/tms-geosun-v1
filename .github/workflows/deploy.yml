@@ -1,0 +1,76 @@
+# Деплой Angular з frontend/ на гілку gh-pages (GitHub Pages: Settings → Pages → branch gh-pages / root)
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci --legacy-peer-deps
+
+      - name: Build Angular application
+        working-directory: frontend
+        run: npx ng build --configuration=production --base-href=/tms-geosun/
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Deploy to GitHub Pages
+        env:
+          DEPLOY_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          DIST="frontend/dist/tms-geosun"
+          if [ ! -d "$DIST" ]; then
+            echo "Error: $DIST directory not found"
+            exit 1
+          fi
+          mkdir -p /tmp/build-output
+          cp -r "$DIST"/* /tmp/build-output/
+          git remote set-url origin https://${DEPLOY_TOKEN}@github.com/${{ github.repository }}.git
+          git fetch origin gh-pages 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages 2>/dev/null; then
+            git checkout -b gh-pages origin/gh-pages 2>/dev/null || git checkout gh-pages
+            git pull origin gh-pages || true
+          else
+            git checkout --orphan gh-pages
+            git rm -rf . --quiet || true
+          fi
+          find . -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} + 2>/dev/null || true
+          cp -r /tmp/build-output/* .
+          touch .nojekyll
+          git add -A
+          if ! git diff --staged --quiet; then
+            git commit -m "Deploy: $(date +'%Y-%m-%d %H:%M:%S') [skip ci]"
+            git push -u origin gh-pages
+          else
+            echo "No changes to commit"
+          fi

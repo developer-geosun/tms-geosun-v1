@@ -1,0 +1,156 @@
+.login-page {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  box-sizing: border-box;
+}
+
+.login-card {
+  width: min(92vw, 600px);
+  box-sizing: border-box;
+  padding: 8px;
+  border-radius: 16px;
+  box-shadow: 0 16px 36px rgba(16, 24, 40, 0.16);
+}
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.header-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(47, 84, 235, 0.12);
+  color: #2f54eb;
+}
+
+h1 {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.subtitle {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.65);
+  font-size: 14px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.login-form mat-form-field,
+.submit-button {
+  width: 100%;
+}
+
+.submit-button {
+  min-height: 44px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.error-text,
+.success-text {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.error-text {
+  color: #c62828;
+}
+
+.success-text {
+  color: #2e7d32;
+}
+
+.loading-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Підвищуємо контраст на темних темах для елементів login-форми */
+:host-context(.theme-magenta-violet),
+:host-context(.theme-cyan-orange) {
+  .login-card {
+    background: rgba(28, 28, 36, 0.92);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  }
+
+  h1,
+  .subtitle {
+    color: #f3f6ff;
+  }
+
+  .error-text {
+    color: #ff8a80;
+  }
+
+  .success-text {
+    color: #7ee0a1;
+  }
+  ::ng-deep .login-form .mat-mdc-form-field {
+    .mdc-text-field--outlined {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .mdc-text-field__input {
+      color: #f3f6ff !important;
+    }
+
+    .mdc-floating-label {
+      color: rgba(243, 246, 255, 0.9) !important;
+    }
+
+    .mdc-notched-outline__leading,
+    .mdc-notched-outline__notch,
+    .mdc-notched-outline__trailing {
+      border-color: rgba(243, 246, 255, 0.45) !important;
+    }
+
+    &.mat-form-field-invalid {
+      .mdc-floating-label {
+        color: #ff8a80 !important;
+      }
+
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: #ff6b6b !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .login-page {
+    padding: 16px 12px;
+  }
+
+  .login-card {
+    padding: 4px;
+  }
+
+  h1 {
+    font-size: 26px;
+  }
+}
