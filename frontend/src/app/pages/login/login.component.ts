@@ -38,6 +38,7 @@ export class LoginComponent {
   readonly isLoading = signal(false);
   readonly hasSuccess = signal(false);
   readonly errorCode = signal<'401' | '403' | 'generic' | null>(null);
+  readonly isPasswordVisible = signal(false);
 
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],

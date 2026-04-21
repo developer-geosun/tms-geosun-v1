@@ -11,6 +11,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 
+const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
@@ -38,10 +40,12 @@ export class RegisterComponent {
   readonly isLoading = signal(false);
   readonly hasSuccess = signal(false);
   readonly errorCode = signal<'409' | '429' | 'generic' | null>(null);
+  readonly isPasswordVisible = signal(false);
+  readonly isConfirmPasswordVisible = signal(false);
 
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
+    password: ['', [Validators.required, Validators.minLength(8), Validators.pattern(PASSWORD_PATTERN)]],
     confirmPassword: ['', [Validators.required, Validators.minLength(8)]]
   });
 
@@ -53,7 +57,8 @@ export class RegisterComponent {
 
     const values = this.form.getRawValue();
     if (values.password !== values.confirmPassword) {
-      this.errorCode.set('generic');
+      this.form.controls.confirmPassword.setErrors({ ...(this.form.controls.confirmPassword.errors ?? {}), mismatch: true });
+      this.form.controls.confirmPassword.markAsTouched();
       return;
     }
 

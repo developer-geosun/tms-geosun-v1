@@ -46,7 +46,21 @@ describe('RegisterComponent', () => {
     component.submit();
 
     expect(authServiceSpy.register).not.toHaveBeenCalled();
-    expect(component.errorCode()).toBe('generic');
+    expect(component.form.controls.confirmPassword.hasError('mismatch')).toBeTrue();
+    expect(component.errorCode()).toBeNull();
+  });
+
+  it('does not call register when password has no digits or letters', () => {
+    component.form.setValue({
+      email: 'user@example.com',
+      password: 'abcdefgh',
+      confirmPassword: 'abcdefgh'
+    });
+
+    component.submit();
+
+    expect(authServiceSpy.register).not.toHaveBeenCalled();
+    expect(component.form.controls.password.hasError('pattern')).toBeTrue();
   });
 
   it('shows conflict error on 409', () => {
