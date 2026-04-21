@@ -8,13 +8,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { AuthService } from '../../core/services/auth.service';
 import { TranslateModule } from '@ngx-translate/core';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
-  selector: 'app-login',
-  templateUrl: './login.component.html',
-  styleUrls: ['./login.component.scss'],
+  selector: 'app-register',
+  templateUrl: './register.component.html',
+  styleUrls: ['./register.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [
@@ -30,18 +30,19 @@ import { TranslateModule } from '@ngx-translate/core';
     TranslateModule
   ]
 })
-export class LoginComponent {
+export class RegisterComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   readonly isLoading = signal(false);
   readonly hasSuccess = signal(false);
-  readonly errorCode = signal<'401' | '403' | 'generic' | null>(null);
+  readonly errorCode = signal<'409' | '429' | 'generic' | null>(null);
 
   readonly form = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]]
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    confirmPassword: ['', [Validators.required, Validators.minLength(8)]]
   });
 
   submit(): void {
@@ -50,15 +51,21 @@ export class LoginComponent {
       return;
     }
 
+    const values = this.form.getRawValue();
+    if (values.password !== values.confirmPassword) {
+      this.errorCode.set('generic');
+      return;
+    }
+
     this.errorCode.set(null);
     this.hasSuccess.set(false);
     this.isLoading.set(true);
 
-    this.authService.login(this.form.getRawValue()).subscribe({
+    this.authService.register({ email: values.email, password: values.password }).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.hasSuccess.set(true);
-        this.router.navigate(['/main']);
+        this.router.navigate(['/login']);
       },
       error: (error: { status?: number }) => {
         this.isLoading.set(false);
@@ -67,12 +74,12 @@ export class LoginComponent {
     });
   }
 
-  private mapErrorCode(status?: number): '401' | '403' | 'generic' {
-    if (status === 401) {
-      return '401';
+  private mapErrorCode(status?: number): '409' | '429' | 'generic' {
+    if (status === 409) {
+      return '409';
     }
-    if (status === 403) {
-      return '403';
+    if (status === 429) {
+      return '429';
     }
     return 'generic';
   }

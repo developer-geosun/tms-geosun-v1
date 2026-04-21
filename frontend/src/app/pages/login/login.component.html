@@ -55,5 +55,10 @@
         }
       </button>
     </form>
+
+    <p class="switch-auth">
+      {{ 'pages.login.noAccount' | translate }}
+      <a [routerLink]="['/register']">{{ 'auth.register' | translate }}</a>
+    </p>
   </mat-card>
 </section>

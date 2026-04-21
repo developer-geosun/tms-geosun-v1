@@ -47,6 +47,12 @@ Frontend будет доступен по адресу: `http://localhost:4200`.
 docker compose up --build
 ```
 
+3. Остановите и удалите контейнеры после работы:
+
+```bash
+docker compose down
+```
+
 ## Полезные URL после запуска
 
 - Frontend: `http://localhost:4200`

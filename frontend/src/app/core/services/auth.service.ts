@@ -2,7 +2,16 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, shareReplay, tap, throwError } from 'rxjs';
 import { ConfigService } from './config.service';
-import { AuthState, AuthUser, LoginRequest, LoginResponse, RefreshResponse, UserRole } from '../../shared/models';
+import {
+  AuthState,
+  AuthUser,
+  LoginRequest,
+  LoginResponse,
+  RefreshResponse,
+  RegisterRequest,
+  RegisterResponse,
+  UserRole
+} from '../../shared/models';
 
 const AUTH_STORAGE_KEY = 'tms_geosun_auth';
 
@@ -31,6 +40,13 @@ export class AuthService {
         this.setSession(response.accessToken, response.refreshToken, this.normalizeUser_(response.user))
       ),
       map((response) => this.normalizeUser_(response.user))
+    );
+  }
+
+  register(payload: RegisterRequest): Observable<RegisterResponse> {
+    return this.http.post<RegisterResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/register'), payload).pipe(
+      map((response) => this.ensureSuccessResponse_(response)),
+      map((response) => ({ ...response, role: normalizeRole_(response.role) }))
     );
   }
 
