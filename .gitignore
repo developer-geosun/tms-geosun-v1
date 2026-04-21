@@ -2,6 +2,9 @@
 node_modules/
 dist/
 .angular/
+.env
+backend/.env
+frontend/.env
 
 # Локальна конфігурація clasp (скопіюйте з .clasp.json.example і додайте scriptId)
 backend/.clasp.json
