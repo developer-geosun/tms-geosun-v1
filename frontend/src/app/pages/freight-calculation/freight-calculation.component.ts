@@ -16,7 +16,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
 import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
 import { FreightRequestApiService } from './freight-request-api.service';
-import { FreightLang, FreightRequestPayload, Waypoint } from './freight-calculation.models';
+import { Checkpoint, FreightLang, FreightRequestPayload, Waypoint } from './freight-calculation.models';
 import { hasPendingBorderCheckpoint, isValidEmail, isValidPhone } from './freight-calculation.utils';
 
 @Component({
@@ -185,7 +185,11 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   }
 
   selectTransitCountry(segmentIndex: number, country: string): void {
-    this.selectedCountryBySegment.update((value) => ({ ...value, [segmentIndex]: country }));
+    this.selectedCountryBySegment.update((value) => {
+      const previous = value[segmentIndex];
+      const nextCountry = previous === country ? null : country;
+      return { ...value, [segmentIndex]: nextCountry };
+    });
   }
 
   async addBorderCheckpoint(segmentIndex: number, checkpointIndex: number): Promise<void> {
@@ -255,8 +259,12 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     return Object.keys(CHECKPOINTS_DATA);
   }
 
-  getCheckpointNames(country: string): string[] {
-    return (CHECKPOINTS_DATA[country] ?? []).map((checkpoint) => checkpoint.name[this.lang()] ?? checkpoint.name.en);
+  getCheckpoints(country: string): Checkpoint[] {
+    return CHECKPOINTS_DATA[country] ?? [];
+  }
+
+  getCheckpointLocalizedName(checkpoint: Checkpoint): string {
+    return checkpoint.name[this.lang()] ?? checkpoint.name.en;
   }
 
   getPointLabel(index: number): string {
@@ -302,9 +310,10 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
 
   private initializeMap(): void {
     const container = this.mapContainer.nativeElement;
+    // Висота задається в SCSS (.map); інлайн height:100% ламає Leaflet при height:auto у батька
     container.style.width = '100%';
-    container.style.height = '70vh';
-    container.style.minHeight = '420px';
+    container.style.removeProperty('height');
+    container.style.removeProperty('min-height');
 
     const map = L.map(this.mapContainer.nativeElement, { zoomControl: true }).setView([50.4501, 30.5234], 6);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
@@ -314,6 +323,9 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     this.map = map;
     this.rebuildMarkers();
     this.scheduleMapResizeFix();
+    requestAnimationFrame(() => {
+      this.map?.invalidateSize();
+    });
   }
 
   private initializeMapWhenContainerReady(attempt = 0): void {
@@ -437,8 +449,11 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   private createWaypointIcon(point: Waypoint, index: number, isSelected: boolean): L.DivIcon {
     const label = String(index + 1);
     const backgroundColor = point.isBorder ? '#16a34a' : '#2563eb';
-    const ringColor = point.isBorder ? '#14532d' : '#1d4ed8';
-    const borderStyle = isSelected ? `border: 3px solid ${ringColor}; box-shadow: 0 0 0 2px #ffffff;` : 'border: none;';
+    const borderStyle = isSelected
+      ? point.isBorder
+        ? 'border: 3px solid #ffffff; box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.35);'
+        : 'border: 3px solid #ffffff; box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35);'
+      : 'border: none;';
     return L.divIcon({
       html: `<div style="margin:0;padding:0;border:0;background:transparent;box-shadow:none;"><div style="width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:10px;font-weight:700;box-sizing:border-box;background:${backgroundColor};${borderStyle}">${label}</div></div>`,
       iconSize: [24, 24],

@@ -2,11 +2,20 @@
 @use 'styles/theme';
 @import 'leaflet/dist/leaflet.css';
 
-html, body { height: 100%; }
-body { 
-  margin: 0; 
+html, body {
+  height: 100%;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+body {
   font-family: Inter, Roboto, "Helvetica Neue", sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+app-root {
+  display: block;
+  height: 100%;
 }
 
 // Базові кольори поверхні для світлих тем

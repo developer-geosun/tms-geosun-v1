@@ -1,50 +1,84 @@
 <div class="freight-layout">
   <aside class="sidebar">
-    <div class="sidebar-header">
-      <h1>{{ 'pages.freightCalculation.title' | translate }}</h1>
-      <p>{{ 'pages.freightCalculation.description' | translate }}</p>
-      <div class="distance">{{ (totalDistanceMeters() / 1000).toFixed(1) }} {{ 'pages.freightCalculation.km' | translate }}</div>
-    </div>
-
-    <div class="search-box">
-      <input
-        #searchInput
-        type="text"
-        [placeholder]="'pages.freightCalculation.searchPlaceholder' | translate"
-        (input)="onSearchChange(searchInput.value)"
-        (keydown)="onSearchKeydown($event, searchInput)"
-      />
-      @if (isSearching()) {
-        <span class="small-note">{{ 'pages.freightCalculation.searching' | translate }}</span>
-      }
-      @if (searchResults().length > 0) {
-        <div class="results">
-          @for (item of searchResults(); track item.display_name) {
-            <button
-              type="button"
-              [class.active]="$index === highlightedSearchIndex()"
-              (mouseenter)="highlightedSearchIndex.set($index)"
-              (click)="selectSearchResult(item, searchInput)"
-            >
-              {{ item.display_name }}
-            </button>
-          }
+   
+    <div class="sidebar-actions">
+      <div class="sidebar-actions__head">
+        <h1 class="sidebar-actions__title">{{ 'pages.freightCalculation.title' | translate }}</h1>
+        <div class="sidebar-actions__distance">
+          {{ (totalDistanceMeters() / 1000).toFixed(1) }} {{ 'pages.freightCalculation.km' | translate }}
         </div>
-      }
+      </div>
+      <div class="sidebar-actions__buttons">
+        <button type="button" (click)="clearAllPoints()">{{ 'pages.freightCalculation.clear' | translate }}</button>
+        <button type="button" (click)="openRequestPage()" [disabled]="!hasRoute()">
+          {{ 'pages.freightCalculation.openRequest' | translate }}
+        </button>
+      </div>
+
+      <div class="search-box">
+        <input
+          #searchInput
+          type="text"
+          [placeholder]="'pages.freightCalculation.searchPlaceholder' | translate"
+          (input)="onSearchChange(searchInput.value)"
+          (keydown)="onSearchKeydown($event, searchInput)"
+        />
+        @if (isSearching()) {
+          <span class="small-note">{{ 'pages.freightCalculation.searching' | translate }}</span>
+        }
+        @if (searchResults().length > 0) {
+          <div class="results">
+            @for (item of searchResults(); track item.display_name) {
+              <button
+                type="button"
+                [class.active]="$index === highlightedSearchIndex()"
+                (mouseenter)="highlightedSearchIndex.set($index)"
+                (click)="selectSearchResult(item, searchInput)"
+              >
+                {{ item.display_name }}
+              </button>
+            }
+          </div>
+        }
+      </div>
     </div>
 
     <div class="points-list">
       @for (point of waypoints(); track $index; let segmentIndex = $index) {
         <div class="point-row" [class.border]="point.isBorder" [class.selected]="$index === selectedWaypointIndex()" (click)="selectWaypoint($index)">
-          <div class="point-order">{{ $index + 1 }}</div>
+          <div class="point-lead">
+            @if (!point.isBorder) {
+              <button
+                type="button"
+                class="point-move"
+                (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, -1)"
+                [disabled]="segmentIndex === 0"
+              >
+                ↑
+              </button>
+            } @else {
+              <span class="point-move point-move--spacer" aria-hidden="true"></span>
+            }
+            <div class="point-order">{{ $index + 1 }}</div>
+            @if (!point.isBorder) {
+              <button
+                type="button"
+                class="point-move"
+                (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, 1)"
+                [disabled]="segmentIndex === waypoints().length - 1"
+              >
+                ↓
+              </button>
+            } @else {
+              <span class="point-move point-move--spacer" aria-hidden="true"></span>
+            }
+          </div>
           <div class="point-main">
             <strong>{{ getPointLabel($index) | translate }}</strong>
             <span>{{ point.address }}</span>
             <small>{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</small>
           </div>
           <div class="point-actions">
-            <button type="button" (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, -1)" [disabled]="segmentIndex === 0 || point.isBorder">↑</button>
-            <button type="button" (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, 1)" [disabled]="segmentIndex === waypoints().length - 1 || point.isBorder">↓</button>
             <button type="button" (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)">✕</button>
           </div>
         </div>
@@ -60,17 +94,40 @@
             <div class="border-picker">
               <button type="button" (click)="toggleBorderDropdown(segmentIndex)">{{ 'pages.freightCalculation.selectBorder' | translate }}</button>
               @if (dropdownSegmentIndex() === segmentIndex) {
-                <div class="dropdown">
-                  <select (change)="selectTransitCountry(segmentIndex, $any($event.target).value)">
-                    <option value="">{{ 'pages.freightCalculation.selectCountry' | translate }}</option>
+                <div class="border-panel">
+                  <div class="country-cards" role="tablist" [attr.aria-label]="'pages.freightCalculation.selectCountry' | translate">
                     @for (country of getSegmentCountryOptions(); track country) {
-                      <option [value]="country">{{ ('pages.freightCalculation.countries.' + country) | translate }}</option>
+                      <button
+                        type="button"
+                        class="country-card"
+                        role="tab"
+                        [attr.aria-selected]="selectedCountryBySegment()[segmentIndex] === country"
+                        [class.country-card--active]="selectedCountryBySegment()[segmentIndex] === country"
+                        (click)="selectTransitCountry(segmentIndex, country)"
+                      >
+                        {{ ('pages.freightCalculation.countries.' + country) | translate }}
+                      </button>
                     }
-                  </select>
+                  </div>
                   @if (selectedCountryBySegment()[segmentIndex]; as selectedCountry) {
-                    @for (name of getCheckpointNames(selectedCountry); track $index; let checkpointIndex = $index) {
-                      <button type="button" (click)="addBorderCheckpoint(segmentIndex, checkpointIndex)">{{ name }}</button>
-                    }
+                    <div class="checkpoint-cards">
+                      @for (checkpoint of getCheckpoints(selectedCountry); track checkpoint.lat + '-' + checkpoint.lng; let checkpointIndex = $index) {
+                        <button
+                          type="button"
+                          class="checkpoint-pick point-row border"
+                          (click)="addBorderCheckpoint(segmentIndex, checkpointIndex)"
+                        >
+                          <div class="point-order checkpoint-pick__order" aria-hidden="true"></div>
+                          <div class="point-main">
+                            <strong>{{ getCheckpointLocalizedName(checkpoint) }}</strong>
+                            <span>{{ ('pages.freightCalculation.countries.' + selectedCountry) | translate }}</span>
+                            <small>{{ checkpoint.lat.toFixed(5) }}, {{ checkpoint.lng.toFixed(5) }}</small>
+                          </div>
+                        </button>
+                      }
+                    </div>
+                  } @else {
+                    <p class="border-panel__hint">{{ 'pages.freightCalculation.selectCountry' | translate }}</p>
                   }
                 </div>
               }
@@ -78,13 +135,6 @@
           }
         }
       }
-    </div>
-
-    <div class="sidebar-actions">
-      <button type="button" (click)="clearAllPoints()">{{ 'pages.freightCalculation.clear' | translate }}</button>
-      <button type="button" (click)="openRequestPage()" [disabled]="!hasRoute()">
-        {{ 'pages.freightCalculation.openRequest' | translate }}
-      </button>
     </div>
   </aside>
 
