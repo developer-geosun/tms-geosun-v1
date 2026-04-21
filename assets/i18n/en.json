@@ -1,0 +1,62 @@
+{
+  "common": {
+    "geosun": "GeoSun LLC",
+    "allRightsReserved": "All rights reserved",
+    "returnToHome": "Return to home",
+    "designedBy": "Designed by Horielikov Maksym (Fermats)"
+  },
+  "pages": {
+    "main": {
+      "title": "Main page",
+      "welcome": "Welcome to the main page!",
+      "signedInAs": "Signed in as",
+      "managerSection": "Manager section is available",
+      "adminSection": "Admin section is available"
+    },
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Use email and password to continue",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "loading": "Signing in...",
+      "success": "Signed in successfully",
+      "error401": "Invalid email or password",
+      "error403": "You do not have enough permissions",
+      "errorGeneric": "Sign in failed, please try again"
+    },
+    "notFound": {
+      "title": "404",
+      "message": "Page not found"
+    },
+    "stopService": {
+      "title": "Service temporarily unavailable",
+      "message": "Technical work in progress",
+      "subMessage": "We are working on improving the service",
+      "tryLater": "Please try again later"
+    }
+  },
+  "theme": {
+    "switchToDark": "Switch to dark theme",
+    "switchToLight": "Switch to light theme",
+    "darkTheme": "Dark theme",
+    "lightTheme": "Light theme"
+  },
+  "language": {
+    "select": "Select language",
+    "ukrainian": "Ukrainian",
+    "english": "English",
+    "russian": "Russian"
+  },
+  "settings": {
+    "buttonLabel": "Settings",
+    "languageSection": "Language",
+    "themeSection": "Theme"
+  },
+  "auth": {
+    "register": "Sign up",
+    "login": "Sign in",
+    "logout": "Sign out"
+  }
+}
+

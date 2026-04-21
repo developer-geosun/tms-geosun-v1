@@ -1,0 +1,62 @@
+{
+  "common": {
+    "geosun": "ТОВ Геосан",
+    "allRightsReserved": "Всі права захищені",
+    "returnToHome": "Повернутися на головну",
+    "designedBy": "Розроблено Максимом Горєліковим (Ферматс)"
+  },
+  "pages": {
+    "main": {
+      "title": "Головна сторінка",
+      "welcome": "Ласкаво просимо на головну сторінку!",
+      "signedInAs": "Ви увійшли як",
+      "managerSection": "Розділ менеджера доступний",
+      "adminSection": "Розділ адміністратора доступний"
+    },
+    "login": {
+      "title": "Вхід до системи",
+      "subtitle": "Увійдіть за email та паролем",
+      "email": "Email",
+      "password": "Пароль",
+      "submit": "Увійти",
+      "loading": "Вхід...",
+      "success": "Успішний вхід",
+      "error401": "Невірний email або пароль",
+      "error403": "Недостатньо прав доступу",
+      "errorGeneric": "Помилка входу, спробуйте ще раз"
+    },
+    "notFound": {
+      "title": "404",
+      "message": "Сторінка не знайдена"
+    },
+    "stopService": {
+      "title": "Сервіс тимчасово недоступний",
+      "message": "Тривають технічні роботи",
+      "subMessage": "Ми працюємо над покращенням сервісу",
+      "tryLater": "Будь ласка, спробуйте пізніше"
+    }
+  },
+  "theme": {
+    "switchToDark": "Переключити на темну тему",
+    "switchToLight": "Переключити на світлу тему",
+    "darkTheme": "Темна тема",
+    "lightTheme": "Світла тема"
+  },
+  "language": {
+    "select": "Виберіть мову",
+    "ukrainian": "Українська",
+    "english": "English",
+    "russian": "Русский"
+  },
+  "settings": {
+    "buttonLabel": "Налаштування",
+    "languageSection": "Мова",
+    "themeSection": "Тема"
+  },
+  "auth": {
+    "register": "Реєстрація",
+    "login": "Увійти",
+    "logout": "Вийти"
+  }
+}
+
