@@ -56,8 +56,42 @@
     },
     "freightCalculation": {
       "title": "Freight calculation",
-      "description": "A page to launch the freight cost calculation tool.",
-      "openTool": "Open calculation tool"
+      "description": "Build a route, choose border checkpoints, and send a request.",
+      "km": "km",
+      "clear": "Clear all",
+      "openRequest": "Send request",
+      "submit": "Submit request",
+      "back": "Back to map",
+      "searchPlaceholder": "Add a point...",
+      "searching": "Searching...",
+      "selectBorder": "Select border checkpoint",
+      "selectCountry": "Select transit country",
+      "requestTitle": "Route request",
+      "email": "Contact email *",
+      "phone": "Contact phone *",
+      "preferredStartDate": "Preferred start date",
+      "routeComment": "Route comment",
+      "success": "Request sent",
+      "labels": {
+        "start": "Start",
+        "stop": "Stop",
+        "finish": "Finish",
+        "border": "Border checkpoint"
+      },
+      "errors": {
+        "routeRequired": "Add at least two route points",
+        "selectBorderRequired": "Choose border checkpoint before sending",
+        "emailRequired": "Enter valid email",
+        "phoneRequired": "Enter valid phone number",
+        "submitFailed": "Request sending failed"
+      },
+      "countries": {
+        "pl": "Poland",
+        "sk": "Slovakia",
+        "hu": "Hungary",
+        "ro": "Romania",
+        "md": "Moldova"
+      }
     }
   },
   "theme": {

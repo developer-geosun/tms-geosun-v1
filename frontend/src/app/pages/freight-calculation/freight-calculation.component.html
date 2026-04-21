@@ -1,13 +1,126 @@
-<div class="freight-calculation-content">
-  <h1>{{ 'pages.freightCalculation.title' | translate }}</h1>
-  <p>{{ 'pages.freightCalculation.description' | translate }}</p>
+<div class="freight-layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h1>{{ 'pages.freightCalculation.title' | translate }}</h1>
+      <p>{{ 'pages.freightCalculation.description' | translate }}</p>
+      <div class="distance">{{ (totalDistanceMeters() / 1000).toFixed(1) }} {{ 'pages.freightCalculation.km' | translate }}</div>
+    </div>
 
-  <a
-    class="freight-calculation-link"
-    href="/freight-calculation/index.html"
-    target="_blank"
-    rel="noopener noreferrer"
-  >
-    {{ 'pages.freightCalculation.openTool' | translate }}
-  </a>
+    <div class="search-box">
+      <input
+        #searchInput
+        type="text"
+        [placeholder]="'pages.freightCalculation.searchPlaceholder' | translate"
+        (input)="onSearchChange(searchInput.value)"
+        (keydown)="onSearchKeydown($event, searchInput)"
+      />
+      @if (isSearching()) {
+        <span class="small-note">{{ 'pages.freightCalculation.searching' | translate }}</span>
+      }
+      @if (searchResults().length > 0) {
+        <div class="results">
+          @for (item of searchResults(); track item.display_name) {
+            <button
+              type="button"
+              [class.active]="$index === highlightedSearchIndex()"
+              (mouseenter)="highlightedSearchIndex.set($index)"
+              (click)="selectSearchResult(item, searchInput)"
+            >
+              {{ item.display_name }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="points-list">
+      @for (point of waypoints(); track $index; let segmentIndex = $index) {
+        <div class="point-row" [class.border]="point.isBorder" [class.selected]="$index === selectedWaypointIndex()" (click)="selectWaypoint($index)">
+          <div class="point-order">{{ $index + 1 }}</div>
+          <div class="point-main">
+            <strong>{{ getPointLabel($index) | translate }}</strong>
+            <span>{{ point.address }}</span>
+            <small>{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</small>
+          </div>
+          <div class="point-actions">
+            <button type="button" (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, -1)" [disabled]="segmentIndex === 0 || point.isBorder">↑</button>
+            <button type="button" (click)="$event.stopPropagation(); moveWaypoint(segmentIndex, 1)" [disabled]="segmentIndex === waypoints().length - 1 || point.isBorder">↓</button>
+            <button type="button" (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)">✕</button>
+          </div>
+        </div>
+
+        @if ($index < waypoints().length - 1) {
+          <div class="segment">
+            @if (segmentDistances()[segmentIndex]) {
+              <span>{{ (segmentDistances()[segmentIndex] / 1000).toFixed(1) }} {{ 'pages.freightCalculation.km' | translate }}</span>
+            }
+          </div>
+
+          @if (waypoints()[segmentIndex].country && waypoints()[segmentIndex + 1].country && waypoints()[segmentIndex].country !== waypoints()[segmentIndex + 1].country && !waypoints()[segmentIndex].isBorder && !waypoints()[segmentIndex + 1].isBorder && (waypoints()[segmentIndex].country === 'ua' || waypoints()[segmentIndex + 1].country === 'ua')) {
+            <div class="border-picker">
+              <button type="button" (click)="toggleBorderDropdown(segmentIndex)">{{ 'pages.freightCalculation.selectBorder' | translate }}</button>
+              @if (dropdownSegmentIndex() === segmentIndex) {
+                <div class="dropdown">
+                  <select (change)="selectTransitCountry(segmentIndex, $any($event.target).value)">
+                    <option value="">{{ 'pages.freightCalculation.selectCountry' | translate }}</option>
+                    @for (country of getSegmentCountryOptions(); track country) {
+                      <option [value]="country">{{ ('pages.freightCalculation.countries.' + country) | translate }}</option>
+                    }
+                  </select>
+                  @if (selectedCountryBySegment()[segmentIndex]; as selectedCountry) {
+                    @for (name of getCheckpointNames(selectedCountry); track $index; let checkpointIndex = $index) {
+                      <button type="button" (click)="addBorderCheckpoint(segmentIndex, checkpointIndex)">{{ name }}</button>
+                    }
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      }
+    </div>
+
+    <div class="sidebar-actions">
+      <button type="button" (click)="clearAllPoints()">{{ 'pages.freightCalculation.clear' | translate }}</button>
+      <button type="button" (click)="openRequestPage()" [disabled]="!hasRoute()">
+        {{ 'pages.freightCalculation.openRequest' | translate }}
+      </button>
+    </div>
+  </aside>
+
+  <div #mapContainer class="map"></div>
+
+  @if (requestOpen()) {
+    <section class="overlay">
+      <div class="dialog">
+        <h2>{{ 'pages.freightCalculation.requestTitle' | translate }}</h2>
+        <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
+          <label>
+            {{ 'pages.freightCalculation.email' | translate }}
+            <input formControlName="email" type="email" />
+          </label>
+          <label>
+            {{ 'pages.freightCalculation.phone' | translate }}
+            <input formControlName="phone" type="tel" />
+          </label>
+          <label>
+            {{ 'pages.freightCalculation.preferredStartDate' | translate }}
+            <input formControlName="preferredStartDate" type="date" />
+          </label>
+          <label>
+            {{ 'pages.freightCalculation.routeComment' | translate }}
+            <textarea formControlName="routeComment" rows="3"></textarea>
+          </label>
+          <div class="dialog-actions">
+            <button type="button" (click)="closeRequestPage()">{{ 'pages.freightCalculation.back' | translate }}</button>
+            <button type="submit" [disabled]="isSubmitting()">{{ 'pages.freightCalculation.submit' | translate }}</button>
+          </div>
+        </form>
+      </div>
+    </section>
+  }
+
+  @if (toastMessage()) {
+    <div class="toast">{{ toastMessage() | translate }}</div>
+  }
 </div>

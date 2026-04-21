@@ -1,6 +1,6 @@
 /* You can add global styles to this file, and also import other style files */
-
 @use 'styles/theme';
+@import 'leaflet/dist/leaflet.css';
 
 html, body { height: 100%; }
 body { 
