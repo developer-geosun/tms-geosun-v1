@@ -12,6 +12,9 @@ import {
   signal
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { MatExpansionModule } from '@angular/material/expansion';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatSelectModule } from '@angular/material/select';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
 import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
@@ -25,7 +28,7 @@ import { hasPendingBorderCheckpoint, isValidEmail, isValidPhone } from './freigh
   styleUrls: ['./freight-calculation.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [TranslateModule, ReactiveFormsModule]
+  imports: [TranslateModule, ReactiveFormsModule, MatExpansionModule, MatFormFieldModule, MatSelectModule]
 })
 export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapContainer', { static: true }) private readonly mapContainer!: ElementRef<HTMLDivElement>;
@@ -45,6 +48,8 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   readonly isSubmitting = signal(false);
   readonly toastMessage = signal('');
   readonly dropdownSegmentIndex = signal<number | null>(null);
+  /** Порожнє значення другого mat-select після вибору КПП або зміни країни */
+  readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
 
   readonly requestForm = this.formBuilder.nonNullable.group({
     email: ['', [Validators.required]],
@@ -154,22 +159,49 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     this.searchResults.set([]);
     this.selectedWaypointIndex.set(null);
     this.requestOpen.set(false);
+    this.selectedCountryBySegment.set({});
+    this.borderCheckpointSelectValue.set({});
+    this.dropdownSegmentIndex.set(null);
     if (this.routeLayer && this.map) {
       this.map.removeLayer(this.routeLayer);
       this.routeLayer = null;
     }
   }
 
-  toggleBorderDropdown(index: number): void {
-    this.dropdownSegmentIndex.update((current) => (current === index ? null : index));
+  /** Відкриття/закриття панелі вибору КПП для сегмента маршруту */
+  onBorderExpansionChange(segmentIndex: number, expanded: boolean): void {
+    if (expanded) {
+      this.dropdownSegmentIndex.set(segmentIndex);
+      return;
+    }
+    if (this.dropdownSegmentIndex() === segmentIndex) {
+      this.dropdownSegmentIndex.set(null);
+    }
   }
 
-  selectTransitCountry(segmentIndex: number, country: string): void {
-    this.selectedCountryBySegment.update((value) => {
-      const previous = value[segmentIndex];
-      const nextCountry = previous === country ? null : country;
-      return { ...value, [segmentIndex]: nextCountry };
-    });
+  /** Вибір країни транзиту в mat-select */
+  onBorderCountryMatSelect(segmentIndex: number, value: unknown): void {
+    const country = typeof value === 'string' && value.length > 0 ? value : null;
+    this.selectedCountryBySegment.update((prev) => ({ ...prev, [segmentIndex]: country }));
+    this.borderCheckpointSelectValue.update((m) => ({ ...m, [segmentIndex]: '' }));
+  }
+
+  getBorderCheckpointSelectValue(segmentIndex: number): string {
+    return this.borderCheckpointSelectValue()[segmentIndex] ?? '';
+  }
+
+  /** Вибір КПП у другому mat-select — одразу додає точку на маршрут */
+  async onBorderCheckpointMatSelect(segmentIndex: number, value: unknown): Promise<void> {
+    const str = value === null || value === undefined ? '' : String(value);
+    if (str === '') {
+      return;
+    }
+    const idx = Number(str);
+    if (!Number.isInteger(idx) || idx < 0) {
+      return;
+    }
+    await this.addBorderCheckpoint(segmentIndex, idx);
+    this.borderCheckpointSelectValue.update((m) => ({ ...m, [segmentIndex]: '' }));
   }
 
   async addBorderCheckpoint(segmentIndex: number, checkpointIndex: number): Promise<void> {

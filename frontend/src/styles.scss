@@ -235,3 +235,9 @@ mat-button-toggle .mdc-button__label {
   --preview-top: #0a6a6c;
   --preview-bottom: #04575a;
 }
+
+/* Випадаючі списки КПП на freight-calculation (overlay поза :host) */
+.cdk-overlay-container .mat-mdc-select-panel.freight-border-select-panel {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}

@@ -171,99 +171,63 @@
 .segment:has(> span) {
   min-height: 32px;
 }
-.point-actions button, .sidebar-actions__buttons button, .border-picker > button, .dialog-actions button { border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 6px 8px; cursor: pointer; }
-/* Кнопка «Обрати прикордонний пункт» — ширина як у .point-row */
+.point-actions button, .sidebar-actions__buttons button, .dialog-actions button { border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 6px 8px; cursor: pointer; }
 .border-picker {
   margin: 0 0 8px;
   width: 100%;
   box-sizing: border-box;
 }
-.border-picker > button {
-  width: 100%;
-  box-sizing: border-box;
-  display: block;
+/* Панель вибору КПП — тло та рамка як у .point-row.border */
+.border-expansion-panel {
   border-radius: 10px;
-  padding: 8px 10px;
-  text-align: left;
+  box-shadow: none !important;
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+}
+.border-expansion-panel ::ng-deep .mat-expansion-panel-header {
+  padding: 0 12px;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  background: #f0fdf4;
+}
+.border-expansion-panel ::ng-deep .mat-expansion-panel-header:hover {
+  background: #ecfdf5;
+}
+.border-expansion-panel ::ng-deep .mat-expansion-panel-header.mat-expanded {
+  background: #f0fdf4;
+}
+.border-expansion-panel ::ng-deep .mat-expansion-panel-body {
+  padding: 0 12px 12px;
+  background: #f0fdf4;
 }
 .border-panel {
-  margin-top: 8px;
-  padding: 10px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #fff;
+  padding: 10px 0 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
-.country-cards {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+/* Вертикальний відступ між mat-select країни та КПП */
+.border-panel--selects {
+  gap: 18px;
 }
-.country-card {
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
-  padding: 6px 10px;
-  font-size: inherit;
-  font-weight: 600;
-  color: #334155;
-  cursor: pointer;
-  line-height: 1.2;
-}
-.country-card:hover {
-  border-color: #cbd5e1;
-  background: #f1f5f9;
-}
-.country-card--active {
-  border-color: #16a34a;
-  background: #f0fdf4;
-  color: #14532d;
-  box-shadow: 0 0 0 1px rgba(22, 163, 74, 0.2);
-}
-.checkpoint-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.checkpoint-pick {
+.border-field {
   width: 100%;
-  margin: 0;
-  text-align: left;
-  cursor: pointer;
-  box-sizing: border-box;
-  font: inherit;
-  align-items: center;
+  font-size: 0.8125rem;
+  line-height: 1.45;
 }
-.checkpoint-pick:hover {
-  border-color: #4ade80;
-  background: #ecfdf5;
+.border-field ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+  display: none;
 }
-.checkpoint-pick:focus-visible {
-  outline: 2px solid #2563eb;
-  outline-offset: 2px;
+.border-field ::ng-deep .mat-mdc-text-field-wrapper {
+  padding-bottom: 0;
 }
-.checkpoint-pick__order {
-  background: #16a34a;
-  color: #fff;
-  flex: 0 0 26px;
+.border-field ::ng-deep .mat-mdc-floating-label,
+.border-field ::ng-deep .mat-mdc-select,
+.border-field ::ng-deep .mat-mdc-select-value-text {
+  font-size: inherit;
 }
-.checkpoint-pick__order::after {
-  content: '';
-  display: block;
-  width: 8px;
-  height: 8px;
-  margin: 0 auto;
-  border-radius: 50%;
-  background: #fff;
-  opacity: 0.95;
-}
-.border-panel__hint {
-  margin: 0;
-  color: #64748b;
-  font-size: 0.75rem;
-  line-height: 1.35;
+.border-field ::ng-deep .mat-mdc-notched-outline .mdc-floating-label--float-above {
+  font-size: inherit;
 }
 .sidebar-actions__buttons button { flex: 1 1 0; }
 /* Поле додавання точки всередині липкого блоку — без додаткового верхнього відступу */
