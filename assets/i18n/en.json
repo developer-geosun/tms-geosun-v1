@@ -38,11 +38,20 @@
       "passwordMismatch": "Passwords do not match",
       "submit": "Sign up",
       "loading": "Creating account...",
-      "success": "Account created successfully",
+      "success": "Account created successfully. Check your inbox to verify your email",
       "error409": "User with this email already exists",
       "error429": "Too many attempts, please try later",
       "errorGeneric": "Registration failed, please check your data",
       "haveAccount": "Already have an account?"
+    },
+    "verifyEmail": {
+      "title": "Email verification",
+      "subtitle": "Please wait while we validate your verification link",
+      "loading": "Verifying email...",
+      "success": "Email verified successfully. You can now sign in",
+      "invalid": "Verification link is invalid or has expired",
+      "error": "Unable to verify email now. Please try again later",
+      "toLogin": "Go to sign in"
     },
     "notFound": {
       "title": "404",
