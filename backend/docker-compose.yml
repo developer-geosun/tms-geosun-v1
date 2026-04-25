@@ -1,4 +1,11 @@
 services:
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: tms-mailhog
+    ports:
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+
   mysql:
     image: mysql:8.0
     container_name: tms-auth-mysql
@@ -24,6 +31,8 @@ services:
       dockerfile: Dockerfile
     container_name: tms-auth-app
     depends_on:
+      mailhog:
+        condition: service_started
       mysql:
         condition: service_healthy
     environment:

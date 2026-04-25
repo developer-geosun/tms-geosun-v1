@@ -13,6 +13,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent)
   },
   {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent)
+  },
+  {
     path: 'main',
     canActivate: [serviceStopGuard, authGuard],
     data: { roles: ['admin', 'manager', 'employee', 'user'] },

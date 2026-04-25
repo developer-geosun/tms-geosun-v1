@@ -11,6 +11,7 @@ public class AppEmailProperties {
   private String from = "no-reply@example.com";
 
   private long verificationExpiresSeconds = 86400;
+  private String verificationLinkBase = "http://localhost:4200/verify-email";
 
   public String getFrom() {
     return from;
@@ -26,5 +27,13 @@ public class AppEmailProperties {
 
   public void setVerificationExpiresSeconds(long verificationExpiresSeconds) {
     this.verificationExpiresSeconds = verificationExpiresSeconds;
+  }
+
+  public String getVerificationLinkBase() {
+    return verificationLinkBase;
+  }
+
+  public void setVerificationLinkBase(String verificationLinkBase) {
+    this.verificationLinkBase = verificationLinkBase;
   }
 }

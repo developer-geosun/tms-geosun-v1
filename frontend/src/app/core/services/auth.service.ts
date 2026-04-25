@@ -7,9 +7,11 @@ import {
   AuthUser,
   LoginRequest,
   LoginResponse,
+  OperationSuccessResponse,
   RefreshResponse,
   RegisterRequest,
   RegisterResponse,
+  VerifyEmailRequest,
   UserRole
 } from '../../shared/models';
 
@@ -48,6 +50,12 @@ export class AuthService {
       map((response) => this.ensureSuccessResponse_(response)),
       map((response) => ({ ...response, role: normalizeRole_(response.role) }))
     );
+  }
+
+  verifyEmail(payload: VerifyEmailRequest): Observable<OperationSuccessResponse> {
+    return this.http
+      .post<OperationSuccessResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/verify-email'), payload)
+      .pipe(map((response) => this.ensureSuccessResponse_(response)));
   }
 
   logout(): Observable<void> {

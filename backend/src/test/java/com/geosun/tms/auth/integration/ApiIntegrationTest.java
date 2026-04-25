@@ -6,6 +6,7 @@ import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,8 +24,15 @@ import com.geosun.tms.auth.dto.request.ResendVerificationRequest;
 import com.geosun.tms.auth.dto.request.VerifyEmailRequest;
 import com.geosun.tms.auth.ratelimit.RateLimitService;
 import com.geosun.tms.auth.repository.UserRepository;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Multipart;
+import jakarta.mail.internet.MimeMessage;
+import java.io.IOException;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -35,7 +43,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
 import org.springframework.mail.MailSendException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
@@ -51,6 +58,8 @@ import org.springframework.transaction.annotation.Transactional;
 @ActiveProfiles("test")
 @Transactional
 class ApiIntegrationTest {
+  private static final Pattern TOKEN_PATTERN = Pattern.compile("[?&]token=([^\\s\"'<>]+)");
+
 
   @Autowired private MockMvc mockMvc;
 
@@ -68,7 +77,7 @@ class ApiIntegrationTest {
   void setUp() {
     rateLimitService.resetForTests();
     org.mockito.Mockito.reset(javaMailSender);
-    doNothing().when(javaMailSender).send(anyMailMessage());
+    stubMailSenderSuccess();
   }
 
   @Test
@@ -145,7 +154,7 @@ class ApiIntegrationTest {
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest("flow@example.com", "Secret123"))));
 
-    ArgumentCaptor<SimpleMailMessage> mailCap = ArgumentCaptor.forClass(SimpleMailMessage.class);
+    ArgumentCaptor<MimeMessage> mailCap = ArgumentCaptor.forClass(MimeMessage.class);
     verify(javaMailSender, times(1)).send(mailCap.capture());
     String token = extractVerificationToken(requireMailText(mailCap.getValue()));
 
@@ -230,6 +239,8 @@ class ApiIntegrationTest {
     verify(javaMailSender, times(1)).send(anyMailMessage());
 
     org.mockito.Mockito.reset(javaMailSender);
+    when(javaMailSender.createMimeMessage())
+        .thenReturn(new MimeMessage(jakarta.mail.Session.getInstance(new Properties())));
     doThrow(new MailSendException("fail")).when(javaMailSender).send(anyMailMessage());
 
     mockMvc
@@ -279,7 +290,7 @@ class ApiIntegrationTest {
         post("/api/v1/auth/register")
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest("ratelimit@example.com", "Secret123"))));
-    ArgumentCaptor<SimpleMailMessage> cap = ArgumentCaptor.forClass(SimpleMailMessage.class);
+    ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
     verify(javaMailSender).send(cap.capture());
     mockMvc.perform(
         post("/api/v1/auth/verify-email")
@@ -401,7 +412,7 @@ class ApiIntegrationTest {
         post("/api/v1/auth/register")
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest(email, "Secret123"))));
-    ArgumentCaptor<SimpleMailMessage> cap = ArgumentCaptor.forClass(SimpleMailMessage.class);
+    ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
     verify(javaMailSender, times(1)).send(cap.capture());
     String token = extractVerificationToken(requireMailText(cap.getValue()));
     mockMvc.perform(
@@ -409,7 +420,7 @@ class ApiIntegrationTest {
             .contentType(jsonContentType())
             .content(toJson(new VerifyEmailRequest(token))));
     org.mockito.Mockito.reset(javaMailSender);
-    doNothing().when(javaMailSender).send(anyMailMessage());
+    stubMailSenderSuccess();
   }
 
   private Session login(String email, String password) throws Exception {
@@ -426,9 +437,9 @@ class ApiIntegrationTest {
   }
 
   private static String extractVerificationToken(String mailText) {
-    int idx = mailText.lastIndexOf("\n\n");
-    assertThat(idx).isGreaterThan(-1);
-    return mailText.substring(idx + 2).trim();
+    Matcher matcher = TOKEN_PATTERN.matcher(mailText);
+    assertThat(matcher.find()).isTrue();
+    return matcher.group(1);
   }
 
   @NonNull
@@ -451,13 +462,47 @@ class ApiIntegrationTest {
   }
 
   @NonNull
-  private static String requireMailText(@NonNull SimpleMailMessage message) {
-    return Objects.requireNonNull(message.getText());
+  private static String requireMailText(@NonNull MimeMessage message) {
+    try {
+      Object content = message.getContent();
+      if (content instanceof String text) {
+        return text;
+      }
+      if (content instanceof Multipart multipart) {
+        return findTextPart(multipart);
+      }
+      throw new IllegalStateException("Unsupported mail content type: " + content);
+    } catch (Exception ex) {
+      throw new IllegalStateException("Cannot read mail content", ex);
+    }
   }
 
   @NonNull
-  private static SimpleMailMessage anyMailMessage() {
-    return (SimpleMailMessage) any(SimpleMailMessage.class);
+  private static MimeMessage anyMailMessage() {
+    return (MimeMessage) any(MimeMessage.class);
+  }
+
+  @NonNull
+  private static String findTextPart(@NonNull Multipart multipart) throws Exception {
+    for (int i = 0; i < multipart.getCount(); i++) {
+      BodyPart part = multipart.getBodyPart(i);
+      Object partContent = part.getContent();
+      if (partContent instanceof String text
+          && part.getContentType() != null
+          && part.getContentType().toLowerCase().startsWith("text/plain")) {
+        return text;
+      }
+      if (partContent instanceof Multipart nested) {
+        return findTextPart(nested);
+      }
+    }
+    throw new IOException("text/plain part not found");
+  }
+
+  private void stubMailSenderSuccess() {
+    when(javaMailSender.createMimeMessage())
+        .thenReturn(new MimeMessage(jakarta.mail.Session.getInstance(new Properties())));
+    doNothing().when(javaMailSender).send(anyMailMessage());
   }
 
   private record Session(String access, String refresh) {}
