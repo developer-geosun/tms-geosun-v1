@@ -60,7 +60,6 @@ import org.springframework.transaction.annotation.Transactional;
 class ApiIntegrationTest {
   private static final Pattern TOKEN_PATTERN = Pattern.compile("[?&]token=([^\\s\"'<>]+)");
 
-
   @Autowired private MockMvc mockMvc;
 
   @Autowired private ObjectMapper objectMapper;

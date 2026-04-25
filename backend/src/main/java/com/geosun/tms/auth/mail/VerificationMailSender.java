@@ -37,10 +37,12 @@ public class VerificationMailSender {
   }
 
   public void sendVerificationEmail(String toAddress, String rawToken) throws MailException {
-    String verificationLink = buildVerificationLink(emailProperties.getVerificationLinkBase(), rawToken);
+    String verificationLink =
+        buildVerificationLink(emailProperties.getVerificationLinkBase(), rawToken);
     MimeMessage message = mailSender.createMimeMessage();
     try {
-      MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
+      MimeMessageHelper helper =
+          new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
       helper.setFrom(emailProperties.getFrom());
       helper.setTo(toAddress);
       helper.setSubject(MAIL_SUBJECT);
