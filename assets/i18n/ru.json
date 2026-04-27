@@ -34,6 +34,7 @@
       "email": "Email",
       "password": "Пароль",
       "confirmPassword": "Подтвердите пароль",
+      "showPassword": "Показать пароль",
       "passwordRule": "Пароль должен содержать минимум одну букву и одну цифру",
       "passwordMismatch": "Пароли не совпадают",
       "submit": "Зарегистрироваться",
