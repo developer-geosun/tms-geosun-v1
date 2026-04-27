@@ -12,7 +12,8 @@
       "signedInAs": "Signed in as",
       "managerSection": "Manager section is available",
       "adminSection": "Admin section is available",
-      "freightCalculationLink": "Go to freight calculation"
+      "freightCalculationLink": "Go to freight calculation",
+      "freightCalculationHereLink": "Go to freight calculation (HERE API)"
     },
     "login": {
       "title": "Sign in",

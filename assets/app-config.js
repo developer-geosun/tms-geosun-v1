@@ -9,5 +9,6 @@ window.__APP_CONFIG__ = {
   developerFacebookUrl: "https://www.facebook.com/hmv.fermats",
   linkedinUrl: "https://www.linkedin.com/in/maksym-horielikov-738347275/",
   logoUrl: "https://www.geosun.net.ua",
-  isServiceStopped: false
+  isServiceStopped: false,
+  hereApiKey: ""
 };
