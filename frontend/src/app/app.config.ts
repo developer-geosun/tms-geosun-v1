@@ -1,15 +1,24 @@
-import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { APP_INITIALIZER, ApplicationConfig, importProvidersFrom, inject } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
 import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors';
+import { AuthAvailabilityService } from './core/services';
 
 // Фабрика для завантаження перекладів з assets
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
+}
+
+function authAvailabilityInitializerFactory(): () => Promise<void> {
+  return async () => {
+    const authAvailabilityService = inject(AuthAvailabilityService);
+    await firstValueFrom(authAvailabilityService.checkOnStartup());
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -17,6 +26,11 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
+    {
+      provide: APP_INITIALIZER,
+      useFactory: authAvailabilityInitializerFactory,
+      multi: true
+    },
     importProvidersFrom(
       TranslateModule.forRoot({
         loader: {

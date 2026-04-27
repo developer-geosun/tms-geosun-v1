@@ -60,9 +60,10 @@
     },
     "stopService": {
       "title": "Service temporarily unavailable",
-      "message": "Technical work in progress",
-      "subMessage": "We are working on improving the service",
-      "tryLater": "Please try again later"
+      "message": "Authorization server is temporarily unavailable",
+      "subMessage": "Sign in and registration are currently unavailable",
+      "tryLater": "Please try again later",
+      "lastCheck": "Last check"
     },
     "freightCalculation": {
       "title": "Freight calculation",
