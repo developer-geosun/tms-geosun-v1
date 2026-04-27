@@ -22,16 +22,6 @@
           formControlName="password"
           autocomplete="new-password"
         />
-        <button
-          type="button"
-          mat-icon-button
-          matSuffix
-          [attr.aria-label]="isPasswordVisible() ? 'Hide password' : 'Show password'"
-          [attr.aria-pressed]="isPasswordVisible()"
-          (click)="isPasswordVisible.set(!isPasswordVisible())"
-        >
-          <mat-icon [fontIcon]="isPasswordVisible() ? 'visibility_off' : 'visibility'"></mat-icon>
-        </button>
         @if (form.controls.password.touched && form.controls.password.hasError('pattern')) {
           <mat-error>{{ 'pages.register.passwordRule' | translate }}</mat-error>
         }
@@ -41,24 +31,22 @@
         <mat-label>{{ 'pages.register.confirmPassword' | translate }}</mat-label>
         <input
           matInput
-          [type]="isConfirmPasswordVisible() ? 'text' : 'password'"
+          [type]="isPasswordVisible() ? 'text' : 'password'"
           formControlName="confirmPassword"
           autocomplete="new-password"
         />
-        <button
-          type="button"
-          mat-icon-button
-          matSuffix
-          [attr.aria-label]="isConfirmPasswordVisible() ? 'Hide password' : 'Show password'"
-          [attr.aria-pressed]="isConfirmPasswordVisible()"
-          (click)="isConfirmPasswordVisible.set(!isConfirmPasswordVisible())"
-        >
-          <mat-icon [fontIcon]="isConfirmPasswordVisible() ? 'visibility_off' : 'visibility'"></mat-icon>
-        </button>
         @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('mismatch')) {
           <mat-error>{{ 'pages.register.passwordMismatch' | translate }}</mat-error>
         }
       </mat-form-field>
+
+      <mat-checkbox
+        class="show-password-toggle"
+        [checked]="isPasswordVisible()"
+        (change)="isPasswordVisible.set($event.checked)"
+      >
+        {{ 'pages.register.showPassword' | translate }}
+      </mat-checkbox>
 
       @if (errorCode() === '409') {
         <p class="error-text">
