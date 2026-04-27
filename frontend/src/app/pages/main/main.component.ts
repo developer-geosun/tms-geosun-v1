@@ -26,5 +26,9 @@ export class MainComponent {
   openFreightCalculation(): void {
     this.router.navigate(['/freight-calculation']);
   }
+
+  openFreightCalculationHere(): void {
+    this.router.navigate(['/freight-calculation-here']);
+  }
 }
 

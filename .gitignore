@@ -5,6 +5,7 @@ dist/
 .env
 backend/.env
 frontend/.env
+frontend/src/assets/app-config.local.js
 
 # Локальна конфігурація clasp (скопіюйте з .clasp.json.example і додайте scriptId)
 backend/.clasp.json

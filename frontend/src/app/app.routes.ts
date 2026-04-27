@@ -39,6 +39,15 @@ export const routes: Routes = [
       import('./pages/freight-calculation/freight-calculation.component').then((m) => m.FreightCalculationComponent)
   },
   {
+    path: 'freight-calculation-here',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['user'] },
+    loadComponent: () =>
+      import('./pages/freight-calculation-here/freight-calculation-here.component').then(
+        (m) => m.FreightCalculationHereComponent
+      )
+  },
+  {
     path: '404',
     loadComponent: () => import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent)
   },

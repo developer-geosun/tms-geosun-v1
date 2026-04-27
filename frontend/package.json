@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "prestart": "node ./scripts/sync-here-key.mjs",
+    "prebuild": "node ./scripts/sync-here-key.mjs",
     "start": "node --no-deprecation ./node_modules/@angular/cli/bin/ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",

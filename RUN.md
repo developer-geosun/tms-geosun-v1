@@ -34,6 +34,8 @@ npm install
 npm start
 ```
 
+Перед `npm start` в корневом `.env` задайте `HERE_API_KEY=<ваш_ключ_here>` — ключ будет автоматически подставлен в локальный `frontend/src/assets/app-config.local.js` (файл игнорируется git).
+
 Frontend будет доступен по адресу: `http://localhost:4200`.
 
 ## Вариант 2: запуск всего стека через Docker Compose
@@ -43,6 +45,7 @@ Frontend будет доступен по адресу: `http://localhost:4200`.
 1. Создайте `.env` на основе шаблона `.env.example`.
    - Для production-сборки frontend оставьте `FRONTEND_BUILD_CONFIGURATION=production`.
    - Для dev-сборки frontend в Docker укажите `FRONTEND_BUILD_CONFIGURATION=development` (в этом режиме будут видны dev-значения из `environment.ts`, включая автозаполнение тестового логина).
+   - Для страницы расчета через HERE укажите `HERE_API_KEY=<ваш_ключ_here>`.
 2. Запустите контейнеры:
 
 ```bash

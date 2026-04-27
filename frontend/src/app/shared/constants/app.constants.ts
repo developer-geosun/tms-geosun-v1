@@ -8,7 +8,8 @@ export const APP_CONFIG = {
   developerFacebookUrl: 'https://www.facebook.com/hmv.fermats', // URL для Facebook розробника (footer)
   linkedinUrl: 'https://www.linkedin.com/in/maksym-horielikov-738347275/', // URL для LinkedIn розробника
   logoUrl: 'https://www.geosun.net.ua',
-  isServiceStopped: false // Настройка остановки сервиса: при true все страницы редиректят на /stop-service
+  isServiceStopped: false, // Настройка остановки сервиса: при true все страницы редиректят на /stop-service
+  hereApiKey: '' // Ключ HERE API для карт/геокодування/маршрутів
 };
 
 export type AppConfig = typeof APP_CONFIG;

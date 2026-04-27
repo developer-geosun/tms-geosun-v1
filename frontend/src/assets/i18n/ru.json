@@ -12,7 +12,8 @@
       "signedInAs": "Вы вошли как",
       "managerSection": "Раздел менеджера доступен",
       "adminSection": "Раздел администратора доступен",
-      "freightCalculationLink": "Перейти к расчету фрахта"
+      "freightCalculationLink": "Перейти к расчету фрахта",
+      "freightCalculationHereLink": "Перейти к расчету фрахта (HERE API)"
     },
     "login": {
       "title": "Вход в систему",
