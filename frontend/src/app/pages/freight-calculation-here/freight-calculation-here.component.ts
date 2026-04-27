@@ -18,15 +18,18 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
 import { ConfigService } from '../../core/services/config.service';
-import { CHECKPOINTS_DATA } from '../freight-calculation/freight-checkpoints.data';
-import { FreightRequestPayload, Waypoint } from '../freight-calculation/freight-calculation.models';
-import { hasPendingBorderCheckpoint, isValidEmail, isValidPhone } from '../freight-calculation/freight-calculation.utils';
-import { FreightRequestApiService } from '../freight-calculation/freight-request-api.service';
+import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
+import { Checkpoint, FreightLang, FreightRequestPayload, Waypoint } from './freight-calculation-here.models';
+import { hasPendingBorderCheckpoint, isValidEmail, isValidPhone } from './freight-calculation-here.utils';
+import { FreightRequestApiService } from './freight-request-api.service';
+import { FreightHereApiService } from './freight-here-api.service';
+import { HereGeocodeItem } from './freight-here.api.models';
+import { decodeHereFlexiblePolyline } from './freight-here-polyline.utils';
 
 @Component({
   selector: 'app-freight-calculation-here',
-  templateUrl: '../freight-calculation/freight-calculation.component.html',
-  styleUrls: ['../freight-calculation/freight-calculation.component.scss'],
+  templateUrl: './freight-calculation-here.component.html',
+  styleUrls: ['./freight-calculation-here.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
   imports: [TranslateModule, ReactiveFormsModule, MatExpansionModule, MatFormFieldModule, MatSelectModule]
@@ -36,6 +39,7 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly requestApi = inject(FreightRequestApiService);
+  private readonly hereApi = inject(FreightHereApiService);
   private readonly translate = inject(TranslateService);
   private readonly config = inject(ConfigService);
 
@@ -63,9 +67,9 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
   readonly totalDistanceMeters = computed(() => this.segmentDistances().reduce((sum, distance) => sum + distance, 0));
   readonly hasRoute = computed(() => this.waypoints().length >= 2);
   readonly hasPendingBorder = computed(() => hasPendingBorderCheckpoint(this.waypoints()));
-  readonly lang = computed<'uk' | 'ru' | 'en'>(() => {
+  readonly lang = computed<FreightLang>(() => {
     const current = this.translate.currentLang || this.translate.getDefaultLang() || 'uk';
-    return (['uk', 'ru', 'en'].includes(current) ? current : 'uk') as 'uk' | 'ru' | 'en';
+    return (['uk', 'ru', 'en'].includes(current) ? current : 'uk') as FreightLang;
   });
 
   private readonly hereApiKey = this.config.config.hereApiKey || this.config.environment.hereApiKey || '';
@@ -128,7 +132,7 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
     }
     this.isSearching.set(true);
     this.searchDebounceTimer = setTimeout(async () => {
-      const items = await this.searchAddress(query);
+      const items = await this.hereApi.searchAddress(query, this.lang(), this.hereApiKey);
       this.searchResults.set(items);
       this.highlightedSearchIndex.set(items.length > 0 ? 0 : -1);
       this.isSearching.set(false);
@@ -274,11 +278,11 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
     return Object.keys(CHECKPOINTS_DATA);
   }
 
-  getCheckpoints(country: string): Array<{ name: Record<'uk' | 'ru' | 'en', string>; lat: number; lng: number }> {
+  getCheckpoints(country: string): Checkpoint[] {
     return CHECKPOINTS_DATA[country] ?? [];
   }
 
-  getCheckpointLocalizedName(checkpoint: { name: Record<'uk' | 'ru' | 'en', string> }): string {
+  getCheckpointLocalizedName(checkpoint: Checkpoint): string {
     return checkpoint.name[this.lang()] ?? checkpoint.name.en;
   }
 
@@ -402,7 +406,7 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
       return;
     }
 
-    const geocoded = await this.reverseGeocode(lat, lng);
+    const geocoded = await this.hereApi.reverseGeocode(lat, lng, this.lang(), this.hereApiKey);
     this.waypoints.update((items) =>
       items.map((item, index) =>
         index === waypointIndex
@@ -422,7 +426,7 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
       }
       return;
     }
-    const route = await this.fetchRoute(points);
+    const route = await this.hereApi.fetchRoute(points, this.hereApiKey);
     if (!route || !this.map) {
       this.segmentDistances.set([]);
       return;
@@ -433,7 +437,7 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
     }
     const latLngs = route.sections.flatMap((section) => {
       try {
-        return this.decodeFlexiblePolyline(section.polyline);
+        return decodeHereFlexiblePolyline(section.polyline);
       } catch {
         return [];
       }
@@ -462,7 +466,7 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
       });
       marker.on('dragend', async () => {
         const position = marker.getLatLng();
-        const geocoded = await this.reverseGeocode(position.lat, position.lng);
+        const geocoded = await this.hereApi.reverseGeocode(position.lat, position.lng, this.lang(), this.hereApiKey);
         this.selectWaypoint(index);
         this.waypoints.update((items) =>
           items.map((item, itemIndex) =>
@@ -493,73 +497,6 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
     });
   }
 
-  private async searchAddress(query: string): Promise<HereGeocodeItem[]> {
-    if (!this.hereApiKey) {
-      return [];
-    }
-    const lang = this.getHereLanguage(this.lang());
-    const url = new URL('https://geocode.search.hereapi.com/v1/geocode');
-    url.searchParams.set('q', query);
-    url.searchParams.set('limit', '5');
-    url.searchParams.set('lang', lang);
-    url.searchParams.set('apiKey', this.hereApiKey);
-    const response = await fetch(url.toString());
-    if (!response.ok) {
-      return [];
-    }
-    const data = (await response.json()) as HereGeocodeResponse;
-    return (data.items ?? []).map((item) => ({
-      lat: String(item.position.lat),
-      lon: String(item.position.lng),
-      display_name: item.title,
-      address: {
-        country_code: this.normalizeCountryCode(item.address?.countryCode) ?? undefined
-      }
-    }));
-  }
-
-  private async reverseGeocode(lat: number, lng: number): Promise<{ address: string; country: string | null }> {
-    if (!this.hereApiKey) {
-      return { address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`, country: null };
-    }
-    const lang = this.getHereLanguage(this.lang());
-    const url = new URL('https://revgeocode.search.hereapi.com/v1/revgeocode');
-    url.searchParams.set('at', `${lat},${lng}`);
-    url.searchParams.set('limit', '1');
-    url.searchParams.set('lang', lang);
-    url.searchParams.set('apiKey', this.hereApiKey);
-    const response = await fetch(url.toString());
-    if (!response.ok) {
-      return { address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`, country: null };
-    }
-    const data = (await response.json()) as HereReverseGeocodeResponse;
-    const first = data.items?.[0];
-    return {
-      address: first?.title ?? `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-      country: this.normalizeCountryCode(first?.address?.countryCode)
-    };
-  }
-
-  private async fetchRoute(points: Waypoint[]): Promise<HereRoute | null> {
-    if (!this.hereApiKey) {
-      return null;
-    }
-    const url = new URL('https://router.hereapi.com/v8/routes');
-    url.searchParams.set('transportMode', 'truck');
-    url.searchParams.set('origin', `${points[0].lat},${points[0].lng}`);
-    url.searchParams.set('destination', `${points[points.length - 1].lat},${points[points.length - 1].lng}`);
-    for (const point of points.slice(1, -1)) {
-      url.searchParams.append('via', `${point.lat},${point.lng}`);
-    }
-    url.searchParams.set('return', 'polyline,summary');
-    url.searchParams.set('apiKey', this.hereApiKey);
-    const response = await fetch(url.toString());
-    if (!response.ok) {
-      return null;
-    }
-    const payload = (await response.json()) as HereRouteResponse;
-    return payload.routes[0] ?? null;
-  }
 
   private createPayload(): FreightRequestPayload {
     const points = this.waypoints();
@@ -601,139 +538,5 @@ export class FreightCalculationHereComponent implements AfterViewInit, OnDestroy
     setTimeout(() => this.toastMessage.set(''), 3000);
   }
 
-  private getHereLanguage(lang: 'uk' | 'ru' | 'en'): string {
-    if (lang === 'uk') {
-      return 'uk-UA';
-    }
-    if (lang === 'ru') {
-      return 'ru-RU';
-    }
-    return 'en-US';
-  }
-
-  /** Нормалізує код країни HERE до ISO-2 (нижній регістр) для сумісності з логікою КПП */
-  private normalizeCountryCode(code?: string): string | null {
-    if (!code) {
-      return null;
-    }
-    const upper = code.toUpperCase();
-    const iso3ToIso2: Record<string, string> = {
-      UKR: 'ua',
-      POL: 'pl',
-      SVK: 'sk',
-      HUN: 'hu',
-      ROU: 'ro',
-      MDA: 'md',
-      RUS: 'ru',
-      BLR: 'by'
-    };
-    if (upper.length === 2) {
-      return upper.toLowerCase();
-    }
-    return iso3ToIso2[upper] ?? null;
-  }
-
-  /** Декодує HERE flexible polyline у координати Leaflet */
-  private decodeFlexiblePolyline(encoded: string): L.LatLngExpression[] {
-    const encodingTable = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
-    const decodingTable = new Map<string, number>([...encodingTable].map((char, index) => [char, index]));
-
-    let index = 0;
-
-    const decodeUnsignedVarint = (): number => {
-      let result = 0;
-      let shift = 0;
-      while (index < encoded.length) {
-        const char = encoded[index++];
-        const value = decodingTable.get(char);
-        if (value === undefined) {
-          throw new Error('Invalid flexible polyline encoding');
-        }
-        result |= (value & 0x1f) << shift;
-        if ((value & 0x20) === 0) {
-          return result;
-        }
-        shift += 5;
-      }
-      throw new Error('Unexpected end of flexible polyline');
-    };
-
-    const decodeSignedVarint = (): number => {
-      const value = decodeUnsignedVarint();
-      const negative = value & 1;
-      const shifted = value >> 1;
-      return negative ? ~shifted : shifted;
-    };
-
-    const version = decodeUnsignedVarint();
-    if (version !== 1) {
-      throw new Error('Unsupported flexible polyline version');
-    }
-    const header = decodeUnsignedVarint();
-    const precision = header & 15;
-    const thirdDim = (header >> 4) & 7;
-    const thirdDimPrecision = (header >> 7) & 15;
-    const thirdDimPresent = thirdDim !== 0;
-    const factorDegree = 10 ** precision;
-    const factorZ = 10 ** thirdDimPrecision;
-
-    let lat = 0;
-    let lng = 0;
-    let z = 0;
-    const points: L.LatLngExpression[] = [];
-
-    while (index < encoded.length) {
-      lat += decodeSignedVarint();
-      lng += decodeSignedVarint();
-      if (thirdDimPresent) {
-        z += decodeSignedVarint();
-        void factorZ;
-        void z;
-      }
-      points.push([lat / factorDegree, lng / factorDegree]);
-    }
-
-    return points;
-  }
 }
 
-interface HereGeocodeResponse {
-  items: HereRawGeocodeItem[];
-}
-
-interface HereReverseGeocodeResponse {
-  items: HereRawGeocodeItem[];
-}
-
-interface HereGeocodeItem {
-  lat: string;
-  lon: string;
-  display_name: string;
-  address?: {
-    country_code?: string;
-  };
-}
-
-interface HereRawGeocodeItem {
-  title: string;
-  position: {
-    lat: number;
-    lng: number;
-  };
-  address?: {
-    countryCode?: string;
-  };
-}
-
-interface HereRouteResponse {
-  routes: HereRoute[];
-}
-
-interface HereRoute {
-  sections: Array<{
-    polyline: string;
-    summary: {
-      length: number;
-    };
-  }>;
-}
