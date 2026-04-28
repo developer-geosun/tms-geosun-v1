@@ -77,5 +77,27 @@ services:
     ports:
       - "${FRONTEND_PORT:-4200}:80"
 
+  gateway:
+    image: nginx:1.27-alpine
+    container_name: tms-gateway
+    depends_on:
+      - backend
+      - frontend
+    volumes:
+      - ./nginx.gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "${GATEWAY_PORT:-8081}:80"
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: tms-ngrok
+    depends_on:
+      - gateway
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
+    command: http --url=${NGROK_DOMAIN} gateway:80
+    ports:
+      - "${NGROK_INSPECT_PORT:-4040}:4040"
+
 volumes:
   mysql_data:

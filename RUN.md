@@ -51,6 +51,11 @@ cp .env.example .env
 - Для production-сборки frontend оставьте `FRONTEND_BUILD_CONFIGURATION=production`.
 - Для dev-сборки frontend в Docker укажите `FRONTEND_BUILD_CONFIGURATION=development` (в этом режиме будут видны dev-значения из `environment.ts`, включая автозаполнение тестового логина).
 - Для страницы расчета через HERE укажите `HERE_API_KEY=<ваш_ключ_here>`.
+- Для публичного адреса через ngrok (один домен для frontend + backend) укажите:
+  - `NGROK_AUTHTOKEN=<ваш_ngrok_authtoken>`
+  - `NGROK_DOMAIN=<ваш_домен_из_ngrok>`
+  - `GATEWAY_PORT=8081` (локальный порт gateway)
+  - `EMAIL_VERIFICATION_LINK_BASE=https://<NGROK_DOMAIN>/verify-email`
 
 2. Запуск контейнеров (из корня проекта):
 
@@ -74,11 +79,21 @@ docker compose up --build
 docker compose down
 ```
 
+### Запуск через один домен (frontend + backend + ngrok)
+
+```bash
+docker compose up --build mysql mailhog backend frontend gateway ngrok
+```
+
 ## Полезные URL после запуска
 
 - Frontend: `http://localhost:4200`
 - Backend health: `http://localhost:8080/actuator/health`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
+- Gateway (единый локальный вход): `http://localhost:8081`
+- ngrok Inspector: `http://localhost:4040`
+- Public frontend URL (пример): `https://<NGROK_DOMAIN>`
+- Public API health (пример): `https://<NGROK_DOMAIN>/actuator/health`
 
 ## Быстрая проверка backend auth API
 
