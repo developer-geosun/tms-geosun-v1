@@ -25,10 +25,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class RouteService implements RouteContractsFacade {
   private final RouteRepository routeRepository;
   private final UserRepository userRepository;
+  private final RouteRequestService routeRequestService;
 
-  public RouteService(RouteRepository routeRepository, UserRepository userRepository) {
+  public RouteService(
+      RouteRepository routeRepository,
+      UserRepository userRepository,
+      RouteRequestService routeRequestService) {
     this.routeRepository = routeRepository;
     this.userRepository = userRepository;
+    this.routeRequestService = routeRequestService;
   }
 
   @Override
@@ -90,12 +95,12 @@ public class RouteService implements RouteContractsFacade {
 
   @Override
   public RouteRequestDto createRouteRequest(String userId, CreateRouteRequestRequest request) {
-    throw new UnsupportedOperationException("Phase 2 endpoint is not implemented yet");
+    return routeRequestService.createRouteRequest(userId, request);
   }
 
   @Override
   public List<RouteRequestDto> getMyRouteRequests(String userId) {
-    throw new UnsupportedOperationException("Phase 2 endpoint is not implemented yet");
+    return routeRequestService.getMyRouteRequests(userId);
   }
 
   private static RoutePoint toEntityPoint(Route route, RoutePointRequest request) {
