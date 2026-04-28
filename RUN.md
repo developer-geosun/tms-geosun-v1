@@ -91,10 +91,16 @@ docker compose --profile dev up -d frontend-dev
 
 Изменения в `frontend/src/*` будут применяться автоматически без пересборки Docker-образа.
 
-4. Остановить dev frontend:
+4. Остановить только dev frontend:
 
 ```bash
 docker compose --profile dev stop frontend-dev
+```
+
+5. Полностью остановить dev-профиль (рекомендуется в конце сессии):
+
+```bash
+docker compose --profile dev down --remove-orphans
 ```
 
 Примечания:
@@ -104,11 +110,15 @@ docker compose --profile dev stop frontend-dev
 - Для внешнего dev-доступа и корректной email-верификации используйте `gateway-dev` и `ngrok-dev` (профиль `dev`).
 - Для dev-ссылки из письма укажите `EMAIL_VERIFICATION_LINK_BASE=https://<NGROK_DOMAIN>/verify-email`.
 - На первом запуске `frontend-dev` установит зависимости (`npm ci`), далее старт обычно заметно быстрее.
+- Если выполнить обычный `docker compose down` без `--profile dev`, может появиться `Network ... Resource is still in use`, потому что dev-контейнеры останутся запущенными.
 
 ### Dev-профиль через один домен (frontend-dev + backend + ngrok)
 
 ```bash
 docker compose --profile dev up -d mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+
+# остановка dev-профиля
+docker compose --profile dev down --remove-orphans
 ```
 
 Локальный вход через dev gateway: `http://localhost:8082` (или `GATEWAY_DEV_PORT`).
@@ -128,6 +138,9 @@ docker compose --profile dev up -d frontend-dev
 
 # dev через единый домен (с корректной verify-email ссылкой)
 docker compose --profile dev up -d mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+
+# полная остановка dev-профиля (без "Network ... Resource is still in use")
+docker compose --profile dev down --remove-orphans
 ```
 
 ### Запуск через один домен (frontend + backend + ngrok)
