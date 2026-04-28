@@ -72,3 +72,10 @@ app:
   cleanup:
     token-retention-days: ${TOKEN_CLEANUP_RETENTION_DAYS:30}
     cron: ${TOKEN_CLEANUP_CRON:0 0 2 * * *}
+  here:
+    api-key: ${HERE_API_KEY:}
+    base-url: ${HERE_BASE_URL:https://router.hereapi.com}
+    transport-mode: ${HERE_TRANSPORT_MODE:truck}
+    routing-mode: ${HERE_ROUTING_MODE:fast}
+    timeout-millis: ${HERE_TIMEOUT_MILLIS:5000}
+    cache-ttl-seconds: ${HERE_CACHE_TTL_SECONDS:86400}

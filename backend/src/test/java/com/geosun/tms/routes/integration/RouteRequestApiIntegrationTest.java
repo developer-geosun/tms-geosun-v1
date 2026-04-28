@@ -71,7 +71,9 @@ class RouteRequestApiIntegrationTest {
         .perform(get("/api/v1/route-requests/my/" + requestId).header("Authorization", bearer(access)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(requestId))
-        .andExpect(jsonPath("$.route.points.length()").value(2));
+        .andExpect(jsonPath("$.route.points.length()").value(2))
+        .andExpect(jsonPath("$.countryDistances.length()").value(1))
+        .andExpect(jsonPath("$.countryDistances[0].countryCode").value("UA"));
   }
 
   @Test

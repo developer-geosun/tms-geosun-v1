@@ -8,6 +8,7 @@ import com.geosun.tms.auth.repository.UserRepository;
 import com.geosun.tms.auth.security.SecurityErrorWriter;
 import com.geosun.tms.auth.security.jwt.JwtAuthenticationFilter;
 import com.geosun.tms.auth.security.jwt.JwtService;
+import com.geosun.tms.routes.config.HereProperties;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -37,7 +38,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableConfigurationProperties({
   JwtProperties.class,
   AppEmailProperties.class,
-  RateLimitProperties.class
+  RateLimitProperties.class,
+  HereProperties.class
 })
 public class SecurityConfig {
 

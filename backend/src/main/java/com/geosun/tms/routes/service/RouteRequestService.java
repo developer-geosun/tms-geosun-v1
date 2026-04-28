@@ -9,6 +9,7 @@ import com.geosun.tms.routes.dto.RoutePointType;
 import com.geosun.tms.routes.dto.RouteRequestStatus;
 import com.geosun.tms.routes.dto.request.CargoDetailsRequest;
 import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
+import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import com.geosun.tms.routes.dto.response.RoutePointDto;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
@@ -28,14 +29,17 @@ public class RouteRequestService {
   private final RouteRepository routeRepository;
   private final RouteRequestRepository routeRequestRepository;
   private final RouteRequestStatusHistoryRepository historyRepository;
+  private final CountryBreakdownService countryBreakdownService;
 
   public RouteRequestService(
       RouteRepository routeRepository,
       RouteRequestRepository routeRequestRepository,
-      RouteRequestStatusHistoryRepository historyRepository) {
+      RouteRequestStatusHistoryRepository historyRepository,
+      CountryBreakdownService countryBreakdownService) {
     this.routeRepository = routeRepository;
     this.routeRequestRepository = routeRequestRepository;
     this.historyRepository = historyRepository;
+    this.countryBreakdownService = countryBreakdownService;
   }
 
   @Transactional
@@ -100,6 +104,7 @@ public class RouteRequestService {
   private RouteRequestDto toDto(RouteRequest request, boolean includeRoutePoints) {
     RouteSnapshotDto route =
         includeRoutePoints ? toRouteSnapshot(request.getRoute()) : toRouteSummaryAsSnapshot(request.getRoute());
+    List<CountryDistanceDto> countryDistances = countryBreakdownService.getOrCalculate(request.getRoute());
     return new RouteRequestDto(
         request.getId(),
         request.getRoute().getId(),
@@ -109,7 +114,7 @@ public class RouteRequestService {
         request.getCreatedAt() == null ? null : request.getCreatedAt().toString(),
         request.getUpdatedAt() == null ? null : request.getUpdatedAt().toString(),
         route,
-        List.of(),
+        countryDistances,
         null);
   }
 
