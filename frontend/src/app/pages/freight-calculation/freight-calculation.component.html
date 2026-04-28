@@ -10,6 +10,10 @@
       </div>
       <div class="sidebar-actions__buttons">
         <button type="button" (click)="clearAllPoints()">{{ 'pages.freightCalculation.clear' | translate }}</button>
+        <button type="button" (click)="saveCurrentRoute()" [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()">
+          {{ 'pages.freightCalculation.saveRoute' | translate }}
+        </button>
+        <button type="button" (click)="goToRoutesHistory()">{{ 'pages.freightCalculation.myRoutes' | translate }}</button>
         <button type="button" (click)="openRequestPage()" [disabled]="!hasRoute()">
           {{ 'pages.freightCalculation.openRequest' | translate }}
         </button>

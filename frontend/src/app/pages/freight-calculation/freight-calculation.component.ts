@@ -15,8 +15,11 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
+import { RoutesApiService } from '../../core/api/routes-api.service';
+import { RoutePointContract, RouteSnapshotContractDto, RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
 import { AuthService } from '../../core/services/auth.service';
 import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
 import { FreightRequestApiService } from './freight-request-api.service';
@@ -36,8 +39,11 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly requestApi = inject(FreightRequestApiService);
+  private readonly routesApi = inject(RoutesApiService);
   private readonly translate = inject(TranslateService);
   private readonly authService = inject(AuthService);
+  private readonly activatedRoute = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly waypoints = signal<Waypoint[]>([]);
   readonly segmentDistances = signal<number[]>([]);
@@ -48,6 +54,9 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   readonly requestOpen = signal(false);
   readonly isSearching = signal(false);
   readonly isSubmitting = signal(false);
+  readonly isSavingRoute = signal(false);
+  readonly isLoadingSavedRoute = signal(false);
+  readonly myRoutes = signal<RouteSummaryContractDto[]>([]);
   readonly toastMessage = signal('');
   readonly dropdownSegmentIndex = signal<number | null>(null);
   /** Порожнє значення другого mat-select після вибору КПП або зміни країни */
@@ -84,6 +93,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
 
   ngAfterViewInit(): void {
     this.initializeMapWhenContainerReady();
+    void this.loadRouteFromQuery();
   }
 
   ngOnDestroy(): void {
@@ -168,6 +178,33 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
       this.map.removeLayer(this.routeLayer);
       this.routeLayer = null;
     }
+  }
+
+  async saveCurrentRoute(): Promise<void> {
+    if (!this.hasRoute()) {
+      this.showToast('pages.freightCalculation.errors.routeRequired');
+      return;
+    }
+    this.isSavingRoute.set(true);
+    try {
+      const snapshot = await this.routesApi.saveRoute(this.createRouteSnapshotRequest());
+      this.showToast('pages.freightCalculation.routeSaved');
+      await this.loadMyRoutes();
+      await this.router.navigate([], {
+        relativeTo: this.activatedRoute,
+        queryParams: { routeId: snapshot.id },
+        queryParamsHandling: 'merge'
+      });
+    } catch {
+      this.showToast('pages.freightCalculation.errors.routeSaveFailed');
+    } finally {
+      this.isSavingRoute.set(false);
+    }
+  }
+
+  async goToRoutesHistory(): Promise<void> {
+    await this.loadMyRoutes();
+    await this.router.navigate(['/routes-history']);
   }
 
   /** Відкриття/закриття панелі вибору КПП для сегмента маршруту */
@@ -544,6 +581,129 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
       points: payloadPoints,
       route: payloadPoints.map((point) => `${point.order}. ${point.address}`).join(' -> ')
     };
+  }
+
+  private createRouteSnapshotRequest() {
+    const points = this.createRoutePointsContract();
+    const title = points.length >= 2 ? `${points[0].address} -> ${points[points.length - 1].address}` : 'Saved route';
+    return {
+      title,
+      routingProfile: 'driving',
+      routingMode: 'fast',
+      routePolyline: this.serializeRoutePolyline(),
+      distanceKm: Number((this.totalDistanceMeters() / 1000).toFixed(3)),
+      durationMin: null,
+      routeComment: this.requestForm.getRawValue().routeComment || null,
+      points,
+      hereRouteMeta: null
+    };
+  }
+
+  private createRoutePointsContract(): RoutePointContract[] {
+    const points = this.waypoints();
+    const distances = this.segmentDistances();
+    const lastIndex = points.length - 1;
+    return points.map((point, index) => ({
+      order: index + 1,
+      type: index === 0 ? 'START' : index === lastIndex ? 'FINISH' : point.isBorder ? 'BORDER' : 'STOP',
+      address: point.address,
+      lat: Number(point.lat.toFixed(6)),
+      lng: Number(point.lng.toFixed(6)),
+      country: point.country ?? '',
+      isBorder: point.isBorder,
+      segmentDistanceKmToNext: index < lastIndex && distances[index] !== undefined ? Number((distances[index] / 1000).toFixed(3)) : null
+    }));
+  }
+
+  private serializeRoutePolyline(): string {
+    if (!this.routeLayer) {
+      return this.waypoints()
+        .map((p) => `${p.lat.toFixed(6)},${p.lng.toFixed(6)}`)
+        .join(';');
+    }
+    const coords = this.routeLayer.getLatLngs() as L.LatLng[];
+    return JSON.stringify(coords.map((c) => [Number(c.lat.toFixed(6)), Number(c.lng.toFixed(6))]));
+  }
+
+  private async loadRouteFromQuery(): Promise<void> {
+    const routeId = this.activatedRoute.snapshot.queryParamMap.get('routeId');
+    if (!routeId) {
+      return;
+    }
+    this.isLoadingSavedRoute.set(true);
+    try {
+      const snapshot = await this.routesApi.getMyRouteById(routeId);
+      await this.applySavedRoute(snapshot);
+      this.showToast('pages.freightCalculation.routeLoaded');
+    } catch {
+      this.showToast('pages.freightCalculation.errors.routeLoadFailed');
+    } finally {
+      this.isLoadingSavedRoute.set(false);
+    }
+  }
+
+  private async applySavedRoute(snapshot: RouteSnapshotContractDto): Promise<void> {
+    const points: Waypoint[] = [...snapshot.points]
+      .sort((a, b) => a.order - b.order)
+      .map((point) => ({
+        lat: point.lat,
+        lng: point.lng,
+        address: point.address,
+        country: point.country ? point.country.toLowerCase() : null,
+        isBorder: point.isBorder
+      }));
+    this.waypoints.set(points);
+    this.segmentDistances.set(
+      snapshot.points
+        .sort((a, b) => a.order - b.order)
+        .map((point) => point.segmentDistanceKmToNext)
+        .filter((distance): distance is number => distance !== null)
+        .map((distance) => distance * 1000)
+    );
+    this.selectedWaypointIndex.set(points.length ? 0 : null);
+    this.requestForm.patchValue({ routeComment: snapshot.routeComment ?? '' });
+    await this.drawSavedPolyline(snapshot.routePolyline, points);
+  }
+
+  private async drawSavedPolyline(routePolyline: string, points: Waypoint[]): Promise<void> {
+    if (!this.map) {
+      return;
+    }
+    if (this.routeLayer) {
+      this.map.removeLayer(this.routeLayer);
+      this.routeLayer = null;
+    }
+    const latLngs = this.parseSavedPolyline(routePolyline);
+    const fallback = points.map((point) => L.latLng(point.lat, point.lng));
+    const path = latLngs.length ? latLngs : fallback;
+    if (!path.length) {
+      return;
+    }
+    this.routeLayer = L.polyline(path, { color: '#2563eb', weight: 5, opacity: 0.7 }).addTo(this.map);
+    this.map.fitBounds(this.routeLayer.getBounds(), { padding: [40, 40] });
+  }
+
+  private parseSavedPolyline(routePolyline: string): L.LatLng[] {
+    try {
+      const parsed = JSON.parse(routePolyline) as Array<[number, number]>;
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+      return parsed
+        .filter((item) => Array.isArray(item) && item.length === 2)
+        .map((item) => L.latLng(item[0], item[1]));
+    } catch {
+      return [];
+    }
+  }
+
+  private async loadMyRoutes(): Promise<void> {
+    try {
+      const routes = await this.routesApi.getMyRoutes();
+      this.myRoutes.set(routes);
+    } catch {
+      this.myRoutes.set([]);
+    }
   }
 
   private showToast(key: string): void {

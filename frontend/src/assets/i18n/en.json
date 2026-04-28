@@ -72,6 +72,8 @@
       "km": "km",
       "clear": "Clear all",
       "openRequest": "Send request",
+      "saveRoute": "Save route",
+      "myRoutes": "My routes",
       "submit": "Submit request",
       "back": "Back to map",
       "searchPlaceholder": "Add a point...",
@@ -86,6 +88,8 @@
       "preferredStartDate": "Preferred start date",
       "routeComment": "Route comment",
       "success": "Request sent",
+      "routeSaved": "Route saved",
+      "routeLoaded": "Route loaded",
       "labels": {
         "start": "Start",
         "stop": "Stop",
@@ -97,7 +101,9 @@
         "selectBorderRequired": "Choose border checkpoint before sending",
         "emailRequired": "Enter valid email",
         "phoneRequired": "Enter valid phone number",
-        "submitFailed": "Request sending failed"
+        "submitFailed": "Request sending failed",
+        "routeSaveFailed": "Failed to save route",
+        "routeLoadFailed": "Failed to load route"
       },
       "countries": {
         "pl": "Poland",
@@ -106,6 +112,14 @@
         "ro": "Romania",
         "md": "Moldova"
       }
+    },
+    "routesHistory": {
+      "title": "My saved routes",
+      "loading": "Loading routes...",
+      "loadFailed": "Failed to load routes",
+      "empty": "No saved routes yet",
+      "openRoute": "Open",
+      "backToCalculation": "Back to calculation"
     }
   },
   "theme": {
