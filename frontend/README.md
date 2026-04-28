@@ -30,6 +30,24 @@ npm start
 
 Application is available at `http://localhost:4200/`.
 
+### Dev server in Docker (hot reload)
+
+From the project root (`tms-geosun-v1`), use the dev profile:
+
+```bash
+docker compose stop frontend
+docker compose --profile dev up -d frontend-dev
+```
+
+Open `http://localhost:4200`.
+
+Notes:
+- `frontend-dev` is optimized for fast UI iteration (Angular `ng serve` with hot reload).
+- `frontend` is a production preview container (static build + nginx).
+- Docker dev mode uses `proxy.docker.conf.json` and forwards `/api` to `http://backend:8080`.
+- For public dev links (including email verification), run `gateway-dev` + `ngrok-dev` from the `dev` profile.
+- On first `frontend-dev` start dependencies are installed; next starts are faster.
+
 ## Build
 
 Production build:

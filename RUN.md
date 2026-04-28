@@ -69,6 +69,50 @@ docker compose up --build
 docker compose down
 ```
 
+### Быстрый dev-цикл frontend (hot reload в Docker)
+
+Когда вы активно меняете UI, удобнее запускать `frontend-dev` (Angular dev server), а не production-`frontend` через nginx.
+
+1. Остановите production frontend (если уже запущен):
+
+```bash
+docker compose stop frontend
+```
+
+2. Запустите dev frontend с hot reload:
+
+```bash
+docker compose --profile dev up -d frontend-dev
+```
+
+3. Откройте приложение:
+
+`http://localhost:4200`
+
+Изменения в `frontend/src/*` будут применяться автоматически без пересборки Docker-образа.
+
+4. Остановить dev frontend:
+
+```bash
+docker compose --profile dev stop frontend-dev
+```
+
+Примечания:
+- `frontend` — это production preview (build + nginx), подходит для проверки итоговой сборки.
+- `frontend-dev` — это режим разработки (ng serve), подходит для быстрых правок и тестирования.
+- В Docker dev-режиме API проксируется через `frontend/proxy.docker.conf.json` на `http://backend:8080`.
+- Для внешнего dev-доступа и корректной email-верификации используйте `gateway-dev` и `ngrok-dev` (профиль `dev`).
+- Для dev-ссылки из письма укажите `EMAIL_VERIFICATION_LINK_BASE=https://<NGROK_DOMAIN>/verify-email`.
+- На первом запуске `frontend-dev` установит зависимости (`npm ci`), далее старт обычно заметно быстрее.
+
+### Dev-профиль через один домен (frontend-dev + backend + ngrok)
+
+```bash
+docker compose --profile dev up -d mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+```
+
+Локальный вход через dev gateway: `http://localhost:8082` (или `GATEWAY_DEV_PORT`).
+
 ### Быстрые команды (копировать одним блоком)
 
 ```bash
@@ -77,6 +121,13 @@ docker compose up --build
 
 # остановка
 docker compose down
+
+# быстрый dev frontend (hot reload)
+docker compose stop frontend
+docker compose --profile dev up -d frontend-dev
+
+# dev через единый домен (с корректной verify-email ссылкой)
+docker compose --profile dev up -d mysql mailhog backend frontend-dev gateway-dev ngrok-dev
 ```
 
 ### Запуск через один домен (frontend + backend + ngrok)
