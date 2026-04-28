@@ -258,6 +258,45 @@
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #0f172a; color: #fff; border-radius: 8px; padding: 10px 14px; z-index: 6000; }
 .small-note { font-size: 0.6875rem; color: #64748b; }
+
+.my-requests-panel {
+  margin-top: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px;
+  background: #fff;
+}
+
+.my-requests-panel h3 {
+  margin: 0 0 8px;
+  font-size: 0.875rem;
+}
+
+.my-requests-list {
+  display: grid;
+  gap: 8px;
+}
+
+.my-request-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  display: grid;
+  gap: 4px;
+}
+
+.my-request-item > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.my-request-quote {
+  display: grid;
+  gap: 2px;
+  color: #0f172a;
+}
 @media (max-width: 1100px) {
   .freight-layout {
     display: flex;

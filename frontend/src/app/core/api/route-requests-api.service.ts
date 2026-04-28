@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { BackendApiService } from './backend-api.service';
 import { CreateRouteRequestContractRequest, RouteRequestContractDto } from './route-requests-contracts.model';
+import { CreateQuoteContractRequest, QuoteContractDto } from './quotes-contracts.model';
 
 @Injectable({ providedIn: 'root' })
 export class RouteRequestsApiService {
@@ -32,5 +33,41 @@ export class RouteRequestsApiService {
     return firstValueFrom(
       this.http.get<RouteRequestContractDto>(`${this.backendApi.adminRouteRequests}/${encodeURIComponent(requestId)}`)
     );
+  }
+
+  async createAdminQuote(
+    requestId: string,
+    payload: CreateQuoteContractRequest,
+    idempotencyKey: string
+  ): Promise<QuoteContractDto> {
+    return firstValueFrom(
+      this.http.post<QuoteContractDto>(
+        `${this.backendApi.adminRouteRequests}/${encodeURIComponent(requestId)}/quotes`,
+        payload,
+        { headers: this.idempotencyHeaders(idempotencyKey) }
+      )
+    );
+  }
+
+  async sendAdminQuote(quoteId: string, idempotencyKey: string): Promise<QuoteContractDto> {
+    return firstValueFrom(
+      this.http.post<QuoteContractDto>(
+        `${this.backendApi.adminQuotes}/${encodeURIComponent(quoteId)}/send`,
+        null,
+        { headers: this.idempotencyHeaders(idempotencyKey) }
+      )
+    );
+  }
+
+  async getAdminQuotesHistory(requestId: string): Promise<QuoteContractDto[]> {
+    return firstValueFrom(
+      this.http.get<QuoteContractDto[]>(
+        `${this.backendApi.adminRouteRequests}/${encodeURIComponent(requestId)}/quotes`
+      )
+    );
+  }
+
+  private idempotencyHeaders(idempotencyKey: string): HttpHeaders {
+    return new HttpHeaders({ 'Idempotency-Key': idempotencyKey.trim() });
   }
 }

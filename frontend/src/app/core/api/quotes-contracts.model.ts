@@ -20,3 +20,13 @@ export interface QuoteContractDto {
   sentAt: string | null;
 }
 
+export interface CreateQuoteContractRequest {
+  currency: string;
+  totalAmount: number;
+  transitDaysMin: number | null;
+  transitDaysMax: number | null;
+  validUntil: string | null;
+  publicNote: string | null;
+  internalNote: string | null;
+}
+

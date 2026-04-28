@@ -42,6 +42,72 @@
           </p>
           <p><strong>{{ 'pages.adminRouteRequests.comment' | translate }}:</strong> {{ selected.comment || '-' }}</p>
 
+          <h3>{{ 'pages.adminRouteRequests.quoteEditor' | translate }}</h3>
+          <form class="quote-form" [formGroup]="quoteDraftForm" (ngSubmit)="createDraftQuote()">
+            <label>
+              {{ 'pages.adminRouteRequests.quoteCurrency' | translate }}
+              <input formControlName="currency" type="text" />
+            </label>
+            <label>
+              {{ 'pages.adminRouteRequests.quoteAmount' | translate }}
+              <input formControlName="totalAmount" type="number" min="0.01" step="0.01" />
+            </label>
+            <label>
+              {{ 'pages.adminRouteRequests.quoteTransitDaysMin' | translate }}
+              <input formControlName="transitDaysMin" type="number" min="0" />
+            </label>
+            <label>
+              {{ 'pages.adminRouteRequests.quoteTransitDaysMax' | translate }}
+              <input formControlName="transitDaysMax" type="number" min="0" />
+            </label>
+            <label>
+              {{ 'pages.adminRouteRequests.quoteValidUntil' | translate }}
+              <input formControlName="validUntil" type="date" />
+            </label>
+            <label>
+              {{ 'pages.adminRouteRequests.quotePublicNote' | translate }}
+              <textarea formControlName="publicNote" rows="2"></textarea>
+            </label>
+            <label>
+              {{ 'pages.adminRouteRequests.quoteInternalNote' | translate }}
+              <textarea formControlName="internalNote" rows="2"></textarea>
+            </label>
+            <div class="quote-form__actions">
+              <button type="submit" [disabled]="isCreatingQuote()">{{ 'pages.adminRouteRequests.createDraftQuote' | translate }}</button>
+              <button
+                type="button"
+                [disabled]="!selectedDraftQuote() || isSendingQuote()"
+                (click)="sendSelectedDraft()">
+                {{ 'pages.adminRouteRequests.sendDraftQuote' | translate }}
+              </button>
+            </div>
+          </form>
+          @if (quoteActionError()) {
+            <p class="admin-route-requests__error">{{ quoteActionError() | translate }}</p>
+          }
+          @if (quoteActionSuccess()) {
+            <p class="admin-route-requests__success">{{ quoteActionSuccess() | translate }}</p>
+          }
+
+          <h3>{{ 'pages.adminRouteRequests.quoteHistory' | translate }}</h3>
+          @if (quoteLoadError()) {
+            <p class="admin-route-requests__error">{{ quoteLoadError() | translate }}</p>
+          } @else if (!quoteHistory().length) {
+            <p>{{ 'pages.adminRouteRequests.quoteHistoryEmpty' | translate }}</p>
+          } @else {
+            <div class="quote-history">
+              @for (quote of quoteHistory(); track quote.id) {
+                <div class="quote-history__item">
+                  <div><strong>ID:</strong> {{ quote.id }}</div>
+                  <div><strong>{{ 'pages.adminRouteRequests.status' | translate }}:</strong> {{ quote.status }}</div>
+                  <div><strong>{{ 'pages.adminRouteRequests.quoteAmount' | translate }}:</strong> {{ quote.totalAmount }} {{ quote.currency }}</div>
+                  <div><strong>{{ 'pages.adminRouteRequests.quoteCreatedAt' | translate }}:</strong> {{ quote.createdAt | date: 'short' }}</div>
+                  <div><strong>{{ 'pages.adminRouteRequests.quoteSentAt' | translate }}:</strong> {{ quote.sentAt ? (quote.sentAt | date: 'short') : '-' }}</div>
+                </div>
+              }
+            </div>
+          }
+
           <h3>{{ 'pages.adminRouteRequests.routePoints' | translate }}</h3>
           <div #requestMap class="request-map"></div>
           @if (selected.route?.points?.length) {
@@ -55,7 +121,6 @@
           } @else {
             <p>{{ 'pages.adminRouteRequests.noRoutePoints' | translate }}</p>
           }
-          <p class="status-history-note">{{ 'pages.adminRouteRequests.statusHistoryPending' | translate }}</p>
         }
       </article>
     </div>
