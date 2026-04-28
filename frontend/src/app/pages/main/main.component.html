@@ -23,5 +23,13 @@
       <span>{{ 'pages.main.freightCalculationHereLink' | translate }}</span>
     </p>
   }
+
+  @if (canSeeAdminRouteRequestsLink()) {
+    <p>
+      <a href="" (click)="$event.preventDefault(); openAdminRouteRequests()">
+        {{ 'pages.main.adminRouteRequestsLink' | translate }}
+      </a>
+    </p>
+  }
 </div>
 
