@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
@@ -36,11 +37,11 @@ public class RoutePoint {
   @Column(name = "address", nullable = false, length = 500)
   private String address;
 
-  @Column(name = "lat", nullable = false)
-  private Double lat;
+  @Column(name = "lat", nullable = false, precision = 10, scale = 7)
+  private BigDecimal lat;
 
-  @Column(name = "lng", nullable = false)
-  private Double lng;
+  @Column(name = "lng", nullable = false, precision = 10, scale = 7)
+  private BigDecimal lng;
 
   @Column(name = "country", length = 8)
   private String country;
@@ -48,8 +49,8 @@ public class RoutePoint {
   @Column(name = "is_border", nullable = false)
   private boolean border;
 
-  @Column(name = "segment_distance_km_to_next")
-  private Double segmentDistanceKmToNext;
+  @Column(name = "segment_distance_km_to_next", precision = 12, scale = 3)
+  private BigDecimal segmentDistanceKmToNext;
 
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -106,19 +107,19 @@ public class RoutePoint {
     this.address = address;
   }
 
-  public Double getLat() {
+  public BigDecimal getLat() {
     return lat;
   }
 
-  public void setLat(Double lat) {
+  public void setLat(BigDecimal lat) {
     this.lat = lat;
   }
 
-  public Double getLng() {
+  public BigDecimal getLng() {
     return lng;
   }
 
-  public void setLng(Double lng) {
+  public void setLng(BigDecimal lng) {
     this.lng = lng;
   }
 
@@ -138,11 +139,11 @@ public class RoutePoint {
     this.border = border;
   }
 
-  public Double getSegmentDistanceKmToNext() {
+  public BigDecimal getSegmentDistanceKmToNext() {
     return segmentDistanceKmToNext;
   }
 
-  public void setSegmentDistanceKmToNext(Double segmentDistanceKmToNext) {
+  public void setSegmentDistanceKmToNext(BigDecimal segmentDistanceKmToNext) {
     this.segmentDistanceKmToNext = segmentDistanceKmToNext;
   }
 

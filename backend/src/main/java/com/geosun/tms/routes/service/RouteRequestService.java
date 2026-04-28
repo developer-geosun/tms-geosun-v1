@@ -130,7 +130,7 @@ public class RouteRequestService {
         route.getRoutingProfile(),
         route.getRoutingMode(),
         route.getRoutePolyline(),
-        route.getDistanceKm(),
+        toDouble(route.getDistanceKm()),
         route.getDurationMin(),
         route.getRouteComment(),
         route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
@@ -150,11 +150,11 @@ public class RouteRequestService {
                             point.getPointOrder(),
                             RoutePointType.valueOf(point.getPointType().name()),
                             point.getAddress(),
-                            point.getLat(),
-                            point.getLng(),
+                            toDouble(point.getLat()),
+                            toDouble(point.getLng()),
                             point.getCountry(),
                             point.isBorder(),
-                            point.getSegmentDistanceKmToNext()))
+                            toDouble(point.getSegmentDistanceKmToNext())))
                 .toList();
 
     return new RouteSnapshotDto(
@@ -163,7 +163,7 @@ public class RouteRequestService {
         route.getRoutingProfile(),
         route.getRoutingMode(),
         route.getRoutePolyline(),
-        route.getDistanceKm(),
+        toDouble(route.getDistanceKm()),
         route.getDurationMin(),
         route.getRouteComment(),
         route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
@@ -193,6 +193,10 @@ public class RouteRequestService {
 
   private static BigDecimal toBigDecimal(Double value) {
     return value == null ? null : BigDecimal.valueOf(value);
+  }
+
+  private static Double toDouble(BigDecimal value) {
+    return value == null ? null : value.doubleValue();
   }
 }
 

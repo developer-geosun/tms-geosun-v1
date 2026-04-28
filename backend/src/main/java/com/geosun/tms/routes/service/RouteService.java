@@ -15,6 +15,7 @@ import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
 import com.geosun.tms.routes.dto.response.RouteSummaryDto;
 import com.geosun.tms.routes.repository.RouteRepository;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -51,7 +52,7 @@ public class RouteService implements RouteContractsFacade {
     route.setRoutingProfile(request.routingProfile());
     route.setRoutingMode(request.routingMode());
     route.setRoutePolyline(request.routePolyline());
-    route.setDistanceKm(request.distanceKm());
+    route.setDistanceKm(toBigDecimal(request.distanceKm()));
     route.setDurationMin(request.durationMin());
     route.setRouteComment(request.routeComment());
     route.setPoints(
@@ -109,11 +110,11 @@ public class RouteService implements RouteContractsFacade {
     point.setPointOrder(request.order());
     point.setPointType(RoutePointKind.valueOf(request.type().name()));
     point.setAddress(request.address());
-    point.setLat(request.lat());
-    point.setLng(request.lng());
+    point.setLat(toBigDecimal(request.lat()));
+    point.setLng(toBigDecimal(request.lng()));
     point.setCountry(request.country());
     point.setBorder(Boolean.TRUE.equals(request.isBorder()));
-    point.setSegmentDistanceKmToNext(request.segmentDistanceKmToNext());
+    point.setSegmentDistanceKmToNext(toBigDecimal(request.segmentDistanceKmToNext()));
     return point;
   }
 
@@ -121,7 +122,7 @@ public class RouteService implements RouteContractsFacade {
     return new RouteSummaryDto(
         route.getId(),
         route.getTitle(),
-        route.getDistanceKm(),
+        toDouble(route.getDistanceKm()),
         route.getDurationMin(),
         route.getPoints() == null ? 0 : route.getPoints().size(),
         route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
@@ -143,7 +144,7 @@ public class RouteService implements RouteContractsFacade {
         route.getRoutingProfile(),
         route.getRoutingMode(),
         route.getRoutePolyline(),
-        route.getDistanceKm(),
+        toDouble(route.getDistanceKm()),
         route.getDurationMin(),
         route.getRouteComment(),
         route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
@@ -157,17 +158,25 @@ public class RouteService implements RouteContractsFacade {
         point.getPointOrder(),
         type,
         point.getAddress(),
-        point.getLat(),
-        point.getLng(),
+        toDouble(point.getLat()),
+        toDouble(point.getLng()),
         point.getCountry(),
         point.isBorder(),
-        point.getSegmentDistanceKmToNext());
+        toDouble(point.getSegmentDistanceKmToNext()));
   }
 
   private static void validatePoints(List<RoutePointRequest> points) {
     if (points == null || points.size() < 2) {
       throw ApiException.badRequest("ROUTE_POINTS_INVALID", "Route must contain at least 2 points");
     }
+  }
+
+  private static BigDecimal toBigDecimal(Double value) {
+    return value == null ? null : BigDecimal.valueOf(value);
+  }
+
+  private static Double toDouble(BigDecimal value) {
+    return value == null ? null : value.doubleValue();
   }
 }
 

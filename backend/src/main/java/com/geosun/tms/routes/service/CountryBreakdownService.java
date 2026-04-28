@@ -9,6 +9,7 @@ import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import com.geosun.tms.routes.repository.RouteCountryDistanceRepository;
 import com.geosun.tms.routes.repository.RouteGeometryCacheRepository;
 import io.micrometer.core.instrument.MeterRegistry;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Instant;
@@ -142,7 +143,7 @@ public class CountryBreakdownService {
       if (point.getSegmentDistanceKmToNext() == null) {
         continue;
       }
-      long distanceMeters = Math.max(0L, Math.round(point.getSegmentDistanceKmToNext() * 1000d));
+      long distanceMeters = Math.max(0L, point.getSegmentDistanceKmToNext().multiply(BigDecimal.valueOf(1000L)).longValue());
       long[] values = grouped.computeIfAbsent(point.getCountry().toUpperCase(), key -> new long[] {0, 0});
       values[0] += distanceMeters;
     }

@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,8 +42,8 @@ public class Route {
   @Column(name = "route_polyline", nullable = false, columnDefinition = "longtext")
   private String routePolyline;
 
-  @Column(name = "distance_km")
-  private Double distanceKm;
+  @Column(name = "distance_km", precision = 12, scale = 3)
+  private BigDecimal distanceKm;
 
   @Column(name = "duration_min")
   private Integer durationMin;
@@ -125,11 +126,11 @@ public class Route {
     this.routePolyline = routePolyline;
   }
 
-  public Double getDistanceKm() {
+  public BigDecimal getDistanceKm() {
     return distanceKm;
   }
 
-  public void setDistanceKm(Double distanceKm) {
+  public void setDistanceKm(BigDecimal distanceKm) {
     this.distanceKm = distanceKm;
   }
 
