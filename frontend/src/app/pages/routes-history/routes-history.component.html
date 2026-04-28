@@ -1,0 +1,28 @@
+<section class="routes-history">
+  <header class="routes-history__header">
+    <h1>{{ 'pages.routesHistory.title' | translate }}</h1>
+    <button type="button" (click)="backToCalculation()">{{ 'pages.routesHistory.backToCalculation' | translate }}</button>
+  </header>
+
+  @if (isLoading()) {
+    <p>{{ 'pages.routesHistory.loading' | translate }}</p>
+  } @else if (loadFailed()) {
+    <p>{{ 'pages.routesHistory.loadFailed' | translate }}</p>
+  } @else if (routes().length === 0) {
+    <p>{{ 'pages.routesHistory.empty' | translate }}</p>
+  } @else {
+    <div class="routes-history__list">
+      @for (route of routes(); track route.id) {
+        <article class="routes-history__item">
+          <div class="routes-history__meta">
+            <h2>{{ route.title }}</h2>
+            <p>{{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}</p>
+            <p>{{ route.updatedAt }}</p>
+          </div>
+          <button type="button" (click)="openRoute(route.id)">{{ 'pages.routesHistory.openRoute' | translate }}</button>
+        </article>
+      }
+    </div>
+  }
+</section>
+

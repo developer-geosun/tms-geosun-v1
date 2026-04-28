@@ -1,4 +1,4 @@
-export type RoutePointType = 'start' | 'stop' | 'finish' | 'border';
+export type RoutePointType = 'START' | 'STOP' | 'FINISH' | 'BORDER';
 
 export interface RoutePointContract {
   order: number;
