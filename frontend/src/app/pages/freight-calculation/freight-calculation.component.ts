@@ -17,6 +17,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
+import { AuthService } from '../../core/services/auth.service';
 import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
 import { FreightRequestApiService } from './freight-request-api.service';
 import { Checkpoint, FreightLang, FreightRequestPayload, Waypoint } from './freight-calculation.models';
@@ -36,6 +37,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly requestApi = inject(FreightRequestApiService);
   private readonly translate = inject(TranslateService);
+  private readonly authService = inject(AuthService);
 
   readonly waypoints = signal<Waypoint[]>([]);
   readonly segmentDistances = signal<number[]>([]);
@@ -237,6 +239,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
       this.showToast('pages.freightCalculation.errors.selectBorderRequired');
       return;
     }
+    this.requestForm.patchValue({ email: this.authService.user()?.email ?? '' });
     this.requestOpen.set(true);
   }
 
@@ -257,7 +260,12 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     this.isSubmitting.set(true);
     try {
       await this.requestApi.send(this.createPayload());
-      this.requestForm.reset({ email: '', phone: '', preferredStartDate: '', routeComment: '' });
+      this.requestForm.reset({
+        email: this.authService.user()?.email ?? '',
+        phone: '',
+        preferredStartDate: '',
+        routeComment: ''
+      });
       this.requestOpen.set(false);
       this.showToast('pages.freightCalculation.success');
     } catch {
