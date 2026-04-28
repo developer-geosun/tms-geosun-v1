@@ -11,6 +11,7 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -21,11 +22,12 @@ import * as L from 'leaflet';
 import {
   CreateRouteRequestContractRequest,
   BackendApiService,
+  RouteRequestContractDto,
   RoutePointContract,
-  RouteRequestsApiService,
   RouteSnapshotContractDto,
   RouteSummaryContractDto
 } from '../../core/api';
+import { RouteRequestsApiService } from '../../core/api/route-requests-api.service';
 import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
 import { Checkpoint, FreightLang, Waypoint } from './freight-calculation.models';
 import { hasPendingBorderCheckpoint } from './freight-calculation.utils';
@@ -38,7 +40,7 @@ import { firstValueFrom } from 'rxjs';
   styleUrls: ['./freight-calculation.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [TranslateModule, ReactiveFormsModule, MatExpansionModule, MatFormFieldModule, MatSelectModule]
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, MatExpansionModule, MatFormFieldModule, MatSelectModule]
 })
 export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapContainer', { static: true }) private readonly mapContainer!: ElementRef<HTMLDivElement>;
@@ -63,6 +65,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   readonly isSavingRoute = signal(false);
   readonly isLoadingSavedRoute = signal(false);
   readonly myRoutes = signal<RouteSummaryContractDto[]>([]);
+  readonly myRouteRequests = signal<RouteRequestContractDto[]>([]);
   readonly toastMessage = signal('');
   readonly dropdownSegmentIndex = signal<number | null>(null);
   /** Порожнє значення другого mat-select після вибору КПП або зміни країни */
@@ -101,6 +104,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.initializeMapWhenContainerReady();
     void this.loadRouteFromQuery();
+    void this.loadMyRouteRequests();
   }
 
   ngOnDestroy(): void {
@@ -313,6 +317,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
         cargoVolumeM3: ''
       });
       this.requestOpen.set(false);
+      await this.loadMyRouteRequests();
       this.showToast('pages.freightCalculation.success');
     } catch {
       this.showToast('pages.freightCalculation.errors.submitFailed');
@@ -713,6 +718,15 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
       this.myRoutes.set(routes);
     } catch {
       this.myRoutes.set([]);
+    }
+  }
+
+  private async loadMyRouteRequests(): Promise<void> {
+    try {
+      const requests = await this.routeRequestsApi.getMyRouteRequests();
+      this.myRouteRequests.set(requests);
+    } catch {
+      this.myRouteRequests.set([]);
     }
   }
 

@@ -125,6 +125,33 @@
         }
       }
     </div>
+
+    <div class="my-requests-panel">
+      <h3>{{ 'pages.freightCalculation.myRequestsTitle' | translate }}</h3>
+      @if (!myRouteRequests().length) {
+        <p class="small-note">{{ 'pages.freightCalculation.myRequestsEmpty' | translate }}</p>
+      } @else {
+        <div class="my-requests-list">
+          @for (request of myRouteRequests(); track request.id) {
+            <div class="my-request-item">
+              <div>
+                <strong>{{ request.status }}</strong>
+                <small>{{ request.createdAt | date: 'short' }}</small>
+              </div>
+              @if (request.currentQuote) {
+                <div class="my-request-quote">
+                  <span>{{ 'pages.freightCalculation.quoteReceived' | translate }}</span>
+                  <strong>{{ request.currentQuote.totalAmount }} {{ request.currentQuote.currency }}</strong>
+                  <small>{{ request.currentQuote.status }}</small>
+                </div>
+              } @else {
+                <small>{{ 'pages.freightCalculation.quotePending' | translate }}</small>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
   </aside>
 
   <div #mapContainer class="map"></div>

@@ -11,15 +11,16 @@ import {
   signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { RouteRequestContractDto, RouteRequestsApiService } from '../../core/api';
+import { CreateQuoteContractRequest, QuoteContractDto, RouteRequestContractDto, RouteRequestsApiService } from '../../core/api';
 import * as L from 'leaflet';
 
 @Component({
   selector: 'app-admin-route-requests',
   standalone: true,
-  imports: [CommonModule, TranslateModule],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule],
   templateUrl: './admin-route-requests.component.html',
   styleUrl: './admin-route-requests.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -27,6 +28,7 @@ import * as L from 'leaflet';
 export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   @ViewChild('requestMap', { static: false }) private readonly requestMapElement?: ElementRef<HTMLDivElement>;
 
+  private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private map: L.Map | null = null;
@@ -37,20 +39,41 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly loadError = signal('');
   readonly requests = signal<RouteRequestContractDto[]>([]);
   readonly selectedRequestId = signal<string | null>(null);
+  readonly quoteHistory = signal<QuoteContractDto[]>([]);
+  readonly quoteLoadError = signal('');
+  readonly isCreatingQuote = signal(false);
+  readonly isSendingQuote = signal(false);
+  readonly quoteActionError = signal('');
+  readonly quoteActionSuccess = signal('');
   readonly selectedRequest = computed(() =>
     this.requests().find((request) => request.id === this.selectedRequestId()) ?? null
   );
+  readonly selectedDraftQuote = computed(
+    () => this.quoteHistory().find((quote) => quote.status === 'draft') ?? null
+  );
+
+  readonly quoteDraftForm = this.formBuilder.nonNullable.group({
+    currency: ['EUR'],
+    totalAmount: [''],
+    transitDaysMin: [''],
+    transitDaysMax: [''],
+    validUntil: [''],
+    publicNote: [''],
+    internalNote: ['']
+  });
 
   constructor() {
     void this.loadRequests();
     effect(() => {
       const request = this.selectedRequest();
       if (!request) {
+        this.quoteHistory.set([]);
         return;
       }
       queueMicrotask(() => {
         this.renderMapForRequest(request);
       });
+      void this.loadQuoteHistory(request.id);
     });
   }
 
@@ -66,6 +89,8 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   async loadRequests(): Promise<void> {
     this.isLoading.set(true);
     this.loadError.set('');
+    this.quoteActionError.set('');
+    this.quoteActionSuccess.set('');
     try {
       const data = await this.routeRequestsApi.getAdminRouteRequests();
       this.requests.set(data);
@@ -81,10 +106,97 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
 
   selectRequest(requestId: string): void {
     this.selectedRequestId.set(requestId);
+    this.quoteActionError.set('');
+    this.quoteActionSuccess.set('');
+  }
+
+  async createDraftQuote(): Promise<void> {
+    const selected = this.selectedRequest();
+    if (!selected) {
+      return;
+    }
+    this.quoteActionError.set('');
+    this.quoteActionSuccess.set('');
+    const payload = this.toCreateQuotePayload();
+    if (!payload) {
+      this.quoteActionError.set('pages.adminRouteRequests.quoteValidationError');
+      return;
+    }
+
+    this.isCreatingQuote.set(true);
+    try {
+      await this.routeRequestsApi.createAdminQuote(selected.id, payload, this.nextIdempotencyKey('create'));
+      await this.loadRequests();
+      this.quoteActionSuccess.set('pages.adminRouteRequests.quoteDraftCreated');
+    } catch {
+      this.quoteActionError.set('pages.adminRouteRequests.quoteCreateFailed');
+    } finally {
+      this.isCreatingQuote.set(false);
+    }
+  }
+
+  async sendSelectedDraft(): Promise<void> {
+    const draft = this.selectedDraftQuote();
+    if (!draft) {
+      return;
+    }
+    this.quoteActionError.set('');
+    this.quoteActionSuccess.set('');
+    this.isSendingQuote.set(true);
+    try {
+      await this.routeRequestsApi.sendAdminQuote(draft.id, this.nextIdempotencyKey('send'));
+      await this.loadRequests();
+      this.quoteActionSuccess.set('pages.adminRouteRequests.quoteSentSuccess');
+    } catch {
+      this.quoteActionError.set('pages.adminRouteRequests.quoteSendFailed');
+    } finally {
+      this.isSendingQuote.set(false);
+    }
   }
 
   async backToMain(): Promise<void> {
     await this.router.navigate(['/main']);
+  }
+
+  private async loadQuoteHistory(requestId: string): Promise<void> {
+    this.quoteLoadError.set('');
+    try {
+      const history = await this.routeRequestsApi.getAdminQuotesHistory(requestId);
+      this.quoteHistory.set(history);
+    } catch {
+      this.quoteHistory.set([]);
+      this.quoteLoadError.set('pages.adminRouteRequests.quoteHistoryLoadFailed');
+    }
+  }
+
+  private toCreateQuotePayload(): CreateQuoteContractRequest | null {
+    const values = this.quoteDraftForm.getRawValue();
+    const totalAmount = Number(values.totalAmount);
+    if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
+      return null;
+    }
+    return {
+      currency: values.currency.trim().toUpperCase() || 'EUR',
+      totalAmount,
+      transitDaysMin: this.parseOptionalNumber(values.transitDaysMin),
+      transitDaysMax: this.parseOptionalNumber(values.transitDaysMax),
+      validUntil: values.validUntil.trim() || null,
+      publicNote: values.publicNote.trim() || null,
+      internalNote: values.internalNote.trim() || null
+    };
+  }
+
+  private parseOptionalNumber(value: string): number | null {
+    const normalized = value.trim();
+    if (!normalized) {
+      return null;
+    }
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private nextIdempotencyKey(prefix: 'create' | 'send'): string {
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
   private initializeMap(): void {
