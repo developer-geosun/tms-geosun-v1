@@ -144,6 +144,127 @@ class RouteRequestApiIntegrationTest {
         .andExpect(jsonPath("$.code").value("FORBIDDEN"));
   }
 
+  @Test
+  void adminCanCreateAndSendQuoteWithIdempotencyAndManagerCanReadHistory() throws Exception {
+    User user = createUser("quote-user@example.com", "Secret123", Role.USER);
+    User admin = createUser("quote-admin@example.com", "Secret123", Role.ADMIN);
+    User manager = createUser("quote-manager@example.com", "Secret123", Role.MANAGER);
+
+    String userAccess = login(user.getEmail(), "Secret123");
+    String adminAccess = login(admin.getEmail(), "Secret123");
+    String managerAccess = login(manager.getEmail(), "Secret123");
+
+    String routeId = createRoute(userAccess, "Quote route");
+    MvcResult requestResult =
+        mockMvc
+            .perform(
+                post("/api/v1/route-requests")
+                    .header("Authorization", bearer(userAccess))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        toJson(
+                            Map.of(
+                                "routeId",
+                                routeId,
+                                "preferredStartDate",
+                                "2026-06-10",
+                                "comment",
+                                "Need quote",
+                                "cargo",
+                                Map.of("type", "steel", "weightKg", 15000.0, "volumeM3", 52.0)))))
+            .andExpect(status().isCreated())
+            .andReturn();
+    String requestId = objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
+
+    String createIdempotencyKey = "create-quote-key-1";
+    MvcResult createDraft =
+        mockMvc
+            .perform(
+                post("/api/v1/admin/route-requests/" + requestId + "/quotes")
+                    .header("Authorization", bearer(adminAccess))
+                    .header("Idempotency-Key", createIdempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        toJson(
+                            Map.of(
+                                "currency", "EUR",
+                                "totalAmount", 3200.50,
+                                "transitDaysMin", 2,
+                                "transitDaysMax", 4,
+                                "validUntil", "2026-06-30",
+                                "publicNote", "Draft offer",
+                                "internalNote", "Internal note"))))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("DRAFT"))
+            .andReturn();
+    String quoteId = objectMapper.readTree(createDraft.getResponse().getContentAsString()).get("id").asText();
+
+    mockMvc
+        .perform(
+            post("/api/v1/admin/route-requests/" + requestId + "/quotes")
+                .header("Authorization", bearer(adminAccess))
+                .header("Idempotency-Key", createIdempotencyKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    toJson(
+                        Map.of(
+                            "currency", "EUR",
+                            "totalAmount", 3200.50,
+                            "transitDaysMin", 2,
+                            "transitDaysMax", 4,
+                            "validUntil", "2026-06-30",
+                            "publicNote", "Draft offer",
+                            "internalNote", "Internal note"))))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.id").value(quoteId));
+
+    String sendIdempotencyKey = "send-quote-key-1";
+    mockMvc
+        .perform(
+            post("/api/v1/admin/quotes/" + quoteId + "/send")
+                .header("Authorization", bearer(adminAccess))
+                .header("Idempotency-Key", sendIdempotencyKey))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(quoteId))
+        .andExpect(jsonPath("$.status").value("SENT"));
+
+    mockMvc
+        .perform(
+            post("/api/v1/admin/quotes/" + quoteId + "/send")
+                .header("Authorization", bearer(adminAccess))
+                .header("Idempotency-Key", sendIdempotencyKey))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(quoteId))
+        .andExpect(jsonPath("$.status").value("SENT"));
+
+    mockMvc
+        .perform(get("/api/v1/admin/route-requests/" + requestId + "/quotes").header("Authorization", bearer(managerAccess)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].id").value(quoteId));
+
+    mockMvc
+        .perform(get("/api/v1/route-requests/my/" + requestId).header("Authorization", bearer(userAccess)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.currentQuote.id").value(quoteId))
+        .andExpect(jsonPath("$.currentQuote.status").value("SENT"));
+
+    mockMvc
+        .perform(
+            post("/api/v1/admin/route-requests/" + requestId + "/quotes")
+                .header("Authorization", bearer(managerAccess))
+                .header("Idempotency-Key", "manager-create-key")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    toJson(
+                        Map.of(
+                            "currency", "EUR",
+                            "totalAmount", 3000.0,
+                            "transitDaysMin", 2,
+                            "transitDaysMax", 3))))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+  }
+
   private String createRoute(String access, String title) throws Exception {
     MvcResult saveResult =
         mockMvc

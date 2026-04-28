@@ -13,6 +13,7 @@ import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import com.geosun.tms.routes.dto.response.RoutePointDto;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
+import com.geosun.tms.routes.dto.response.QuoteDto;
 import com.geosun.tms.routes.repository.RouteRepository;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
 import com.geosun.tms.routes.repository.RouteRequestStatusHistoryRepository;
@@ -30,16 +31,19 @@ public class RouteRequestService {
   private final RouteRequestRepository routeRequestRepository;
   private final RouteRequestStatusHistoryRepository historyRepository;
   private final CountryBreakdownService countryBreakdownService;
+  private final FreightQuoteService freightQuoteService;
 
   public RouteRequestService(
       RouteRepository routeRepository,
       RouteRequestRepository routeRequestRepository,
       RouteRequestStatusHistoryRepository historyRepository,
-      CountryBreakdownService countryBreakdownService) {
+      CountryBreakdownService countryBreakdownService,
+      FreightQuoteService freightQuoteService) {
     this.routeRepository = routeRepository;
     this.routeRequestRepository = routeRequestRepository;
     this.historyRepository = historyRepository;
     this.countryBreakdownService = countryBreakdownService;
+    this.freightQuoteService = freightQuoteService;
   }
 
   @Transactional
@@ -105,6 +109,7 @@ public class RouteRequestService {
     RouteSnapshotDto route =
         includeRoutePoints ? toRouteSnapshot(request.getRoute()) : toRouteSummaryAsSnapshot(request.getRoute());
     List<CountryDistanceDto> countryDistances = countryBreakdownService.getOrCalculate(request.getRoute());
+    QuoteDto currentQuote = freightQuoteService.getCurrentQuoteForRequest(request.getId());
     return new RouteRequestDto(
         request.getId(),
         request.getRoute().getId(),
@@ -115,7 +120,7 @@ public class RouteRequestService {
         request.getUpdatedAt() == null ? null : request.getUpdatedAt().toString(),
         route,
         countryDistances,
-        null);
+        currentQuote);
   }
 
   private RouteSnapshotDto toRouteSummaryAsSnapshot(Route route) {
