@@ -15,9 +15,10 @@
 
 ### 1) Backend
 
-Из папки `backend`:
+Из корня проекта:
 
 ```bash
+cd backend
 mvn spring-boot:run
 ```
 
@@ -27,9 +28,10 @@ mvn spring-boot:run
 
 ### 2) Frontend
 
-Из папки `frontend`:
+Из корня проекта:
 
 ```bash
+cd frontend
 npm install
 npm start
 ```
@@ -40,21 +42,35 @@ Frontend будет доступен по адресу: `http://localhost:4200`.
 
 ## Вариант 2: запуск всего стека через Docker Compose
 
-Из корня проекта:
-
 1. Создайте `.env` на основе шаблона `.env.example`.
-   - Для production-сборки frontend оставьте `FRONTEND_BUILD_CONFIGURATION=production`.
-   - Для dev-сборки frontend в Docker укажите `FRONTEND_BUILD_CONFIGURATION=development` (в этом режиме будут видны dev-значения из `environment.ts`, включая автозаполнение тестового логина).
-   - Для страницы расчета через HERE укажите `HERE_API_KEY=<ваш_ключ_here>`.
-2. Запустите контейнеры:
+
+```bash
+cp .env.example .env
+```
+
+- Для production-сборки frontend оставьте `FRONTEND_BUILD_CONFIGURATION=production`.
+- Для dev-сборки frontend в Docker укажите `FRONTEND_BUILD_CONFIGURATION=development` (в этом режиме будут видны dev-значения из `environment.ts`, включая автозаполнение тестового логина).
+- Для страницы расчета через HERE укажите `HERE_API_KEY=<ваш_ключ_here>`.
+
+2. Запуск контейнеров (из корня проекта):
 
 ```bash
 docker compose up --build
 ```
 
-3. Остановите и удалите контейнеры после работы:
+3. Остановка и удаление контейнеров:
 
 ```bash
+docker compose down
+```
+
+### Быстрые команды (копировать одним блоком)
+
+```bash
+# запуск
+docker compose up --build
+
+# остановка
 docker compose down
 ```
 
