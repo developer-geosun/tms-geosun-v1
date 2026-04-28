@@ -8,6 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -72,6 +74,15 @@ public class GlobalExceptionHandler {
         ApiErrorResponse.of(
             request.getRequestURI(), 409, "Conflict", "CONFLICT", "Email is already registered");
     return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+  }
+
+  @ExceptionHandler({AccessDeniedException.class, AuthorizationDeniedException.class})
+  public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+      RuntimeException ex, HttpServletRequest request) {
+    ApiErrorResponse body =
+        ApiErrorResponse.of(
+            request.getRequestURI(), 403, "Forbidden", "FORBIDDEN", "Access denied");
+    return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
   }
 
   @ExceptionHandler(Exception.class)

@@ -1,0 +1,188 @@
+package com.geosun.tms.routes.service;
+
+import com.geosun.tms.auth.exception.ApiException;
+import com.geosun.tms.routes.domain.Route;
+import com.geosun.tms.routes.domain.RoutePoint;
+import com.geosun.tms.routes.domain.RouteRequest;
+import com.geosun.tms.routes.domain.RouteRequestStatusHistory;
+import com.geosun.tms.routes.dto.RoutePointType;
+import com.geosun.tms.routes.dto.RouteRequestStatus;
+import com.geosun.tms.routes.dto.request.CargoDetailsRequest;
+import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
+import com.geosun.tms.routes.dto.response.RoutePointDto;
+import com.geosun.tms.routes.dto.response.RouteRequestDto;
+import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
+import com.geosun.tms.routes.repository.RouteRepository;
+import com.geosun.tms.routes.repository.RouteRequestRepository;
+import com.geosun.tms.routes.repository.RouteRequestStatusHistoryRepository;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import java.util.Comparator;
+import java.util.List;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class RouteRequestService {
+  private final RouteRepository routeRepository;
+  private final RouteRequestRepository routeRequestRepository;
+  private final RouteRequestStatusHistoryRepository historyRepository;
+
+  public RouteRequestService(
+      RouteRepository routeRepository,
+      RouteRequestRepository routeRequestRepository,
+      RouteRequestStatusHistoryRepository historyRepository) {
+    this.routeRepository = routeRepository;
+    this.routeRequestRepository = routeRequestRepository;
+    this.historyRepository = historyRepository;
+  }
+
+  @Transactional
+  public RouteRequestDto createRouteRequest(String userId, CreateRouteRequestRequest request) {
+    Route route =
+        routeRepository
+            .findByIdAndUserIdAndDeletedFalse(request.routeId(), userId)
+            .orElseThrow(() -> ApiException.notFound("Route not found"));
+
+    RouteRequest routeRequest = new RouteRequest();
+    routeRequest.setUser(route.getUser());
+    routeRequest.setRoute(route);
+    routeRequest.setStatus(RouteRequestStatus.NEW);
+    routeRequest.setComment(request.comment());
+    routeRequest.setPreferredStartDate(parseDateOrNull(request.preferredStartDate()));
+    applyCargo(routeRequest, request.cargo());
+    RouteRequest saved = routeRequestRepository.save(routeRequest);
+
+    RouteRequestStatusHistory history = new RouteRequestStatusHistory();
+    history.setRequest(saved);
+    history.setFromStatus(null);
+    history.setToStatus(RouteRequestStatus.NEW);
+    history.setChangedBy(route.getUser());
+    history.setNote("Created by user");
+    historyRepository.save(history);
+
+    return toDto(saved, true);
+  }
+
+  @Transactional(readOnly = true)
+  public List<RouteRequestDto> getMyRouteRequests(String userId) {
+    return routeRequestRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
+        .map((request) -> toDto(request, false))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public RouteRequestDto getMyRouteRequestById(String userId, String requestId) {
+    RouteRequest request =
+        routeRequestRepository
+            .findByIdAndUserId(requestId, userId)
+            .orElseThrow(() -> ApiException.notFound("Route request not found"));
+    return toDto(request, true);
+  }
+
+  @Transactional(readOnly = true)
+  public List<RouteRequestDto> getAllRequestsForAdmin() {
+    return routeRequestRepository.findAllByOrderByCreatedAtDesc().stream()
+        .map((request) -> toDto(request, false))
+        .toList();
+  }
+
+  @Transactional(readOnly = true)
+  public RouteRequestDto getRequestByIdForAdmin(String requestId) {
+    RouteRequest request =
+        routeRequestRepository
+            .findById(requestId)
+            .orElseThrow(() -> ApiException.notFound("Route request not found"));
+    return toDto(request, true);
+  }
+
+  private RouteRequestDto toDto(RouteRequest request, boolean includeRoutePoints) {
+    RouteSnapshotDto route =
+        includeRoutePoints ? toRouteSnapshot(request.getRoute()) : toRouteSummaryAsSnapshot(request.getRoute());
+    return new RouteRequestDto(
+        request.getId(),
+        request.getRoute().getId(),
+        request.getStatus(),
+        request.getPreferredStartDate() == null ? null : request.getPreferredStartDate().toString(),
+        request.getComment(),
+        request.getCreatedAt() == null ? null : request.getCreatedAt().toString(),
+        request.getUpdatedAt() == null ? null : request.getUpdatedAt().toString(),
+        route,
+        List.of(),
+        null);
+  }
+
+  private RouteSnapshotDto toRouteSummaryAsSnapshot(Route route) {
+    return new RouteSnapshotDto(
+        route.getId(),
+        route.getTitle(),
+        route.getRoutingProfile(),
+        route.getRoutingMode(),
+        route.getRoutePolyline(),
+        route.getDistanceKm(),
+        route.getDurationMin(),
+        route.getRouteComment(),
+        route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
+        route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
+        List.of());
+  }
+
+  private RouteSnapshotDto toRouteSnapshot(Route route) {
+    List<RoutePointDto> points =
+        route.getPoints() == null
+            ? List.of()
+            : route.getPoints().stream()
+                .sorted(Comparator.comparing(RoutePoint::getPointOrder))
+                .map(
+                    point ->
+                        new RoutePointDto(
+                            point.getPointOrder(),
+                            RoutePointType.valueOf(point.getPointType().name()),
+                            point.getAddress(),
+                            point.getLat(),
+                            point.getLng(),
+                            point.getCountry(),
+                            point.isBorder(),
+                            point.getSegmentDistanceKmToNext()))
+                .toList();
+
+    return new RouteSnapshotDto(
+        route.getId(),
+        route.getTitle(),
+        route.getRoutingProfile(),
+        route.getRoutingMode(),
+        route.getRoutePolyline(),
+        route.getDistanceKm(),
+        route.getDurationMin(),
+        route.getRouteComment(),
+        route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
+        route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
+        points);
+  }
+
+  private LocalDate parseDateOrNull(String rawDate) {
+    if (rawDate == null || rawDate.isBlank()) {
+      return null;
+    }
+    try {
+      return LocalDate.parse(rawDate);
+    } catch (DateTimeParseException ex) {
+      throw ApiException.badRequest("VALIDATION_ERROR", "Invalid preferredStartDate format");
+    }
+  }
+
+  private static void applyCargo(RouteRequest routeRequest, CargoDetailsRequest cargo) {
+    if (cargo == null) {
+      return;
+    }
+    routeRequest.setCargoType(cargo.type());
+    routeRequest.setWeightKg(toBigDecimal(cargo.weightKg()));
+    routeRequest.setVolumeM3(toBigDecimal(cargo.volumeM3()));
+  }
+
+  private static BigDecimal toBigDecimal(Double value) {
+    return value == null ? null : BigDecimal.valueOf(value);
+  }
+}
+
