@@ -45,6 +45,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/routes-history/routes-history.component').then((m) => m.RoutesHistoryComponent)
   },
   {
+    path: 'admin/route-requests',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['admin', 'manager'] },
+    loadComponent: () =>
+      import('./pages/admin-route-requests/admin-route-requests.component').then(
+        (m) => m.AdminRouteRequestsComponent
+      )
+  },
+  {
     path: 'freight-calculation-here',
     canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
     data: { roles: ['user'] },

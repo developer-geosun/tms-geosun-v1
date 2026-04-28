@@ -13,7 +13,8 @@
       "managerSection": "Manager section is available",
       "adminSection": "Admin section is available",
       "freightCalculationLink": "Go to freight calculation",
-      "freightCalculationHereLink": "Go to freight calculation (HERE API)"
+      "freightCalculationHereLink": "Go to freight calculation (HERE API)",
+      "adminRouteRequestsLink": "Route requests queue (admin)"
     },
     "login": {
       "title": "Sign in",
@@ -83,10 +84,11 @@
       "selectCheckpoint": "Border checkpoint",
       "notSelected": "Not selected",
       "requestTitle": "Route request",
-      "email": "Contact email *",
-      "phone": "Contact phone *",
       "preferredStartDate": "Preferred start date",
       "routeComment": "Route comment",
+      "cargoType": "Cargo type",
+      "cargoWeightKg": "Weight, kg",
+      "cargoVolumeM3": "Volume, m³",
       "success": "Request sent",
       "routeSaved": "Route saved",
       "routeLoaded": "Route loaded",
@@ -99,8 +101,7 @@
       "errors": {
         "routeRequired": "Add at least two route points",
         "selectBorderRequired": "Choose border checkpoint before sending",
-        "emailRequired": "Enter valid email",
-        "phoneRequired": "Enter valid phone number",
+        "routeMustBeSaved": "Save route first and open it from history before submit",
         "submitFailed": "Request sending failed",
         "routeSaveFailed": "Failed to save route",
         "routeLoadFailed": "Failed to load route"
@@ -120,6 +121,21 @@
       "empty": "No saved routes yet",
       "openRoute": "Open",
       "backToCalculation": "Back to calculation"
+    },
+    "adminRouteRequests": {
+      "title": "Route requests queue",
+      "refresh": "Refresh",
+      "backToMain": "Back to main",
+      "loading": "Loading requests...",
+      "loadFailed": "Failed to load requests",
+      "empty": "No requests yet",
+      "details": "Request details",
+      "status": "Status",
+      "preferredStartDate": "Preferred start date",
+      "comment": "Comment",
+      "routePoints": "Route points",
+      "noRoutePoints": "Route points are not available",
+      "statusHistoryPending": "Status history will be added in the next phase."
     }
   },
   "theme": {

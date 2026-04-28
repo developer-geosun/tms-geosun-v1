@@ -135,20 +135,24 @@
         <h2>{{ 'pages.freightCalculation.requestTitle' | translate }}</h2>
         <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
           <label>
-            {{ 'pages.freightCalculation.email' | translate }}
-            <input formControlName="email" type="email" />
-          </label>
-          <label>
-            {{ 'pages.freightCalculation.phone' | translate }}
-            <input formControlName="phone" type="tel" />
-          </label>
-          <label>
             {{ 'pages.freightCalculation.preferredStartDate' | translate }}
             <input formControlName="preferredStartDate" type="date" />
           </label>
           <label>
             {{ 'pages.freightCalculation.routeComment' | translate }}
             <textarea formControlName="routeComment" rows="3"></textarea>
+          </label>
+          <label>
+            {{ 'pages.freightCalculation.cargoType' | translate }}
+            <input formControlName="cargoType" type="text" />
+          </label>
+          <label>
+            {{ 'pages.freightCalculation.cargoWeightKg' | translate }}
+            <input formControlName="cargoWeightKg" type="number" min="0" step="0.001" />
+          </label>
+          <label>
+            {{ 'pages.freightCalculation.cargoVolumeM3' | translate }}
+            <input formControlName="cargoVolumeM3" type="number" min="0" step="0.001" />
           </label>
           <div class="dialog-actions">
             <button type="button" (click)="closeRequestPage()">{{ 'pages.freightCalculation.back' | translate }}</button>

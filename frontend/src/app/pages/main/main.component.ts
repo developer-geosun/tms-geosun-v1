@@ -22,6 +22,7 @@ export class MainComponent {
   readonly canSeeManagerSection = computed(() => this.authService.hasAnyRole(['admin', 'manager']));
   readonly canSeeAdminSection = computed(() => this.authService.hasAnyRole(['admin']));
   readonly canSeeFreightCalculationLink = computed(() => this.authService.hasAnyRole(['user']));
+  readonly canSeeAdminRouteRequestsLink = computed(() => this.authService.hasAnyRole(['admin', 'manager']));
 
   openFreightCalculation(): void {
     this.router.navigate(['/freight-calculation']);
@@ -29,6 +30,10 @@ export class MainComponent {
 
   openFreightCalculationHere(): void {
     this.router.navigate(['/freight-calculation-here']);
+  }
+
+  openAdminRouteRequests(): void {
+    this.router.navigate(['/admin/route-requests']);
   }
 }
 

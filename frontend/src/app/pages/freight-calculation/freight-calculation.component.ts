@@ -11,20 +11,26 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
-import { RoutesApiService } from '../../core/api/routes-api.service';
-import { RoutePointContract, RouteSnapshotContractDto, RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
-import { AuthService } from '../../core/services/auth.service';
+import {
+  CreateRouteRequestContractRequest,
+  BackendApiService,
+  RoutePointContract,
+  RouteRequestsApiService,
+  RouteSnapshotContractDto,
+  RouteSummaryContractDto
+} from '../../core/api';
 import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
-import { FreightRequestApiService } from './freight-request-api.service';
-import { Checkpoint, FreightLang, FreightRequestPayload, Waypoint } from './freight-calculation.models';
-import { hasPendingBorderCheckpoint, isValidEmail, isValidPhone } from './freight-calculation.utils';
+import { Checkpoint, FreightLang, Waypoint } from './freight-calculation.models';
+import { hasPendingBorderCheckpoint } from './freight-calculation.utils';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-freight-calculation',
@@ -38,10 +44,10 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapContainer', { static: true }) private readonly mapContainer!: ElementRef<HTMLDivElement>;
 
   private readonly formBuilder = inject(FormBuilder);
-  private readonly requestApi = inject(FreightRequestApiService);
-  private readonly routesApi = inject(RoutesApiService);
+  private readonly http = inject(HttpClient);
+  private readonly backendApi = inject(BackendApiService);
+  private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly translate = inject(TranslateService);
-  private readonly authService = inject(AuthService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -63,10 +69,11 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
 
   readonly requestForm = this.formBuilder.nonNullable.group({
-    email: ['', [Validators.required]],
-    phone: ['', [Validators.required]],
     preferredStartDate: [''],
-    routeComment: ['']
+    routeComment: [''],
+    cargoType: [''],
+    cargoWeightKg: [''],
+    cargoVolumeM3: ['']
   });
 
   readonly totalDistanceMeters = computed(() => this.segmentDistances().reduce((sum, distance) => sum + distance, 0));
@@ -187,7 +194,9 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     }
     this.isSavingRoute.set(true);
     try {
-      const snapshot = await this.routesApi.saveRoute(this.createRouteSnapshotRequest());
+      const snapshot = await firstValueFrom(
+        this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, this.createRouteSnapshotRequest())
+      );
       this.showToast('pages.freightCalculation.routeSaved');
       await this.loadMyRoutes();
       await this.router.navigate([], {
@@ -276,7 +285,10 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
       this.showToast('pages.freightCalculation.errors.selectBorderRequired');
       return;
     }
-    this.requestForm.patchValue({ email: this.authService.user()?.email ?? '' });
+    if (!this.getSelectedRouteId()) {
+      this.showToast('pages.freightCalculation.errors.routeMustBeSaved');
+      return;
+    }
     this.requestOpen.set(true);
   }
 
@@ -285,23 +297,20 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   }
 
   async submitRequest(): Promise<void> {
-    const { email, phone } = this.requestForm.getRawValue();
-    if (!isValidEmail(email)) {
-      this.showToast('pages.freightCalculation.errors.emailRequired');
-      return;
-    }
-    if (!isValidPhone(phone)) {
-      this.showToast('pages.freightCalculation.errors.phoneRequired');
+    const routeId = this.getSelectedRouteId();
+    if (!routeId) {
+      this.showToast('pages.freightCalculation.errors.routeMustBeSaved');
       return;
     }
     this.isSubmitting.set(true);
     try {
-      await this.requestApi.send(this.createPayload());
+      await this.routeRequestsApi.createRouteRequest(this.createRouteRequestPayload(routeId));
       this.requestForm.reset({
-        email: this.authService.user()?.email ?? '',
-        phone: '',
         preferredStartDate: '',
-        routeComment: ''
+        routeComment: '',
+        cargoType: '',
+        cargoWeightKg: '',
+        cargoVolumeM3: ''
       });
       this.requestOpen.set(false);
       this.showToast('pages.freightCalculation.success');
@@ -548,39 +557,38 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     return payload.routes[0] ?? null;
   }
 
-  private createPayload(): FreightRequestPayload {
-    const points = this.waypoints();
-    const distances = this.segmentDistances();
-    const lastIndex = points.length - 1;
-    const payloadPoints = points.map((point, index) => ({
-      order: index + 1,
-      type: (index === 0 ? 'start' : index === lastIndex ? 'finish' : point.isBorder ? 'border' : 'stop') as
-        | 'start'
-        | 'stop'
-        | 'finish'
-        | 'border',
-      address: point.address,
-      lat: Number(point.lat.toFixed(6)),
-      lng: Number(point.lng.toFixed(6)),
-      country: point.country ?? '',
-      isBorder: point.isBorder,
-      segmentDistanceKmToNext: index < lastIndex && distances[index] !== undefined ? Number((distances[index] / 1000).toFixed(3)) : null
-    }));
+  private createRouteRequestPayload(routeId: string): CreateRouteRequestContractRequest {
     const values = this.requestForm.getRawValue();
+    const cargoType = values.cargoType.trim();
+    const cargoWeightKg = this.parseOptionalNumber(values.cargoWeightKg);
+    const cargoVolumeM3 = this.parseOptionalNumber(values.cargoVolumeM3);
+    const hasCargo = Boolean(cargoType) || cargoWeightKg !== null || cargoVolumeM3 !== null;
+
     return {
-      clientRequestId: (Date.now().toString(36) + Math.random().toString(36).slice(2, 10)).toUpperCase(),
-      timestamp: new Date().toISOString(),
-      source: 'freight-calculation-web',
-      userAgent: navigator.userAgent,
-      lang: this.lang(),
-      email: values.email,
-      phone: values.phone,
-      preferredStartDate: values.preferredStartDate || '',
-      routeComment: values.routeComment || '',
-      distanceKm: Number((this.totalDistanceMeters() / 1000).toFixed(3)),
-      points: payloadPoints,
-      route: payloadPoints.map((point) => `${point.order}. ${point.address}`).join(' -> ')
+      routeId,
+      preferredStartDate: values.preferredStartDate || null,
+      comment: values.routeComment.trim() || null,
+      cargo: hasCargo
+        ? {
+            type: cargoType || null,
+            weightKg: cargoWeightKg,
+            volumeM3: cargoVolumeM3
+          }
+        : null
     };
+  }
+
+  private parseOptionalNumber(value: string): number | null {
+    const normalized = value.trim();
+    if (!normalized) {
+      return null;
+    }
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private getSelectedRouteId(): string | null {
+    return this.activatedRoute.snapshot.queryParamMap.get('routeId');
   }
 
   private createRouteSnapshotRequest() {
@@ -632,7 +640,9 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
     }
     this.isLoadingSavedRoute.set(true);
     try {
-      const snapshot = await this.routesApi.getMyRouteById(routeId);
+      const snapshot = await firstValueFrom(
+        this.http.get<RouteSnapshotContractDto>(`${this.backendApi.myRoutes}/${encodeURIComponent(routeId)}`)
+      );
       await this.applySavedRoute(snapshot);
       this.showToast('pages.freightCalculation.routeLoaded');
     } catch {
@@ -699,7 +709,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
 
   private async loadMyRoutes(): Promise<void> {
     try {
-      const routes = await this.routesApi.getMyRoutes();
+      const routes = await firstValueFrom(this.http.get<RouteSummaryContractDto[]>(this.backendApi.myRoutes));
       this.myRoutes.set(routes);
     } catch {
       this.myRoutes.set([]);

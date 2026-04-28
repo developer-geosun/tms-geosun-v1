@@ -1,0 +1,63 @@
+<section class="admin-route-requests">
+  <header class="admin-route-requests__header">
+    <h1>{{ 'pages.adminRouteRequests.title' | translate }}</h1>
+    <div class="admin-route-requests__actions">
+      <button type="button" (click)="loadRequests()">{{ 'pages.adminRouteRequests.refresh' | translate }}</button>
+      <button type="button" (click)="backToMain()">{{ 'pages.adminRouteRequests.backToMain' | translate }}</button>
+    </div>
+  </header>
+
+  @if (isLoading()) {
+    <p>{{ 'pages.adminRouteRequests.loading' | translate }}</p>
+  } @else if (loadError()) {
+    <p class="admin-route-requests__error">{{ loadError() | translate }}</p>
+  } @else if (!requests().length) {
+    <p>{{ 'pages.adminRouteRequests.empty' | translate }}</p>
+  } @else {
+    <div class="admin-route-requests__layout">
+      <aside class="admin-route-requests__list">
+        @for (request of requests(); track request.id) {
+          <button
+            type="button"
+            class="request-card"
+            [class.request-card--active]="request.id === selectedRequestId()"
+            (click)="selectRequest(request.id)">
+            <div class="request-card__top">
+              <strong>{{ request.route?.title || request.routeId }}</strong>
+              <span class="request-card__status">{{ request.status }}</span>
+            </div>
+            <small>{{ request.createdAt | date: 'short' }}</small>
+          </button>
+        }
+      </aside>
+
+      <article class="admin-route-requests__details">
+        @if (selectedRequest(); as selected) {
+          <h2>{{ 'pages.adminRouteRequests.details' | translate }}</h2>
+          <p><strong>ID:</strong> {{ selected.id }}</p>
+          <p><strong>{{ 'pages.adminRouteRequests.status' | translate }}:</strong> {{ selected.status }}</p>
+          <p>
+            <strong>{{ 'pages.adminRouteRequests.preferredStartDate' | translate }}:</strong>
+            {{ selected.preferredStartDate || '-' }}
+          </p>
+          <p><strong>{{ 'pages.adminRouteRequests.comment' | translate }}:</strong> {{ selected.comment || '-' }}</p>
+
+          <h3>{{ 'pages.adminRouteRequests.routePoints' | translate }}</h3>
+          <div #requestMap class="request-map"></div>
+          @if (selected.route?.points?.length) {
+            <ol>
+              @for (point of selected.route!.points; track point.order) {
+                <li>
+                  {{ point.order }}. {{ point.address }} ({{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }})
+                </li>
+              }
+            </ol>
+          } @else {
+            <p>{{ 'pages.adminRouteRequests.noRoutePoints' | translate }}</p>
+          }
+          <p class="status-history-note">{{ 'pages.adminRouteRequests.statusHistoryPending' | translate }}</p>
+        }
+      </article>
+    </div>
+  }
+</section>
