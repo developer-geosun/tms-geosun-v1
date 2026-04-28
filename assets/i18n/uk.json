@@ -13,7 +13,8 @@
       "managerSection": "Розділ менеджера доступний",
       "adminSection": "Розділ адміністратора доступний",
       "freightCalculationLink": "Перейти до розрахунку фрахту",
-      "freightCalculationHereLink": "Перейти до розрахунку фрахту (HERE API)"
+      "freightCalculationHereLink": "Перейти до розрахунку фрахту (HERE API)",
+      "adminRouteRequestsLink": "Черга заявок (admin)"
     },
     "login": {
       "title": "Вхід до системи",
@@ -83,10 +84,11 @@
       "selectCheckpoint": "Пункт пропуску",
       "notSelected": "Не обрано",
       "requestTitle": "Запит за маршрутом",
-      "email": "E-mail для зв'язку *",
-      "phone": "Телефон для зв'язку *",
       "preferredStartDate": "Бажана дата початку",
       "routeComment": "Коментар до маршруту",
+      "cargoType": "Тип вантажу",
+      "cargoWeightKg": "Вага, кг",
+      "cargoVolumeM3": "Об'єм, м³",
       "success": "Запит надіслано",
       "routeSaved": "Маршрут збережено",
       "routeLoaded": "Маршрут завантажено",
@@ -99,8 +101,7 @@
       "errors": {
         "routeRequired": "Додайте щонайменше дві точки маршруту",
         "selectBorderRequired": "Оберіть прикордонний пункт перед надсиланням",
-        "emailRequired": "Вкажіть коректний email",
-        "phoneRequired": "Вкажіть коректний номер телефону",
+        "routeMustBeSaved": "Перед надсиланням збережіть маршрут та відкрийте його з історії",
         "submitFailed": "Не вдалося надіслати запит",
         "routeSaveFailed": "Не вдалося зберегти маршрут",
         "routeLoadFailed": "Не вдалося завантажити маршрут"
@@ -120,6 +121,21 @@
       "empty": "Поки немає збережених маршрутів",
       "openRoute": "Відкрити",
       "backToCalculation": "До розрахунку"
+    },
+    "adminRouteRequests": {
+      "title": "Черга заявок",
+      "refresh": "Оновити",
+      "backToMain": "На головну",
+      "loading": "Завантаження заявок...",
+      "loadFailed": "Не вдалося завантажити заявки",
+      "empty": "Заявок поки немає",
+      "details": "Деталі заявки",
+      "status": "Статус",
+      "preferredStartDate": "Бажана дата початку",
+      "comment": "Коментар",
+      "routePoints": "Точки маршруту",
+      "noRoutePoints": "Точки маршруту недоступні",
+      "statusHistoryPending": "Історію статусів буде додано на наступній фазі."
     }
   },
   "theme": {
