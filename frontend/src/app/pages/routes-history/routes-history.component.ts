@@ -26,6 +26,9 @@ export class RoutesHistoryComponent {
   readonly routes = signal<RouteSummaryContractDto[]>([]);
   readonly isLoading = signal(true);
   readonly loadFailed = signal(false);
+  readonly deletingRouteId = signal<string | null>(null);
+  readonly pendingDeleteRouteId = signal<string | null>(null);
+  readonly deleteFailed = signal(false);
 
   constructor() {
     void this.loadRoutes();
@@ -37,6 +40,41 @@ export class RoutesHistoryComponent {
 
   async backToCalculation(): Promise<void> {
     await this.router.navigate(['/freight-calculation']);
+  }
+
+  requestRouteDelete(routeId: string): void {
+    if (this.deletingRouteId()) {
+      return;
+    }
+
+    this.pendingDeleteRouteId.set(routeId);
+  }
+
+  cancelRouteDelete(): void {
+    if (this.deletingRouteId()) {
+      return;
+    }
+
+    this.pendingDeleteRouteId.set(null);
+  }
+
+  async confirmRouteDelete(): Promise<void> {
+    const routeId = this.pendingDeleteRouteId();
+    if (!routeId || this.deletingRouteId()) {
+      return;
+    }
+
+    this.deleteFailed.set(false);
+    this.deletingRouteId.set(routeId);
+    try {
+      await this.routesApi.deleteMyRoute(routeId);
+      this.routes.update((currentRoutes) => currentRoutes.filter((route) => route.id !== routeId));
+      this.pendingDeleteRouteId.set(null);
+    } catch {
+      this.deleteFailed.set(true);
+    } finally {
+      this.deletingRouteId.set(null);
+    }
   }
 
   formatRouteDateTime(isoDateTime: string | null | undefined): string {

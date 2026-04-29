@@ -24,5 +24,9 @@ export class RoutesApiService {
   async getMyRouteById(routeId: string): Promise<RouteSnapshotContractDto> {
     return firstValueFrom(this.http.get<RouteSnapshotContractDto>(`${this.backendApi.myRoutes}/${encodeURIComponent(routeId)}`));
   }
+
+  async deleteMyRoute(routeId: string): Promise<void> {
+    await firstValueFrom(this.http.delete<void>(`${this.backendApi.myRoutes}/${encodeURIComponent(routeId)}`));
+  }
 }
 

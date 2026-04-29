@@ -8,6 +8,8 @@
     <p>{{ 'pages.routesHistory.loading' | translate }}</p>
   } @else if (loadFailed()) {
     <p>{{ 'pages.routesHistory.loadFailed' | translate }}</p>
+  } @else if (deleteFailed()) {
+    <p>{{ 'pages.routesHistory.deleteFailed' | translate }}</p>
   } @else if (routes().length === 0) {
     <p>{{ 'pages.routesHistory.empty' | translate }}</p>
   } @else {
@@ -19,10 +21,42 @@
             <p>{{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}</p>
             <p>{{ formatRouteDateTime(route.updatedAt) }}</p>
           </div>
-          <button type="button" (click)="openRoute(route.id)">{{ 'pages.routesHistory.openRoute' | translate }}</button>
+          <div class="routes-history__actions">
+            <button type="button" (click)="openRoute(route.id)" [disabled]="deletingRouteId() === route.id">
+              {{ 'pages.routesHistory.openRoute' | translate }}
+            </button>
+            <button type="button" class="routes-history__delete" (click)="requestRouteDelete(route.id)" [disabled]="deletingRouteId() !== null">
+              @if (deletingRouteId() === route.id) {
+                {{ 'pages.routesHistory.deleting' | translate }}
+              } @else {
+                {{ 'pages.routesHistory.deleteRoute' | translate }}
+              }
+            </button>
+          </div>
         </article>
       }
     </div>
   }
 </section>
+
+@if (pendingDeleteRouteId()) {
+  <div class="routes-history__modal-backdrop" (click)="cancelRouteDelete()">
+    <div class="routes-history__modal" (click)="$event.stopPropagation()">
+      <h3>{{ 'pages.routesHistory.deleteConfirmTitle' | translate }}</h3>
+      <p>{{ 'pages.routesHistory.deleteConfirmText' | translate }}</p>
+      <div class="routes-history__modal-actions">
+        <button type="button" (click)="cancelRouteDelete()" [disabled]="deletingRouteId() !== null">
+          {{ 'pages.routesHistory.deleteCancel' | translate }}
+        </button>
+        <button type="button" class="routes-history__delete" (click)="confirmRouteDelete()" [disabled]="deletingRouteId() !== null">
+          @if (deletingRouteId() !== null) {
+            {{ 'pages.routesHistory.deleting' | translate }}
+          } @else {
+            {{ 'pages.routesHistory.deleteConfirmAction' | translate }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}
 
