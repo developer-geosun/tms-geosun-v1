@@ -55,12 +55,7 @@ export const routes: Routes = [
   },
   {
     path: 'freight-calculation-here',
-    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
-    data: { roles: ['user'] },
-    loadComponent: () =>
-      import('./pages/freight-calculation-here/freight-calculation-here.component').then(
-        (m) => m.FreightCalculationHereComponent
-      )
+    redirectTo: '/404'
   },
   {
     path: '404',

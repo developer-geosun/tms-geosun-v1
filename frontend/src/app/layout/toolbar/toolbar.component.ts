@@ -67,11 +67,6 @@ export class ToolbarComponent {
       roles: ['user'] as const
     },
     {
-      route: '/freight-calculation-here',
-      labelKey: 'navigation.freightCalculationHere',
-      roles: ['user'] as const
-    },
-    {
       route: '/admin/route-requests',
       labelKey: 'navigation.adminRouteRequests',
       roles: ['admin', 'manager'] as const
