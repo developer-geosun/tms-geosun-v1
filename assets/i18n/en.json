@@ -21,6 +21,7 @@
       "subtitle": "Use email and password to continue",
       "email": "Email",
       "password": "Password",
+      "rememberMe": "Remember me",
       "submit": "Sign in",
       "loading": "Signing in...",
       "success": "Signed in successfully",

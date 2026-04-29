@@ -21,6 +21,7 @@
       "subtitle": "Увійдіть за email та паролем",
       "email": "Email",
       "password": "Пароль",
+      "rememberMe": "Запам'ятати мене",
       "submit": "Увійти",
       "loading": "Вхід...",
       "success": "Успішний вхід",
