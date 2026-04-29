@@ -22,42 +22,54 @@ mat-toolbar {
   flex-shrink: 0;
 }
 
+app-logo {
+  display: inline-flex;
+  transform-origin: center;
+  transition: transform .28s ease;
+}
+
 .logo-hover-icons {
   position: absolute;
-  top: 100%;
-  left: 50%;
+  top: 50%;
+  left: 100%;
   z-index: 20;
-  flex-direction: column;
-  padding: 4px;
+  flex-direction: row;
+  padding: 4px 4px 4px 14px;
   margin: 0;
-  max-height: 0;
+  max-width: 0;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
-  transform: translate(-50%, -10px);
-  transition: max-height .45s cubic-bezier(.2, .8, .2, 1), opacity .35s ease, transform .35s ease;
+  transform: translate(-12px, -50%);
+  transition: max-width .45s cubic-bezier(.2, .8, .2, 1), opacity .35s ease, transform .35s ease;
 }
 
 .logo-hover-icons > * {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateX(-6px);
   transition: opacity .28s ease, transform .28s ease;
 }
 
 .logo-icons-group.is-open .logo-hover-icons,
 .logo-icons-group:hover .logo-hover-icons,
 .logo-icons-group:focus-within .logo-hover-icons {
-  max-height: 260px;
+  max-width: 260px;
   opacity: 1;
   pointer-events: auto;
-  transform: translate(-50%, 0);
+  transform: translate(0, -50%);
 }
 
 .logo-icons-group.is-open .logo-hover-icons > *,
 .logo-icons-group:hover .logo-hover-icons > *,
 .logo-icons-group:focus-within .logo-hover-icons > * {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(0);
+}
+
+.logo-icons-group.is-open app-logo,
+.logo-icons-group:hover app-logo,
+.logo-icons-group:focus-within app-logo {
+  transform: scale(1.06);
 }
 
 app-logo,
