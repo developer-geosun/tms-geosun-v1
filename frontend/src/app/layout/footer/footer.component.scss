@@ -17,6 +17,29 @@
     width: 100%;
     max-width: 1200px;
 
+    .user-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .user-login {
+      opacity: 0.95;
+    }
+
+    .user-role {
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid currentColor;
+      font-size: 11px;
+      letter-spacing: 0.3px;
+    }
+
     .footer-section {
       display: flex;
       flex-wrap: wrap;
@@ -87,6 +110,10 @@ app-social-icon:hover {
 
     .footer-content {
       gap: 15px;
+
+      .user-section {
+        font-size: 14px;
+      }
 
       .footer-section {
         gap: 5px;
