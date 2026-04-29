@@ -122,8 +122,15 @@
       "title": "My saved routes",
       "loading": "Loading routes...",
       "loadFailed": "Failed to load routes",
+      "deleteFailed": "Failed to delete route",
+      "deleteConfirmTitle": "Delete route",
+      "deleteConfirmText": "Are you sure you want to delete this saved route?",
+      "deleteCancel": "Cancel",
+      "deleteConfirmAction": "Delete",
       "empty": "No saved routes yet",
       "openRoute": "Open",
+      "deleteRoute": "Delete",
+      "deleting": "Deleting...",
       "backToCalculation": "Back to calculation"
     },
     "adminRouteRequests": {

@@ -122,8 +122,15 @@
       "title": "Мої збережені маршрути",
       "loading": "Завантаження маршрутів...",
       "loadFailed": "Не вдалося завантажити маршрути",
+      "deleteFailed": "Не вдалося видалити маршрут",
+      "deleteConfirmTitle": "Видалення маршруту",
+      "deleteConfirmText": "Ви впевнені, що хочете видалити збережений маршрут?",
+      "deleteCancel": "Скасувати",
+      "deleteConfirmAction": "Видалити",
       "empty": "Поки немає збережених маршрутів",
       "openRoute": "Відкрити",
+      "deleteRoute": "Видалити",
+      "deleting": "Видалення...",
       "backToCalculation": "До розрахунку"
     },
     "adminRouteRequests": {

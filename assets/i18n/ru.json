@@ -122,8 +122,15 @@
       "title": "Мои сохраненные маршруты",
       "loading": "Загрузка маршрутов...",
       "loadFailed": "Не удалось загрузить маршруты",
+      "deleteFailed": "Не удалось удалить маршрут",
+      "deleteConfirmTitle": "Удаление маршрута",
+      "deleteConfirmText": "Вы уверены, что хотите удалить сохраненный маршрут?",
+      "deleteCancel": "Отмена",
+      "deleteConfirmAction": "Удалить",
       "empty": "Пока нет сохраненных маршрутов",
       "openRoute": "Открыть",
+      "deleteRoute": "Удалить",
+      "deleting": "Удаление...",
       "backToCalculation": "К расчету"
     },
     "adminRouteRequests": {
