@@ -15,6 +15,13 @@ import { RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
 export class RoutesHistoryComponent {
   private readonly routesApi = inject(RoutesApiService);
   private readonly router = inject(Router);
+  private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 
   readonly routes = signal<RouteSummaryContractDto[]>([]);
   readonly isLoading = signal(true);
@@ -30,6 +37,17 @@ export class RoutesHistoryComponent {
 
   async backToCalculation(): Promise<void> {
     await this.router.navigate(['/freight-calculation']);
+  }
+
+  formatRouteDateTime(isoDateTime: string | null | undefined): string {
+    if (!isoDateTime) {
+      return '';
+    }
+    const parsed = new Date(isoDateTime);
+    if (Number.isNaN(parsed.getTime())) {
+      return isoDateTime;
+    }
+    return this.dateTimeFormatter.format(parsed);
   }
 
   private async loadRoutes(): Promise<void> {
