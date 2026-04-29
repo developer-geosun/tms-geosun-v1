@@ -19,4 +19,3 @@ public record RoutePointRequest(
     String country,
     @NotNull Boolean isBorder,
     Double segmentDistanceKmToNext) {}
-

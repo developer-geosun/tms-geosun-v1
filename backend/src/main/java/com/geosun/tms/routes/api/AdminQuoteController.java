@@ -44,7 +44,8 @@ public class AdminQuoteController {
           String idempotencyKey,
       @Valid @RequestBody CreateQuoteRequest request) {
     QuoteDto quote =
-        freightQuoteService.createDraftQuote(requestId, principal.getUserId(), idempotencyKey, request);
+        freightQuoteService.createDraftQuote(
+            requestId, principal.getUserId(), idempotencyKey, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(quote);
   }
 

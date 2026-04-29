@@ -9,4 +9,3 @@ public enum RoutePointType {
   FINISH,
   BORDER
 }
-

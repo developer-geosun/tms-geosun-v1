@@ -17,4 +17,3 @@ public record RouteRequestDto(
     RouteSnapshotDto route,
     List<CountryDistanceDto> countryDistances,
     QuoteDto currentQuote) {}
-

@@ -17,4 +17,3 @@ public record RouteSnapshotDto(
     String createdAt,
     String updatedAt,
     List<RoutePointDto> points) {}
-

@@ -21,4 +21,3 @@ public interface RouteContractsFacade {
 
   List<RouteRequestDto> getMyRouteRequests(String userId);
 }
-

@@ -38,4 +38,3 @@ public class AdminRouteRequestController {
     return routeRequestService.getRequestByIdForAdmin(requestId);
   }
 }
-

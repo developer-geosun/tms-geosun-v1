@@ -42,9 +42,7 @@ public class RouteService implements RouteContractsFacade {
   public RouteSnapshotDto saveRoute(String userId, SaveRouteRequest request) {
     validatePoints(request.points());
     User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> ApiException.notFound("User not found"));
+        userRepository.findById(userId).orElseThrow(() -> ApiException.notFound("User not found"));
 
     Route route = new Route();
     route.setUser(user);
@@ -179,4 +177,3 @@ public class RouteService implements RouteContractsFacade {
     return value == null ? null : value.doubleValue();
   }
 }
-

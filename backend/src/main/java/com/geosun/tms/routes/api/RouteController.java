@@ -36,7 +36,8 @@ public class RouteController {
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @PostMapping
   public ResponseEntity<RouteSnapshotDto> saveRoute(
-      @AuthenticationPrincipal UserPrincipal principal, @Valid @RequestBody SaveRouteRequest request) {
+      @AuthenticationPrincipal UserPrincipal principal,
+      @Valid @RequestBody SaveRouteRequest request) {
     RouteSnapshotDto response = routeService.saveRoute(principal.getUserId(), request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
@@ -65,4 +66,3 @@ public class RouteController {
     return ResponseEntity.noContent().build();
   }
 }
-

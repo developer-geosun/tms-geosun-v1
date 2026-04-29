@@ -17,4 +17,3 @@ public record QuoteDto(
     String publicNote,
     String createdAt,
     String sentAt) {}
-

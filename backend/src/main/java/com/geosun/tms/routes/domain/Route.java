@@ -190,4 +190,3 @@ public class Route {
     this.points = points;
   }
 }
-

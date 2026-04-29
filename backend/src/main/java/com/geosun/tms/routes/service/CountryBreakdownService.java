@@ -101,9 +101,11 @@ public class CountryBreakdownService {
       RouteGeometryCacheEntry newEntry = new RouteGeometryCacheEntry();
       newEntry.setCacheKey(cacheKey);
       newEntry.setResponseJson(raw);
-      newEntry.setExpiresAt(Instant.now().plusSeconds(Math.max(60, hereProperties.cacheTtlSeconds())));
+      newEntry.setExpiresAt(
+          Instant.now().plusSeconds(Math.max(60, hereProperties.cacheTtlSeconds())));
       routeGeometryCacheRepository.save(newEntry);
-      List<HereRoutingClient.CountryBreakdownRow> parsed = hereRoutingClient.parseCountryBreakdown(raw);
+      List<HereRoutingClient.CountryBreakdownRow> parsed =
+          hereRoutingClient.parseCountryBreakdown(raw);
       if (!parsed.isEmpty()) {
         return collapseByCountry(parsed);
       }
@@ -127,7 +129,9 @@ public class CountryBreakdownService {
         .map(
             entry ->
                 new HereRoutingClient.CountryBreakdownRow(
-                    entry.getKey(), entry.getValue()[0], entry.getValue()[1] > 0 ? entry.getValue()[1] : null))
+                    entry.getKey(),
+                    entry.getValue()[0],
+                    entry.getValue()[1] > 0 ? entry.getValue()[1] : null))
         .toList();
   }
 
@@ -143,12 +147,19 @@ public class CountryBreakdownService {
       if (point.getSegmentDistanceKmToNext() == null) {
         continue;
       }
-      long distanceMeters = Math.max(0L, point.getSegmentDistanceKmToNext().multiply(BigDecimal.valueOf(1000L)).longValue());
-      long[] values = grouped.computeIfAbsent(point.getCountry().toUpperCase(), key -> new long[] {0, 0});
+      long distanceMeters =
+          Math.max(
+              0L,
+              point.getSegmentDistanceKmToNext().multiply(BigDecimal.valueOf(1000L)).longValue());
+      long[] values =
+          grouped.computeIfAbsent(point.getCountry().toUpperCase(), key -> new long[] {0, 0});
       values[0] += distanceMeters;
     }
     return grouped.entrySet().stream()
-        .map(entry -> new HereRoutingClient.CountryBreakdownRow(entry.getKey(), entry.getValue()[0], null))
+        .map(
+            entry ->
+                new HereRoutingClient.CountryBreakdownRow(
+                    entry.getKey(), entry.getValue()[0], null))
         .toList();
   }
 

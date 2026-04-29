@@ -45,13 +45,18 @@ class RouteApiIntegrationTest {
     String body = toJson(routePayload("Kyiv -> Warsaw"));
     MvcResult saveResult =
         mockMvc
-            .perform(post("/api/v1/routes").header("Authorization", bearer(access)).contentType(MediaType.APPLICATION_JSON).content(body))
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(body))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.title").value("Kyiv -> Warsaw"))
             .andExpect(jsonPath("$.points.length()").value(2))
             .andReturn();
 
-    String routeId = objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
 
     mockMvc
         .perform(get("/api/v1/routes/my").header("Authorization", bearer(access)))
@@ -81,10 +86,12 @@ class RouteApiIntegrationTest {
                     .content(toJson(routePayload("Private route"))))
             .andExpect(status().isCreated())
             .andReturn();
-    String routeId = objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
 
     mockMvc
-        .perform(get("/api/v1/routes/my/" + routeId).header("Authorization", bearer(intruderAccess)))
+        .perform(
+            get("/api/v1/routes/my/" + routeId).header("Authorization", bearer(intruderAccess)))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.code").value("NOT_FOUND"));
   }
@@ -103,7 +110,8 @@ class RouteApiIntegrationTest {
                     .content(toJson(routePayload("Delete me"))))
             .andExpect(status().isCreated())
             .andReturn();
-    String routeId = objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
 
     mockMvc
         .perform(delete("/api/v1/routes/my/" + routeId).header("Authorization", bearer(access)))
@@ -196,4 +204,3 @@ class RouteApiIntegrationTest {
     return objectMapper.writeValueAsString(value);
   }
 }
-

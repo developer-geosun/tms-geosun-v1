@@ -110,4 +110,3 @@ public class RouteRequestStatusHistory {
     this.note = note;
   }
 }
-

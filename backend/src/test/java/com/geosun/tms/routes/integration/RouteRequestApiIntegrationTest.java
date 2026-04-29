@@ -51,16 +51,21 @@ class RouteRequestApiIntegrationTest {
                     .content(
                         toJson(
                             Map.of(
-                                "routeId", routeId,
-                                "preferredStartDate", "2026-05-12",
-                                "comment", "Need reefer",
-                                "cargo", Map.of("type", "food", "weightKg", 18000.0, "volumeM3", 78.0)))))
+                                "routeId",
+                                routeId,
+                                "preferredStartDate",
+                                "2026-05-12",
+                                "comment",
+                                "Need reefer",
+                                "cargo",
+                                Map.of("type", "food", "weightKg", 18000.0, "volumeM3", 78.0)))))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.routeId").value(routeId))
             .andExpect(jsonPath("$.status").value("NEW"))
             .andReturn();
 
-    String requestId = objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
+    String requestId =
+        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
 
     mockMvc
         .perform(get("/api/v1/route-requests/my").header("Authorization", bearer(access)))
@@ -68,7 +73,8 @@ class RouteRequestApiIntegrationTest {
         .andExpect(jsonPath("$[0].id").value(requestId));
 
     mockMvc
-        .perform(get("/api/v1/route-requests/my/" + requestId).header("Authorization", bearer(access)))
+        .perform(
+            get("/api/v1/route-requests/my/" + requestId).header("Authorization", bearer(access)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(requestId))
         .andExpect(jsonPath("$.route.points.length()").value(2))
@@ -126,7 +132,8 @@ class RouteRequestApiIntegrationTest {
                     .content(toJson(requestPayload)))
             .andExpect(status().isCreated())
             .andReturn();
-    String requestId = objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
+    String requestId =
+        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
 
     mockMvc
         .perform(get("/api/v1/admin/route-requests").header("Authorization", bearer(adminAccess)))
@@ -134,7 +141,9 @@ class RouteRequestApiIntegrationTest {
         .andExpect(jsonPath("$[0].id").value(requestId));
 
     mockMvc
-        .perform(get("/api/v1/admin/route-requests/" + requestId).header("Authorization", bearer(managerAccess)))
+        .perform(
+            get("/api/v1/admin/route-requests/" + requestId)
+                .header("Authorization", bearer(managerAccess)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(requestId));
 
@@ -174,7 +183,8 @@ class RouteRequestApiIntegrationTest {
                                 Map.of("type", "steel", "weightKg", 15000.0, "volumeM3", 52.0)))))
             .andExpect(status().isCreated())
             .andReturn();
-    String requestId = objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
+    String requestId =
+        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
 
     String createIdempotencyKey = "create-quote-key-1";
     MvcResult createDraft =
@@ -197,7 +207,8 @@ class RouteRequestApiIntegrationTest {
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.status").value("DRAFT"))
             .andReturn();
-    String quoteId = objectMapper.readTree(createDraft.getResponse().getContentAsString()).get("id").asText();
+    String quoteId =
+        objectMapper.readTree(createDraft.getResponse().getContentAsString()).get("id").asText();
 
     mockMvc
         .perform(
@@ -238,12 +249,16 @@ class RouteRequestApiIntegrationTest {
         .andExpect(jsonPath("$.status").value("SENT"));
 
     mockMvc
-        .perform(get("/api/v1/admin/route-requests/" + requestId + "/quotes").header("Authorization", bearer(managerAccess)))
+        .perform(
+            get("/api/v1/admin/route-requests/" + requestId + "/quotes")
+                .header("Authorization", bearer(managerAccess)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(quoteId));
 
     mockMvc
-        .perform(get("/api/v1/route-requests/my/" + requestId).header("Authorization", bearer(userAccess)))
+        .perform(
+            get("/api/v1/route-requests/my/" + requestId)
+                .header("Authorization", bearer(userAccess)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.currentQuote.id").value(quoteId))
         .andExpect(jsonPath("$.currentQuote.status").value("SENT"));
@@ -257,10 +272,14 @@ class RouteRequestApiIntegrationTest {
                 .content(
                     toJson(
                         Map.of(
-                            "currency", "EUR",
-                            "totalAmount", 3000.0,
-                            "transitDaysMin", 2,
-                            "transitDaysMax", 3))))
+                            "currency",
+                            "EUR",
+                            "totalAmount",
+                            3000.0,
+                            "transitDaysMin",
+                            2,
+                            "transitDaysMax",
+                            3))))
         .andExpect(status().isForbidden())
         .andExpect(jsonPath("$.code").value("FORBIDDEN"));
   }
@@ -352,4 +371,3 @@ class RouteRequestApiIntegrationTest {
     return objectMapper.writeValueAsString(value);
   }
 }
-

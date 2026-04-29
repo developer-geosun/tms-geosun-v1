@@ -10,10 +10,10 @@ import com.geosun.tms.routes.dto.RouteRequestStatus;
 import com.geosun.tms.routes.dto.request.CargoDetailsRequest;
 import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
+import com.geosun.tms.routes.dto.response.QuoteDto;
 import com.geosun.tms.routes.dto.response.RoutePointDto;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
-import com.geosun.tms.routes.dto.response.QuoteDto;
 import com.geosun.tms.routes.repository.RouteRepository;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
 import com.geosun.tms.routes.repository.RouteRequestStatusHistoryRepository;
@@ -107,8 +107,11 @@ public class RouteRequestService {
 
   private RouteRequestDto toDto(RouteRequest request, boolean includeRoutePoints) {
     RouteSnapshotDto route =
-        includeRoutePoints ? toRouteSnapshot(request.getRoute()) : toRouteSummaryAsSnapshot(request.getRoute());
-    List<CountryDistanceDto> countryDistances = countryBreakdownService.getOrCalculate(request.getRoute());
+        includeRoutePoints
+            ? toRouteSnapshot(request.getRoute())
+            : toRouteSummaryAsSnapshot(request.getRoute());
+    List<CountryDistanceDto> countryDistances =
+        countryBreakdownService.getOrCalculate(request.getRoute());
     QuoteDto currentQuote = freightQuoteService.getCurrentQuoteForRequest(request.getId());
     return new RouteRequestDto(
         request.getId(),
@@ -199,4 +202,3 @@ public class RouteRequestService {
     return value == null ? null : value.doubleValue();
   }
 }
-

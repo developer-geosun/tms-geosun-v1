@@ -18,4 +18,3 @@ public record SaveRouteRequest(
     String routeComment,
     @NotEmpty List<@Valid RoutePointRequest> points,
     @Valid HereRouteMetaRequest hereRouteMeta) {}
-

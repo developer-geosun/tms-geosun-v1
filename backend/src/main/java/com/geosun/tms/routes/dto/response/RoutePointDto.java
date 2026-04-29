@@ -14,4 +14,3 @@ public record RoutePointDto(
     String country,
     Boolean isBorder,
     Double segmentDistanceKmToNext) {}
-

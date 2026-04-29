@@ -58,7 +58,9 @@ public class FreightQuoteService {
     }
 
     User adminUser =
-        userRepository.findById(adminUserId).orElseThrow(() -> ApiException.notFound("User not found"));
+        userRepository
+            .findById(adminUserId)
+            .orElseThrow(() -> ApiException.notFound("User not found"));
     RouteRequest routeRequest =
         routeRequestRepository
             .findById(requestId)
@@ -79,7 +81,11 @@ public class FreightQuoteService {
 
     if (routeRequest.getStatus() == RouteRequestStatus.NEW) {
       appendRequestStatusHistory(
-          routeRequest, routeRequest.getStatus(), RouteRequestStatus.IN_REVIEW, adminUser, "Draft created");
+          routeRequest,
+          routeRequest.getStatus(),
+          RouteRequestStatus.IN_REVIEW,
+          adminUser,
+          "Draft created");
       routeRequest.setStatus(RouteRequestStatus.IN_REVIEW);
     }
 
@@ -96,9 +102,13 @@ public class FreightQuoteService {
     }
 
     User adminUser =
-        userRepository.findById(adminUserId).orElseThrow(() -> ApiException.notFound("User not found"));
+        userRepository
+            .findById(adminUserId)
+            .orElseThrow(() -> ApiException.notFound("User not found"));
     FreightQuote quote =
-        freightQuoteRepository.findById(quoteId).orElseThrow(() -> ApiException.notFound("Quote not found"));
+        freightQuoteRepository
+            .findById(quoteId)
+            .orElseThrow(() -> ApiException.notFound("Quote not found"));
     if (quote.getStatus() == QuoteStatus.SENT) {
       persistIdempotency(OP_SEND, key, adminUser, quote.getRequest(), quote);
       return toDto(quote);
@@ -108,7 +118,8 @@ public class FreightQuoteService {
     }
 
     List<FreightQuote> sentQuotes =
-        freightQuoteRepository.findByRequestIdAndStatus(quote.getRequest().getId(), QuoteStatus.SENT);
+        freightQuoteRepository.findByRequestIdAndStatus(
+            quote.getRequest().getId(), QuoteStatus.SENT);
     for (FreightQuote sent : sentQuotes) {
       sent.setStatus(QuoteStatus.SUPERSEDED);
     }
@@ -120,7 +131,8 @@ public class FreightQuoteService {
     RouteRequest routeRequest = quote.getRequest();
     RouteRequestStatus fromStatus = routeRequest.getStatus();
     routeRequest.setStatus(RouteRequestStatus.QUOTED);
-    appendRequestStatusHistory(routeRequest, fromStatus, RouteRequestStatus.QUOTED, adminUser, "Quote sent");
+    appendRequestStatusHistory(
+        routeRequest, fromStatus, RouteRequestStatus.QUOTED, adminUser, "Quote sent");
 
     persistIdempotency(OP_SEND, key, adminUser, routeRequest, quote);
     return toDto(quote);
@@ -183,7 +195,8 @@ public class FreightQuoteService {
 
   private static String requireIdempotencyKey(String idempotencyKey) {
     if (!StringUtils.hasText(idempotencyKey)) {
-      throw ApiException.badRequest("IDEMPOTENCY_KEY_REQUIRED", "Idempotency-Key header is required");
+      throw ApiException.badRequest(
+          "IDEMPOTENCY_KEY_REQUIRED", "Idempotency-Key header is required");
     }
     return idempotencyKey.trim();
   }

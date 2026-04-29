@@ -13,4 +13,3 @@ public final class RoutesApiPaths {
 
   private RoutesApiPaths() {}
 }
-

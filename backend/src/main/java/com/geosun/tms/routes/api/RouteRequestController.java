@@ -36,14 +36,16 @@ public class RouteRequestController {
   public ResponseEntity<RouteRequestDto> createRouteRequest(
       @AuthenticationPrincipal UserPrincipal principal,
       @Valid @RequestBody CreateRouteRequestRequest request) {
-    RouteRequestDto response = routeRequestService.createRouteRequest(principal.getUserId(), request);
+    RouteRequestDto response =
+        routeRequestService.createRouteRequest(principal.getUserId(), request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @Operation(summary = "List my route requests")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping("/my")
-  public List<RouteRequestDto> getMyRouteRequests(@AuthenticationPrincipal UserPrincipal principal) {
+  public List<RouteRequestDto> getMyRouteRequests(
+      @AuthenticationPrincipal UserPrincipal principal) {
     return routeRequestService.getMyRouteRequests(principal.getUserId());
   }
 
@@ -55,4 +57,3 @@ public class RouteRequestController {
     return routeRequestService.getMyRouteRequestById(principal.getUserId(), requestId);
   }
 }
-

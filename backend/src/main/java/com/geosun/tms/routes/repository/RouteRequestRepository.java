@@ -19,4 +19,3 @@ public interface RouteRequestRepository extends JpaRepository<RouteRequest, Stri
   @EntityGraph(attributePaths = {"route", "route.points"})
   Optional<RouteRequest> findById(String id);
 }
-

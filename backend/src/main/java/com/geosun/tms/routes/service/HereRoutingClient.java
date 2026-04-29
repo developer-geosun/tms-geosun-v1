@@ -24,7 +24,9 @@ public class HereRoutingClient {
   private final RestTemplate restTemplate;
 
   public HereRoutingClient(
-      HereProperties properties, ObjectMapper objectMapper, RestTemplateBuilder restTemplateBuilder) {
+      HereProperties properties,
+      ObjectMapper objectMapper,
+      RestTemplateBuilder restTemplateBuilder) {
     this.properties = properties;
     this.objectMapper = objectMapper;
     this.restTemplate =
@@ -92,7 +94,9 @@ public class HereRoutingClient {
           }
           long length = span.path("length").asLong(0);
           long duration = span.path("duration").asLong(0);
-          rows.add(new CountryBreakdownRow(countryCode.toUpperCase(), length, duration > 0 ? duration : null));
+          rows.add(
+              new CountryBreakdownRow(
+                  countryCode.toUpperCase(), length, duration > 0 ? duration : null));
         }
       }
       return rows;
@@ -102,12 +106,15 @@ public class HereRoutingClient {
   }
 
   private static List<RoutePoint> sortedPoints(Route route) {
-    return route.getPoints().stream().sorted(Comparator.comparing(RoutePoint::getPointOrder)).toList();
+    return route.getPoints().stream()
+        .sorted(Comparator.comparing(RoutePoint::getPointOrder))
+        .toList();
   }
 
   private static String latLng(RoutePoint point) {
     return point.getLat() + "," + point.getLng();
   }
 
-  public record CountryBreakdownRow(String countryCode, long distanceMeters, Long durationSeconds) {}
+  public record CountryBreakdownRow(
+      String countryCode, long distanceMeters, Long durationSeconds) {}
 }

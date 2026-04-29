@@ -155,4 +155,3 @@ public class RoutePoint {
     return updatedAt;
   }
 }
-

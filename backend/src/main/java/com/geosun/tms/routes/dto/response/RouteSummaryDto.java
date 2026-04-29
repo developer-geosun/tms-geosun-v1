@@ -11,4 +11,3 @@ public record RouteSummaryDto(
     Integer pointsCount,
     String updatedAt,
     String lastOpenedAt) {}
-
