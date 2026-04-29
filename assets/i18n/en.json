@@ -185,6 +185,13 @@
     "languageSection": "Language",
     "themeSection": "Theme"
   },
+  "navigation": {
+    "main": "Main",
+    "freightCalculation": "Freight",
+    "routesHistory": "Route history",
+    "freightCalculationHere": "HERE freight",
+    "adminRouteRequests": "Requests queue"
+  },
   "auth": {
     "register": "Sign up",
     "login": "Sign in",

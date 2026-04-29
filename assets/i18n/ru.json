@@ -185,6 +185,13 @@
     "languageSection": "Язык",
     "themeSection": "Тема"
   },
+  "navigation": {
+    "main": "Главная",
+    "freightCalculation": "Расчет фрахта",
+    "routesHistory": "История маршрутов",
+    "freightCalculationHere": "Расчет HERE",
+    "adminRouteRequests": "Очередь заявок"
+  },
   "auth": {
     "register": "Регистрация",
     "login": "Войти",
