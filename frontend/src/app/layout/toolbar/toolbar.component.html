@@ -22,6 +22,33 @@
   <div class="toolbar-end">
     <span class="spacer"></span>
 
+    @if (isAuthenticated()) {
+      <nav class="toolbar-nav" aria-label="Навигация по разделам">
+        @for (item of navigationItems; track item.route) {
+          @if (canAccess(item.roles)) {
+            <button
+              mat-stroked-button
+              type="button"
+              class="nav-button"
+              [class.nav-button--active]="isRouteActive(item.route)"
+              (click)="navigateTo(item.route)">
+              {{ item.labelKey | translate }}
+            </button>
+          }
+        }
+      </nav>
+
+      <button
+        mat-mini-fab
+        type="button"
+        class="nav-menu-button"
+        [matMenuTriggerFor]="navigationMenu"
+        [attr.aria-label]="'Навигационное меню'"
+        title="Навигация">
+        <mat-icon fontIcon="menu" aria-hidden="true"></mat-icon>
+      </button>
+    }
+
     <div class="toolbar-actions">
       <div class="auth-actions">
         @if (!isAuthenticated()) {
@@ -59,6 +86,16 @@
     </div>
   </div>
 </mat-toolbar>
+
+<mat-menu #navigationMenu="matMenu" class="navigation-menu" panelClass="navigation-menu-panel">
+  @for (item of navigationItems; track item.route) {
+    @if (canAccess(item.roles)) {
+      <button mat-menu-item type="button" (click)="navigateTo(item.route)">
+        <span>{{ item.labelKey | translate }}</span>
+      </button>
+    }
+  }
+</mat-menu>
 
 <mat-menu #settingsMenu="matMenu" class="settings-menu" panelClass="settings-menu-panel">
   <div class="settings-menu-content" (click)="$event.stopPropagation()">

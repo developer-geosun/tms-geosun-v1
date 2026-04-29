@@ -13,6 +13,7 @@ import { LanguageService, Language } from '../../core/services/language.service'
 import { AuthService } from '../../core/services/auth.service';
 import { LogoComponent } from '../../shared/components/logo/logo.component';
 import { SocialIconComponent } from '../../shared/components/social-icon/social-icon.component';
+import { UserRole } from '../../shared/models';
 
 /**
  * Компонент панелі інструментів (toolbar)
@@ -49,6 +50,33 @@ export class ToolbarComponent {
   readonly currentTheme = this.themeService.theme;
   readonly isLogoIconsOpen = signal(false);
   readonly isAuthenticated = this.authService.isAuthenticated;
+  readonly navigationItems = [
+    {
+      route: '/main',
+      labelKey: 'navigation.main',
+      roles: ['admin', 'manager', 'employee', 'user'] as const
+    },
+    {
+      route: '/freight-calculation',
+      labelKey: 'navigation.freightCalculation',
+      roles: ['user'] as const
+    },
+    {
+      route: '/routes-history',
+      labelKey: 'navigation.routesHistory',
+      roles: ['user'] as const
+    },
+    {
+      route: '/freight-calculation-here',
+      labelKey: 'navigation.freightCalculationHere',
+      roles: ['user'] as const
+    },
+    {
+      route: '/admin/route-requests',
+      labelKey: 'navigation.adminRouteRequests',
+      roles: ['admin', 'manager'] as const
+    }
+  ];
   
   // Доступні мови
   languages: { code: Language; label: string }[] = [
@@ -82,6 +110,18 @@ export class ToolbarComponent {
 
   navigateToLogin(): void {
     this.router.navigate(['/login']);
+  }
+
+  navigateTo(route: string): void {
+    this.router.navigate([route]);
+  }
+
+  isRouteActive(route: string): boolean {
+    return this.router.url === route || this.router.url.startsWith(`${route}/`);
+  }
+
+  canAccess(allowedRoles: readonly UserRole[]): boolean {
+    return this.authService.hasAnyRole(allowedRoles);
   }
 
   logout(): void {

@@ -91,6 +91,39 @@ app-social-icon {
   min-width: 8px;
 }
 
+.toolbar-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 8px;
+  overflow: hidden;
+}
+
+.nav-menu-button {
+  display: none;
+  flex-shrink: 0;
+  margin-right: 8px;
+  --mdc-fab-container-shape: 20px;
+  --mdc-fab-small-container-color: var(--mat-sys-secondary-container);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-secondary-container);
+}
+
+.nav-button {
+  flex-shrink: 0;
+  min-height: 32px;
+  border-radius: 16px !important;
+  line-height: 1;
+}
+
+.nav-button--active {
+  background: rgba(255, 255, 255, .14);
+  border-color: rgba(255, 255, 255, .5);
+}
+
+.navigation-menu-panel .mat-mdc-menu-content {
+  padding: 4px 0 !important;
+}
+
 // Група кнопок авторизації та налаштувань — без переносу та стиснення
 .toolbar-actions {
   display: flex;
@@ -318,6 +351,16 @@ a.company-site-button:active {
 
   .toolbar-actions {
     gap: 8px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .toolbar-nav {
+    display: none;
+  }
+
+  .nav-menu-button {
+    display: inline-flex;
   }
 }
 
