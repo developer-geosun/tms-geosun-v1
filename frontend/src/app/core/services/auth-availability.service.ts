@@ -18,7 +18,7 @@ export class AuthAvailabilityService {
   }
 
   checkOnStartup(): Observable<void> {
-    return this.http.get<unknown>(this.toApiUrl('/auth/me')).pipe(
+    return this.checkHealthEndpoint_().pipe(
       timeout(AUTH_AVAILABILITY_TIMEOUT_MS),
       map(() => true),
       catchError((error: unknown) => of(this.mapAvailabilityFromError_(error))),
@@ -27,10 +27,22 @@ export class AuthAvailabilityService {
     );
   }
 
-  private toApiUrl(path: string): string {
+  private toBaseUrl(path: string): string {
     const baseUrl = this.configService.environment.apiUrl;
     const sanitizedBase = baseUrl.replace(/\/+$/, '');
-    return `${sanitizedBase}/api/v1${path}`;
+    return `${sanitizedBase}${path}`;
+  }
+
+  private checkHealthEndpoint_(): Observable<unknown> {
+    return this.http.get<unknown>(this.toBaseUrl('/actuator/health/readiness')).pipe(
+      catchError((error: unknown) => {
+        // Для сумісності з середовищами, де readiness endpoint вимкнений.
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          return this.http.get<unknown>(this.toBaseUrl('/actuator/health'));
+        }
+        throw error;
+      })
+    );
   }
 
   private mapAvailabilityFromError_(error: unknown): boolean {
@@ -43,12 +55,13 @@ export class AuthAvailabilityService {
       return false;
     }
 
-    // 401/403 на /auth/me означають, що auth-сервер відповідає (немає сесії/прав)
-    if (error.status === 401 || error.status === 403) {
+    // Для health endpoint будь-який HTTP-статус (навіть 4xx/5xx) означає,
+    // що бекенд досяжний, просто його стан не "UP".
+    if (error.status > 0) {
       return true;
     }
 
-    // Інші статуси (включно з 5xx від proxy) трактуємо як недоступність auth-сервера
+    // Інші випадки трактуємо як недоступність auth-сервера
     return false;
   }
 }
