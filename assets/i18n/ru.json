@@ -21,7 +21,6 @@
       "subtitle": "Войдите по email и паролю",
       "email": "Email",
       "password": "Пароль",
-      "rememberMe": "Запомнить меня",
       "submit": "Войти",
       "loading": "Вход...",
       "success": "Успешный вход",
