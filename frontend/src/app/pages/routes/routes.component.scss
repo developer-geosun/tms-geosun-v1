@@ -79,12 +79,9 @@
 }
 
 .route-card__open-action {
-  background: #1d4ed8 !important;
-  color: #fff !important;
-}
-
-.route-card__open-action:hover {
-  background: #1e40af !important;
+  --mdc-fab-small-container-color: var(--mat-sys-primary);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-primary);
+  color: var(--mat-sys-on-primary) !important;
 }
 
 .route-card__meta {
@@ -96,7 +93,10 @@
 
 .route-card__meta--secondary {
   margin-top: 0;
-  color: #1d4ed8;
+  color: var(--mat-sys-on-primary-container);
+  background: var(--mat-sys-primary-container);
+  border-radius: 0.625rem;
+  padding: 0.1875rem 0.5rem;
   font-weight: 600;
   text-align: right;
   white-space: nowrap;
