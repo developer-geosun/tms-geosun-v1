@@ -1,6 +1,7 @@
 .app-footer {
-  background-color: var(--mat-toolbar-container-background-color, #3f51b5);
-  color: var(--mat-toolbar-container-text-color, #fff);
+  background-color: var(--mat-sys-surface-container, #f3f3f3);
+  color: var(--mat-sys-on-surface, #1a1a1a);
+  border-top: 1px solid var(--mat-sys-outline-variant, #c7c7c7);
   min-height: 80px;
   padding: 16px 12px;
   margin-top: auto;
@@ -62,42 +63,17 @@
   }
 }
 
-// Стилі для світлих кольорових тем
-:host-context(.theme-rose-red),
-:host-context(.theme-azure-blue) {
-  .app-footer {
-    background-color: #e0e0e0;
-    color: #424242;
-    --social-hover-color: #ffffff;
-  }
-
-  app-social-icon {
-    --background-color: #ffffff;
-    color: #424242;
-  }
-}
-
-// Стилі для темних кольорових тем
-:host-context(.theme-magenta-violet),
-:host-context(.theme-cyan-orange) {
-  .app-footer {
-    background-color: #1f1f1f;
-    color: #f1f1f1;
-    --social-hover-color: #121212;
-  }
-
-  app-social-icon {
-    --background-color: #2b2b2b;
-    color: #f1f1f1;
-  }
+app-social-icon {
+  --background-color: var(--mat-sys-surface, #ffffff);
+  color: var(--mat-sys-on-surface, #1a1a1a);
 }
 
 app-social-icon:hover {
   ::ng-deep {
-    color: var(--social-hover-color, #ffffff) !important;
+    color: var(--mat-sys-primary, #6750a4) !important;
 
     svg {
-      fill: var(--social-hover-color, #ffffff) !important;
+      fill: var(--mat-sys-primary, #6750a4) !important;
     }
   }
 }

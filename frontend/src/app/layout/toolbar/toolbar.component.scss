@@ -1,4 +1,8 @@
 mat-toolbar {
+  --mat-toolbar-container-background-color: var(--mat-sys-primary-container);
+  --mat-toolbar-container-text-color: var(--mat-sys-on-primary-container);
+  background-color: var(--mat-sys-primary-container) !important;
+  color: var(--mat-sys-on-primary-container) !important;
   padding: .5rem !important;
   display: flex;
   align-items: center;
