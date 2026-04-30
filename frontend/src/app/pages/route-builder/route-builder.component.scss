@@ -334,8 +334,7 @@
   -webkit-overflow-scrolling: touch;
   padding-right: 4px;
 }
-.points-list:empty::before {
-  content: 'Додайте точки на мапі або через пошук';
+.points-list-empty {
   display: block;
   padding: 12px;
   color: var(--mat-sys-on-surface-variant);

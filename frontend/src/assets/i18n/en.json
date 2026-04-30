@@ -91,6 +91,7 @@
       "cargoVolumeM3": "Volume, m³",
       "myRequestsTitle": "My requests",
       "myRequestsEmpty": "No requests yet",
+      "pointsListEmpty": "Add points on the map or by using search",
       "quoteReceived": "Quote received",
       "quotePending": "Quote is pending",
       "success": "Request sent",

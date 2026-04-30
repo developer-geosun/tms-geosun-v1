@@ -91,6 +91,7 @@
       "cargoVolumeM3": "Об'єм, м³",
       "myRequestsTitle": "Мої заявки",
       "myRequestsEmpty": "Заявок поки немає",
+      "pointsListEmpty": "Додайте точки на мапі або через пошук",
       "quoteReceived": "Отримано пропозицію",
       "quotePending": "Пропозиція очікується",
       "success": "Запит надіслано",
