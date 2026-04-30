@@ -2,30 +2,52 @@
   <aside class="sidebar">
     <div class="sidebar-actions">
       <div class="sidebar-actions__head">
-        <h1 class="sidebar-actions__title">{{ 'pages.freightCalculation.title' | translate }}</h1>
-        <div class="sidebar-actions__distance">
-          {{ (totalDistanceMeters() / 1000).toFixed(1) }} {{ 'pages.freightCalculation.km' | translate }}
+        <h1 class="sidebar-actions__title">{{ 'navigation.routeBuilder' | translate }}</h1>
+        <div class="sidebar-actions__distance-chip">
+          <span class="sidebar-actions__distance-value">{{ (totalDistanceMeters() / 1000).toFixed(1) }}</span>
+          <span>{{ 'pages.freightCalculation.km' | translate }}</span>
         </div>
       </div>
       <div class="sidebar-actions__buttons">
-        <button type="button" (click)="clearAllPoints()">{{ 'pages.freightCalculation.clear' | translate }}</button>
-        <button type="button" (click)="saveCurrentRoute()" [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()">
+        <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="clearAllPoints()">
+          {{ 'pages.freightCalculation.clear' | translate }}
+        </button>
+        <button
+          class="sidebar-login-button"
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="saveCurrentRoute()"
+          [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
+        >
           {{ 'pages.freightCalculation.saveRoute' | translate }}
         </button>
-        <button type="button" (click)="goToRoutesHistory()">{{ 'pages.freightCalculation.myRoutes' | translate }}</button>
-        <button type="button" (click)="openRequestPage()" [disabled]="!hasRoute()">
+        <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="goToRoutesHistory()">
+          {{ 'pages.freightCalculation.myRoutes' | translate }}
+        </button>
+        <button
+          class="sidebar-login-button"
+          mat-raised-button
+          color="primary"
+          type="button"
+          (click)="openRequestPage()"
+          [disabled]="!hasRoute()"
+        >
           {{ 'pages.freightCalculation.openRequest' | translate }}
         </button>
       </div>
 
       <div class="search-box">
-        <input
-          #searchInput
-          type="text"
-          [placeholder]="'pages.freightCalculation.searchPlaceholder' | translate"
-          (input)="onSearchChange(searchInput.value)"
-          (keydown)="onSearchKeydown($event, searchInput)"
-        />
+        <mat-form-field class="search-field" appearance="outline" subscriptSizing="dynamic">
+          <input
+            #searchInput
+            matInput
+            type="text"
+            [placeholder]="'pages.freightCalculation.searchPlaceholder' | translate"
+            (input)="onSearchChange(searchInput.value)"
+            (keydown)="onSearchKeydown($event, searchInput)"
+          />
+        </mat-form-field>
         @if (isSearching()) {
           <span class="small-note">{{ 'pages.freightCalculation.searching' | translate }}</span>
         }
@@ -62,7 +84,14 @@
             <small>{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</small>
           </div>
           <div class="point-actions">
-            <button type="button" (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)">✕</button>
+            <button
+              mat-icon-button
+              type="button"
+              (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)"
+              [attr.aria-label]="'pages.freightCalculation.clear' | translate"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
           </div>
         </div>
 
