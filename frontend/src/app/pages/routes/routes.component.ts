@@ -49,7 +49,11 @@ export class RoutesComponent {
   }
 
   async openRoute(routeId: string): Promise<void> {
-    await this.router.navigate(['/route-builder'], { queryParams: { routeId } });
+    await this.router.navigate(['/route-builder'], { queryParams: { routeId, mode: 'view' } });
+  }
+
+  async editRoute(routeId: string): Promise<void> {
+    await this.router.navigate(['/route-builder'], { queryParams: { routeId, mode: 'edit' } });
   }
 
   private async loadRouteCards(): Promise<void> {

@@ -28,7 +28,8 @@ import {
   RouteRequestContractDto,
   RoutePointContract,
   RouteSnapshotContractDto,
-  RouteSummaryContractDto
+  RouteSummaryContractDto,
+  RoutesApiService
 } from '../../core/api';
 import { RouteRequestsApiService } from '../../core/api/route-requests-api.service';
 import { CHECKPOINTS_DATA } from './route-builder-checkpoints.data';
@@ -62,6 +63,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private readonly http = inject(HttpClient);
   private readonly backendApi = inject(BackendApiService);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
+  private readonly routesApi = inject(RoutesApiService);
   private readonly translate = inject(TranslateService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -82,6 +84,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly toastMessage = signal('');
   readonly dropdownSegmentIndex = signal<number | null>(null);
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
+  readonly mode = signal<RouteBuilderMode>('create');
 
   readonly requestForm = this.formBuilder.nonNullable.group({
     preferredStartDate: [''],
@@ -94,6 +97,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly totalDistanceMeters = computed(() => this.segmentDistances().reduce((sum, distance) => sum + distance, 0));
   readonly hasRoute = computed(() => this.waypoints().length >= 2);
   readonly hasPendingBorder = computed(() => hasPendingBorderCheckpoint(this.waypoints()));
+  readonly isViewMode = computed(() => this.mode() === 'view');
+  readonly isEditMode = computed(() => this.mode() === 'edit');
+  readonly isCreateMode = computed(() => this.mode() === 'create');
+  readonly canEditRoute = computed(() => this.isEditMode() || this.isCreateMode());
   readonly lang = computed<FreightLang>(() => {
     const current = this.translate.currentLang || this.translate.getDefaultLang() || 'uk';
     return (['uk', 'ru', 'en'].includes(current) ? current : 'uk') as FreightLang;
@@ -133,6 +140,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async onMapClick(event: L.LeafletMouseEvent): Promise<void> {
+    if (!this.canEditRoute()) {
+      return;
+    }
     await this.addWaypoint(event.latlng.lat, event.latlng.lng);
   }
 
@@ -149,6 +159,11 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async onSearchChange(value: string): Promise<void> {
+    if (!this.canEditRoute()) {
+      this.searchResults.set([]);
+      this.highlightedSearchIndex.set(-1);
+      return;
+    }
     const query = value.trim();
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
@@ -168,6 +183,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async selectSearchResult(item: NominatimResult, input: HTMLInputElement): Promise<void> {
+    if (!this.canEditRoute()) {
+      return;
+    }
     input.value = '';
     this.searchResults.set([]);
     this.highlightedSearchIndex.set(-1);
@@ -175,6 +193,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async removeWaypoint(index: number): Promise<void> {
+    if (!this.canEditRoute()) {
+      return;
+    }
     this.waypoints.update((items) => items.filter((_, currentIndex) => currentIndex !== index));
     this.selectedWaypointIndex.update((current) => {
       if (current === null) {
@@ -189,6 +210,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async clearAllPoints(): Promise<void> {
+    if (!this.canEditRoute()) {
+      return;
+    }
     this.waypoints.set([]);
     this.segmentDistances.set([]);
     this.searchResults.set([]);
@@ -204,20 +228,31 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async saveCurrentRoute(): Promise<void> {
+    if (!this.canEditRoute()) {
+      return;
+    }
     if (!this.hasRoute()) {
       this.showToast('pages.freightCalculation.errors.routeRequired');
       return;
     }
     this.isSavingRoute.set(true);
     try {
-      const snapshot = await firstValueFrom(
-        this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, this.createRouteSnapshotRequest())
-      );
+      const selectedRouteId = this.getSelectedRouteId();
+      const payload = this.createRouteSnapshotRequest();
+      const snapshot = selectedRouteId && this.isEditMode()
+        ? await firstValueFrom(
+            this.http.put<RouteSnapshotContractDto>(
+              `${this.backendApi.myRoutes}/${encodeURIComponent(selectedRouteId)}`,
+              payload
+            )
+          )
+        : await firstValueFrom(this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, payload));
       this.showToast('pages.freightCalculation.routeSaved');
       await this.loadMyRoutes();
+      this.mode.set('view');
       await this.router.navigate([], {
         relativeTo: this.activatedRoute,
-        queryParams: { routeId: snapshot.id },
+        queryParams: { routeId: snapshot.id, mode: 'view' },
         queryParamsHandling: 'merge'
       });
     } catch {
@@ -266,6 +301,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async addBorderCheckpoint(segmentIndex: number, checkpointIndex: number): Promise<void> {
+    if (!this.canEditRoute()) {
+      return;
+    }
     const country = this.selectedCountryBySegment()[segmentIndex];
     if (!country) {
       return;
@@ -290,6 +328,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   openRequestPage(): void {
+    if (!this.isViewMode()) {
+      this.showToast('pages.freightCalculation.errors.requestOnlyInViewMode');
+      return;
+    }
     if (!this.hasRoute()) {
       this.showToast('pages.freightCalculation.errors.routeRequired');
       return;
@@ -360,7 +402,20 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       : 'pages.freightCalculation.labels.stop';
   }
 
+  getModeTitleKey(): string {
+    if (this.isViewMode()) {
+      return 'pages.routeBuilder.modeTitleView';
+    }
+    if (this.isEditMode()) {
+      return 'pages.routeBuilder.modeTitleEdit';
+    }
+    return 'pages.routeBuilder.modeTitleCreate';
+  }
+
   async onSearchKeydown(event: KeyboardEvent, input: HTMLInputElement): Promise<void> {
+    if (!this.canEditRoute()) {
+      return;
+    }
     const items = this.searchResults();
     if (!items.length) {
       return;
@@ -501,7 +556,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.markers.forEach((marker) => marker.remove());
     this.markers = points.map((point, index) => {
       const marker = L.marker([point.lat, point.lng], {
-        draggable: true,
+        draggable: this.canEditRoute(),
         icon: this.createWaypointIcon(point, index, index === selectedIndex),
         zIndexOffset: 1000
       }).addTo(this.map!);
@@ -509,6 +564,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         this.selectWaypoint(index);
       });
       marker.on('dragend', async () => {
+        if (!this.canEditRoute()) {
+          return;
+        }
         const position = marker.getLatLng();
         const geocoded = await this.reverseGeocode(position.lat, position.lng);
         this.selectWaypoint(index);
@@ -648,6 +706,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
 
   private async loadRouteFromQuery(): Promise<void> {
     const routeId = this.activatedRoute.snapshot.queryParamMap.get('routeId');
+    const modeFromQuery = this.parseMode(this.activatedRoute.snapshot.queryParamMap.get('mode'));
+    this.mode.set(modeFromQuery ?? (routeId ? 'view' : 'create'));
     if (!routeId) {
       return;
     }
@@ -742,6 +802,64 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.toastMessage.set(key);
     setTimeout(() => this.toastMessage.set(''), 3000);
   }
+
+  async switchToEditMode(): Promise<void> {
+    if (!this.getSelectedRouteId()) {
+      return;
+    }
+    this.mode.set('edit');
+    await this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { mode: 'edit' },
+      queryParamsHandling: 'merge'
+    });
+    this.rebuildMarkers();
+  }
+
+  async switchToCreateMode(): Promise<void> {
+    this.mode.set('create');
+    await this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { routeId: null, mode: 'create' },
+      queryParamsHandling: 'merge'
+    });
+    await this.clearAllPoints();
+    this.rebuildMarkers();
+  }
+
+  async switchToViewMode(): Promise<void> {
+    if (!this.getSelectedRouteId()) {
+      return;
+    }
+    this.mode.set('view');
+    await this.router.navigate([], {
+      relativeTo: this.activatedRoute,
+      queryParams: { mode: 'view' },
+      queryParamsHandling: 'merge'
+    });
+    this.rebuildMarkers();
+  }
+
+  async deleteCurrentRoute(): Promise<void> {
+    const routeId = this.getSelectedRouteId();
+    if (!routeId || this.isSavingRoute()) {
+      return;
+    }
+    this.isSavingRoute.set(true);
+    try {
+      await this.routesApi.deleteMyRoute(routeId);
+      this.showToast('pages.routeBuilder.routeDeleted');
+      await this.switchToCreateMode();
+    } catch {
+      this.showToast('pages.routesHistory.deleteFailed');
+    } finally {
+      this.isSavingRoute.set(false);
+    }
+  }
+
+  private parseMode(value: string | null): RouteBuilderMode | null {
+    return value === 'view' || value === 'edit' || value === 'create' ? value : null;
+  }
 }
 
 interface NominatimResult {
@@ -761,3 +879,5 @@ interface OsrmRoute {
   legs: Array<{ distance: number }>;
   geometry: { coordinates: [number, number][] };
 }
+
+type RouteBuilderMode = 'view' | 'edit' | 'create';

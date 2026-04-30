@@ -2,39 +2,92 @@
   <aside class="sidebar">
     <div class="sidebar-actions">
       <div class="sidebar-actions__head">
-        <h1 class="sidebar-actions__title">{{ 'navigation.routeBuilder' | translate }}</h1>
+        <h1 class="sidebar-actions__title">{{ getModeTitleKey() | translate }}</h1>
         <div class="sidebar-actions__distance-chip">
           <span class="sidebar-actions__distance-value">{{ (totalDistanceMeters() / 1000).toFixed(1) }}</span>
           <span>{{ 'pages.freightCalculation.km' | translate }}</span>
         </div>
       </div>
       <div class="sidebar-actions__buttons">
-        <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="clearAllPoints()">
-          {{ 'pages.freightCalculation.clear' | translate }}
-        </button>
-        <button
-          class="sidebar-login-button"
-          mat-raised-button
-          color="primary"
-          type="button"
-          (click)="saveCurrentRoute()"
-          [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
-        >
-          {{ 'pages.freightCalculation.saveRoute' | translate }}
-        </button>
+        @if (isViewMode()) {
+          <button
+            class="sidebar-login-button"
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="deleteCurrentRoute()"
+            [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
+          >
+            {{ 'pages.routeBuilder.deleteRoute' | translate }}
+          </button>
+          <button
+            class="sidebar-login-button"
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="switchToEditMode()"
+            [disabled]="!hasRoute() || isLoadingSavedRoute()"
+          >
+            {{ 'pages.routeBuilder.editRoute' | translate }}
+          </button>
+          <button
+            class="sidebar-login-button"
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="openRequestPage()"
+            [disabled]="!hasRoute()"
+          >
+            {{ 'pages.freightCalculation.openRequest' | translate }}
+          </button>
+        } @else {
+          <button
+            class="sidebar-login-button"
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="clearAllPoints()"
+            [disabled]="!canEditRoute()"
+          >
+            {{ 'pages.freightCalculation.clear' | translate }}
+          </button>
+          <button
+            class="sidebar-login-button"
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="saveCurrentRoute()"
+            [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
+          >
+            {{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}
+          </button>
+          @if (isEditMode()) {
+            <button
+              class="sidebar-login-button"
+              mat-raised-button
+              color="primary"
+              type="button"
+              (click)="switchToViewMode()"
+              [disabled]="isLoadingSavedRoute()"
+            >
+              {{ 'pages.routeBuilder.cancelEdit' | translate }}
+            </button>
+          }
+        }
         <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="goToRoutesHistory()">
           {{ 'pages.freightCalculation.myRoutes' | translate }}
         </button>
-        <button
-          class="sidebar-login-button"
-          mat-raised-button
-          color="primary"
-          type="button"
-          (click)="openRequestPage()"
-          [disabled]="!hasRoute()"
-        >
-          {{ 'pages.freightCalculation.openRequest' | translate }}
-        </button>
+        @if (!isCreateMode()) {
+          <button
+            class="sidebar-login-button"
+            mat-raised-button
+            color="primary"
+            type="button"
+            (click)="switchToCreateMode()"
+          >
+            {{ 'pages.routeBuilder.newRoute' | translate }}
+          </button>
+        }
       </div>
 
       <div class="search-box">
@@ -46,6 +99,7 @@
             [placeholder]="'pages.freightCalculation.searchPlaceholder' | translate"
             (input)="onSearchChange(searchInput.value)"
             (keydown)="onSearchKeydown($event, searchInput)"
+            [disabled]="!canEditRoute()"
           />
         </mat-form-field>
         @if (isSearching()) {
@@ -93,6 +147,7 @@
               mat-icon-button
               type="button"
               (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)"
+              [disabled]="!canEditRoute()"
               [attr.aria-label]="'pages.freightCalculation.clear' | translate"
             >
               <mat-icon>close</mat-icon>
@@ -124,6 +179,7 @@
                       panelClass="freight-border-select-panel"
                       [value]="selectedCountryBySegment()[segmentIndex] ?? ''"
                       (selectionChange)="onBorderCountryMatSelect(segmentIndex, $event.value)"
+                      [disabled]="!canEditRoute()"
                       [attr.aria-label]="'pages.freightCalculation.selectCountry' | translate"
                     >
                       <mat-option value="">{{ 'pages.freightCalculation.notSelected' | translate }}</mat-option>
@@ -136,7 +192,7 @@
                     <mat-label>{{ 'pages.freightCalculation.selectCheckpoint' | translate }}</mat-label>
                     <mat-select
                       panelClass="freight-border-select-panel"
-                      [disabled]="!selectedCountryBySegment()[segmentIndex]"
+                      [disabled]="!canEditRoute() || !selectedCountryBySegment()[segmentIndex]"
                       [value]="getBorderCheckpointSelectValue(segmentIndex)"
                       (selectionChange)="onBorderCheckpointMatSelect(segmentIndex, $event.value)"
                       [attr.aria-label]="'pages.freightCalculation.selectCheckpoint' | translate"

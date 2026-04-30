@@ -107,6 +107,7 @@
         "routeRequired": "Добавьте минимум две точки маршрута",
         "selectBorderRequired": "Выберите пограничный пункт перед отправкой",
         "routeMustBeSaved": "Перед отправкой сохраните маршрут и откройте его из истории",
+        "requestOnlyInViewMode": "Отправка заявки доступна только в режиме просмотра",
         "submitFailed": "Не удалось отправить заявку",
         "routeSaveFailed": "Не удалось сохранить маршрут",
         "routeLoadFailed": "Не удалось загрузить маршрут"
@@ -118,6 +119,18 @@
         "ro": "Румыния",
         "md": "Молдова"
       }
+    },
+    "routeBuilder": {
+      "modeTitleView": "Просмотр маршрута",
+      "modeTitleEdit": "Редактирование маршрута",
+      "modeTitleCreate": "Новый маршрут",
+      "deleteRoute": "Удалить маршрут",
+      "editRoute": "Редактировать",
+      "saveChanges": "Сохранить изменения",
+      "createRoute": "Создать маршрут",
+      "newRoute": "Новый маршрут",
+      "cancelEdit": "К просмотру",
+      "routeDeleted": "Маршрут удален"
     },
     "routesHistory": {
       "title": "Мои сохраненные маршруты",

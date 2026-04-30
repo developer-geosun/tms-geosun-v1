@@ -107,6 +107,7 @@
         "routeRequired": "Add at least two route points",
         "selectBorderRequired": "Choose border checkpoint before sending",
         "routeMustBeSaved": "Save route first and open it from history before submit",
+        "requestOnlyInViewMode": "Submitting a request is available only in view mode",
         "submitFailed": "Request sending failed",
         "routeSaveFailed": "Failed to save route",
         "routeLoadFailed": "Failed to load route"
@@ -118,6 +119,18 @@
         "ro": "Romania",
         "md": "Moldova"
       }
+    },
+    "routeBuilder": {
+      "modeTitleView": "Route view",
+      "modeTitleEdit": "Route editing",
+      "modeTitleCreate": "New route",
+      "deleteRoute": "Delete route",
+      "editRoute": "Edit route",
+      "saveChanges": "Save changes",
+      "createRoute": "Create route",
+      "newRoute": "New route",
+      "cancelEdit": "Back to view",
+      "routeDeleted": "Route deleted"
     },
     "routesHistory": {
       "title": "My saved routes",
