@@ -133,6 +133,17 @@
       "deleting": "Видалення...",
       "backToCalculation": "До розрахунку"
     },
+    "routes": {
+      "title": "Маршрути",
+      "loading": "Завантаження маршрутів...",
+      "loadFailed": "Не вдалося завантажити маршрути",
+      "empty": "Поки немає збережених маршрутів",
+      "savedAt": "Збережено",
+      "totalDistance": "Загальна довжина",
+      "pointsUnavailable": "Точки недоступні для цього маршруту",
+      "points": "Точки маршруту",
+      "editRoute": "Редагувати"
+    },
     "adminRouteRequests": {
       "title": "Черга заявок",
       "refresh": "Оновити",
@@ -189,6 +200,7 @@
     "main": "Головна",
     "freightCalculation": "Розрахунок фрахту",
     "routesHistory": "Історія маршрутів",
+    "routes": "Маршрути",
     "freightCalculationHere": "Розрахунок HERE",
     "adminRouteRequests": "Черга заявок"
   },
