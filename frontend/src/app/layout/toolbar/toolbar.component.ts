@@ -62,6 +62,11 @@ export class ToolbarComponent {
       roles: ['user'] as const
     },
     {
+      route: '/route-builder',
+      labelKey: 'navigation.routeBuilder',
+      roles: ['user'] as const
+    },
+    {
       route: '/routes-history',
       labelKey: 'navigation.routesHistory',
       roles: ['user'] as const

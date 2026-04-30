@@ -49,7 +49,7 @@ export class RoutesComponent {
   }
 
   async openRoute(routeId: string): Promise<void> {
-    await this.router.navigate(['/freight-calculation'], { queryParams: { routeId } });
+    await this.router.navigate(['/route-builder'], { queryParams: { routeId } });
   }
 
   private async loadRouteCards(): Promise<void> {

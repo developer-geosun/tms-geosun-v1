@@ -199,6 +199,7 @@
   "navigation": {
     "main": "Main",
     "freightCalculation": "Freight",
+    "routeBuilder": "Route builder",
     "routesHistory": "Route history",
     "routes": "Routes",
     "freightCalculationHere": "HERE freight",

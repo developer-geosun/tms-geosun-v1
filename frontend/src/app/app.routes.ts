@@ -39,6 +39,12 @@ export const routes: Routes = [
       import('./pages/freight-calculation/freight-calculation.component').then((m) => m.FreightCalculationComponent)
   },
   {
+    path: 'route-builder',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['user'] },
+    loadComponent: () => import('./pages/route-builder/route-builder.component').then((m) => m.RouteBuilderComponent)
+  },
+  {
     path: 'routes-history',
     canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
     data: { roles: ['user'] },

@@ -28,6 +28,10 @@ export class MainComponent {
     this.router.navigate(['/freight-calculation']);
   }
 
+  openRouteBuilder(): void {
+    this.router.navigate(['/route-builder']);
+  }
+
   openFreightCalculationHere(): void {
     this.router.navigate(['/freight-calculation-here']);
   }

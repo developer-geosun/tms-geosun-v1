@@ -199,6 +199,7 @@
   "navigation": {
     "main": "Главная",
     "freightCalculation": "Расчет фрахта",
+    "routeBuilder": "Построение маршрута",
     "routesHistory": "История маршрутов",
     "routes": "Маршруты",
     "freightCalculationHere": "Расчет HERE",
