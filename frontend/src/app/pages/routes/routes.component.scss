@@ -11,23 +11,25 @@
 }
 
 .route-card {
-  border: 1px solid #d7dce2;
-  border-radius: 0.75rem;
-  background: #fff;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 18px;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
   width: min(100%, 33.333vw);
   font-size: 0.8125rem;
   line-height: 1.25;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
 }
 
 .route-card:hover {
-  border-color: #b9c5d6;
+  border-color: color-mix(in srgb, var(--mat-sys-primary) 32%, var(--mat-sys-outline-variant));
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
 }
 
 .route-card__header {
   display: block;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
   padding: 1rem;
   padding-bottom: 0.6rem;
 }
@@ -50,7 +52,7 @@
 .route-card__footer {
   display: flex;
   justify-content: flex-end;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--mat-sys-outline-variant);
   padding: 0.6rem 1rem 1rem;
 }
 
@@ -70,23 +72,15 @@
 }
 
 .route-card__delete-action {
-  background: #dc2626 !important;
-  color: #fff !important;
-}
-
-.route-card__delete-action:hover {
-  background: #b91c1c !important;
-}
-
-.route-card__open-action {
-  --mdc-fab-small-container-color: var(--mat-sys-primary);
-  --mdc-fab-small-foreground-color: var(--mat-sys-on-primary);
-  color: var(--mat-sys-on-primary) !important;
+  --mdc-fab-small-container-color: var(--mat-sys-error);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-error);
+  background-color: var(--mat-sys-error) !important;
+  color: var(--mat-sys-on-error) !important;
 }
 
 .route-card__meta {
   margin: 0;
-  color: #3f4a59;
+  color: var(--mat-sys-on-surface);
   font-size: 0.8125rem;
   line-height: 1.25;
 }
@@ -104,7 +98,7 @@
 
 .route-card__section-title {
   margin-bottom: 0.35rem;
-  color: #64748b;
+  color: var(--mat-sys-on-surface-variant);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -156,4 +150,12 @@
 .route-card :is(.mat-mdc-card-title, .mat-mdc-card-subtitle, .mdc-list-item__primary-text, .mdc-button__label) {
   font-size: inherit;
   line-height: inherit;
+}
+
+:host-context(.theme-magenta-violet),
+:host-context(.theme-cyan-orange) {
+  .route-card {
+    background: color-mix(in srgb, var(--mat-sys-surface-container-high) 92%, #101218);
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  }
 }
