@@ -123,23 +123,36 @@ docker compose --profile dev down --remove-orphans
 
 Локальный вход через dev gateway: `http://localhost:8082` (или `GATEWAY_DEV_PORT`).
 
-### Быстрые команды (копировать одним блоком)
+### Быстрые команды
+
+Запуск:
 
 ```bash
-# запуск
 docker compose up --build
+```
 
-# остановка
+Остановка:
+
+```bash
 docker compose down
+```
 
-# быстрый dev frontend (hot reload)
+Быстрый dev frontend (hot reload):
+
+```bash
 docker compose stop frontend
 docker compose --profile dev up -d frontend-dev
+```
 
-# dev через единый домен (с корректной verify-email ссылкой)
+Dev через единый домен (с корректной verify-email ссылкой):
+
+```bash
 docker compose --profile dev up -d mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+```
 
-# полная остановка dev-профиля (без "Network ... Resource is still in use")
+Полная остановка dev-профиля (без "Network ... Resource is still in use"):
+
+```bash
 docker compose --profile dev down --remove-orphans
 ```
 
