@@ -45,6 +45,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/routes-history/routes-history.component').then((m) => m.RoutesHistoryComponent)
   },
   {
+    path: 'routes',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['user'] },
+    loadComponent: () => import('./pages/routes/routes.component').then((m) => m.RoutesComponent)
+  },
+  {
     path: 'admin/route-requests',
     canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
     data: { roles: ['admin', 'manager'] },

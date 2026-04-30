@@ -133,6 +133,17 @@
       "deleting": "Deleting...",
       "backToCalculation": "Back to calculation"
     },
+    "routes": {
+      "title": "Routes",
+      "loading": "Loading routes...",
+      "loadFailed": "Failed to load routes",
+      "empty": "No saved routes yet",
+      "savedAt": "Saved",
+      "totalDistance": "Total distance",
+      "pointsUnavailable": "Points are unavailable for this route",
+      "points": "Route points",
+      "editRoute": "Edit"
+    },
     "adminRouteRequests": {
       "title": "Route requests queue",
       "refresh": "Refresh",
@@ -189,6 +200,7 @@
     "main": "Main",
     "freightCalculation": "Freight",
     "routesHistory": "Route history",
+    "routes": "Routes",
     "freightCalculationHere": "HERE freight",
     "adminRouteRequests": "Requests queue"
   },

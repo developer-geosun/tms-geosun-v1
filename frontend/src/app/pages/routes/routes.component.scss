@@ -1,0 +1,159 @@
+.routes-page {
+  min-height: 100%;
+  padding: 1.25rem;
+}
+
+.routes-page__cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.route-card {
+  border: 1px solid #d7dce2;
+  border-radius: 0.75rem;
+  background: #fff;
+  width: min(100%, 33.333vw);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.route-card:hover {
+  border-color: #b9c5d6;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.route-card__header {
+  display: block;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 1rem;
+  padding-bottom: 0.6rem;
+}
+
+.route-card__header .mat-mdc-card-header-text {
+  margin: 0;
+}
+
+.route-card__header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.route-card__content {
+  padding: 0.75rem 1rem 0.5rem;
+}
+
+.route-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  border-top: 1px solid #e2e8f0;
+  padding: 0.6rem 1rem 1rem;
+}
+
+.route-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.75rem;
+}
+
+.route-card__actions-left,
+.route-card__actions-right {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.route-card__delete-action {
+  background: #dc2626 !important;
+  color: #fff !important;
+}
+
+.route-card__delete-action:hover {
+  background: #b91c1c !important;
+}
+
+.route-card__open-action {
+  background: #1d4ed8 !important;
+  color: #fff !important;
+}
+
+.route-card__open-action:hover {
+  background: #1e40af !important;
+}
+
+.route-card__meta {
+  margin: 0;
+  color: #3f4a59;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+}
+
+.route-card__meta--secondary {
+  margin-top: 0;
+  color: #1d4ed8;
+  font-weight: 600;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.route-card__section-title {
+  margin-bottom: 0.35rem;
+  color: #64748b;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.route-card__points {
+  margin: 0;
+  padding: 0;
+}
+
+.route-card__points .mat-mdc-list-item {
+  --mdc-list-list-item-one-line-container-height: 18px;
+}
+
+.route-point-row {
+  min-height: 18px;
+}
+
+.point-order {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 9px;
+  line-height: 1;
+  color: #fff !important;
+  box-sizing: border-box;
+  border: none;
+}
+
+.point-order--regular {
+  background: #2563eb;
+}
+
+.point-order--border {
+  background: #16a34a;
+}
+
+.route-point-address {
+  display: block;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.route-card :is(.mat-mdc-card-title, .mat-mdc-card-subtitle, .mdc-list-item__primary-text, .mdc-button__label) {
+  font-size: inherit;
+  line-height: inherit;
+}

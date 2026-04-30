@@ -32,6 +32,10 @@ export class MainComponent {
     this.router.navigate(['/freight-calculation-here']);
   }
 
+  openRoutes(): void {
+    this.router.navigate(['/routes']);
+  }
+
   openAdminRouteRequests(): void {
     this.router.navigate(['/admin/route-requests']);
   }

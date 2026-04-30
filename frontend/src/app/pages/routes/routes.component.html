@@ -1,0 +1,84 @@
+<section class="routes-page">
+  <h1>{{ 'pages.routes.title' | translate }}</h1>
+
+  @if (isLoading()) {
+    <p>{{ 'pages.routes.loading' | translate }}</p>
+  } @else if (loadFailed()) {
+    <p>{{ 'pages.routes.loadFailed' | translate }}</p>
+  } @else if (routeCards().length === 0) {
+    <p>{{ 'pages.routes.empty' | translate }}</p>
+  } @else {
+    <div class="routes-page__cards">
+      @for (route of routeCards(); track route.id) {
+        <mat-card class="route-card" appearance="outlined">
+          <mat-card-header class="route-card__header">
+            <div class="route-card__header-row">
+              <mat-card-title class="route-card__meta">
+                {{ formatRouteDateTime(route.createdAt) }}
+              </mat-card-title>
+              <mat-card-subtitle class="route-card__meta route-card__meta--secondary">
+                {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
+              </mat-card-subtitle>
+            </div>
+          </mat-card-header>
+
+          <mat-card-content class="route-card__content">
+            @if (route.points.length === 0) {
+              <mat-list>
+                <mat-list-item>{{ 'pages.routes.pointsUnavailable' | translate }}</mat-list-item>
+              </mat-list>
+            } @else {
+              <mat-list class="route-card__points">
+                @for (point of route.points; track point.order) {
+                  <mat-list-item class="route-point-row">
+                    <span matListItemIcon class="point-order" [class.point-order--regular]="!point.isBorder" [class.point-order--border]="point.isBorder">
+                      {{ point.order }}
+                    </span>
+                    <span matListItemTitle class="route-point-address">{{ point.address }}</span>
+                  </mat-list-item>
+                }
+              </mat-list>
+            }
+          </mat-card-content>
+
+          <mat-card-footer class="route-card__footer">
+            <div class="route-card__actions">
+              <div class="route-card__actions-left">
+                <button
+                  mat-mini-fab
+                  type="button"
+                  class="route-card__delete-action"
+                  [attr.aria-label]="'pages.routesHistory.deleteRoute' | translate"
+                  [title]="'pages.routesHistory.deleteRoute' | translate"
+                >
+                  <mat-icon>delete</mat-icon>
+                </button>
+                <button
+                  mat-mini-fab
+                  type="button"
+                  [attr.aria-label]="'pages.routes.editRoute' | translate"
+                  [title]="'pages.routes.editRoute' | translate"
+                >
+                  <mat-icon>edit</mat-icon>
+                </button>
+              </div>
+              <div class="route-card__actions-right">
+                <button
+                  mat-mini-fab
+                  color="primary"
+                  class="route-card__open-action"
+                  type="button"
+                  (click)="openRoute(route.id)"
+                  [attr.aria-label]="'pages.routesHistory.openRoute' | translate"
+                  [title]="'pages.routesHistory.openRoute' | translate"
+                >
+                  <mat-icon>open_in_new</mat-icon>
+                </button>
+              </div>
+            </div>
+          </mat-card-footer>
+        </mat-card>
+      }
+    </div>
+  }
+</section>

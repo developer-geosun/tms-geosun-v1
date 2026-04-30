@@ -67,6 +67,11 @@ export class ToolbarComponent {
       roles: ['user'] as const
     },
     {
+      route: '/routes',
+      labelKey: 'navigation.routes',
+      roles: ['user'] as const
+    },
+    {
       route: '/admin/route-requests',
       labelKey: 'navigation.adminRouteRequests',
       roles: ['admin', 'manager'] as const
