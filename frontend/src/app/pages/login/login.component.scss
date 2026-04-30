@@ -58,6 +58,10 @@ h1 {
   gap: 12px;
 }
 
+::ng-deep .login-form .mat-mdc-form-field .mat-mdc-form-field-icon-suffix .mat-mdc-icon-button {
+  margin-right: 4px;
+}
+
 .login-form mat-form-field,
 .submit-button {
   width: 100%;
@@ -66,7 +70,26 @@ h1 {
 .submit-button {
   min-height: 46px;
   border-radius: 10px;
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  --mdc-protected-button-container-color: var(--mat-sys-primary-container);
+  --mdc-protected-button-label-text-color: var(--mat-sys-on-primary-container);
+  --mat-protected-button-state-layer-color: var(--mat-sys-on-primary-container);
+  --mdc-protected-button-disabled-container-color: var(--mat-sys-primary-container);
+  --mdc-protected-button-disabled-label-text-color: var(--mat-sys-on-primary-container);
+  --mdc-protected-button-disabled-container-opacity: 1;
+  --mdc-protected-button-disabled-label-text-opacity: 1;
+
+  &:not(:disabled):not(.mat-mdc-button-disabled):not(.mdc-button--disabled) {
+    background-color: var(--mat-sys-primary-container) !important;
+    color: var(--mat-sys-on-primary-container) !important;
+  }
+
+  &:disabled,
+  &.mat-mdc-button-disabled,
+  &.mdc-button--disabled {
+    opacity: 1;
+  }
 }
 
 .error-text,
@@ -119,6 +142,13 @@ h1 {
 
   .success-text {
     color: color-mix(in srgb, var(--mat-sys-primary) 48%, #8ceab2);
+  }
+
+  .submit-button {
+    --mdc-protected-button-container-color: var(--mat-sys-primary-container);
+    --mdc-protected-button-label-text-color: var(--mat-sys-on-primary-container);
+    --mat-protected-button-state-layer-color: var(--mat-sys-on-primary-container);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--mat-sys-on-primary) 24%, transparent);
   }
 
   ::ng-deep .login-form .mat-mdc-form-field {
