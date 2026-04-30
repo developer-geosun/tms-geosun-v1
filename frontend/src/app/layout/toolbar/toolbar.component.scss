@@ -231,6 +231,11 @@ a.company-site-button:active {
 
 .settings-menu-panel .mat-mdc-menu-content {
   padding: 0 !important;
+  background-color: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .28);
 }
 
 .settings-menu-panel {
@@ -250,14 +255,17 @@ a.company-site-button:active {
   text-align: center;
   font-size: 12px;
   font-weight: 600;
-  opacity: .8;
+  color: var(--mat-sys-on-surface-variant);
+  opacity: .95;
 }
 
 .settings-menu-content mat-button-toggle-group {
   display: flex;
   width: 100%;
-  border: 0 !important;
+  border: 1px solid var(--mat-sys-outline-variant) !important;
   box-shadow: none !important;
+  border-radius: 14px;
+  overflow: hidden;
 }
 
 .settings-menu-content mat-button-toggle {
@@ -278,10 +286,10 @@ a.company-site-button:active {
 .theme-option {
   width: 100%;
   height: 40px;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 10px;
   background: transparent;
-  color: inherit;
+  color: var(--mat-sys-on-surface);
   padding: 0 6px 0 0;
   display: flex;
   align-items: center;
@@ -292,11 +300,19 @@ a.company-site-button:active {
 }
 
 .theme-option:hover {
-  background-color: rgba(255, 255, 255, .06);
+  background-color: var(--mat-sys-surface-container-highest);
 }
 
 .theme-option.selected {
-  background-color: rgba(255, 255, 255, .1);
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+  border-color: var(--mat-sys-outline);
+}
+
+.theme-option:focus-visible,
+.settings-menu-content mat-button-toggle:focus-visible {
+  outline: 2px solid var(--mat-sys-primary);
+  outline-offset: 2px;
 }
 
 .theme-option-radio {
@@ -317,7 +333,7 @@ a.company-site-button:active {
   width: 24px;
   height: 24px;
   border-radius: 5px;
-  border: 1px solid rgba(255, 255, 255, .12);
+  border: 1px solid var(--mat-sys-outline-variant);
   background-color: var(--preview-bg, #28252b);
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .22);
   position: relative;

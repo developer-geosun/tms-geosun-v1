@@ -22,6 +22,7 @@ app-root {
 mat-button-toggle.ua-button.mat-button-toggle-checked {
   background-color: #FFD700 !important;
   color: #0000FF !important;
+  border: 1px solid var(--mat-sys-outline) !important;
   
   .mat-button-toggle-button,
   .mat-button-toggle-label-content {
@@ -33,6 +34,7 @@ mat-button-toggle.ua-button.mat-button-toggle-checked {
 mat-button-toggle.en-button.mat-button-toggle-checked {
   background-color: #0000FF !important;
   color: #FFFFFF !important;
+  border: 1px solid var(--mat-sys-outline) !important;
   
   .mat-button-toggle-button,
   .mat-button-toggle-label-content {
@@ -44,6 +46,7 @@ mat-button-toggle.en-button.mat-button-toggle-checked {
 mat-button-toggle.ru-button.mat-button-toggle-checked {
   background-color: #FF0000 !important;
   color: #FFFFFF !important;
+  border: 1px solid var(--mat-sys-outline) !important;
   
   .mat-button-toggle-button,
   .mat-button-toggle-label-content {
@@ -55,28 +58,29 @@ mat-button-toggle.ru-button.mat-button-toggle-checked {
 mat-button-toggle.ua-button:not(.mat-button-toggle-checked),
 mat-button-toggle.en-button:not(.mat-button-toggle-checked),
 mat-button-toggle.ru-button:not(.mat-button-toggle-checked) {
-  background-color: #e6e6e6 !important;
-  color: #333333 !important;
+  background-color: var(--mat-sys-surface-container) !important;
+  color: var(--mat-sys-on-surface-variant) !important;
+  border: 1px solid var(--mat-sys-outline-variant) !important;
 
   .mat-button-toggle-button,
   .mat-button-toggle-label-content,
   .mat-mdc-button-toggle-button,
   .mdc-button__label {
-    background-color: #e6e6e6 !important;
-    color: #333333 !important;
+    background-color: var(--mat-sys-surface-container) !important;
+    color: var(--mat-sys-on-surface-variant) !important;
   }
 }
 
 mat-button-toggle.ua-button:not(.mat-button-toggle-checked):hover,
 mat-button-toggle.en-button:not(.mat-button-toggle-checked):hover,
 mat-button-toggle.ru-button:not(.mat-button-toggle-checked):hover {
-  background-color: #d2d2d2 !important;
+  background-color: var(--mat-sys-surface-container-highest) !important;
 
   .mat-button-toggle-button,
   .mat-button-toggle-label-content,
   .mat-mdc-button-toggle-button,
   .mdc-button__label {
-    background-color: #d2d2d2 !important;
+    background-color: var(--mat-sys-surface-container-highest) !important;
   }
 }
 
