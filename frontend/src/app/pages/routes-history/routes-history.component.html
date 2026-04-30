@@ -19,7 +19,7 @@
           <div class="routes-history__meta">
             <h2>{{ route.title }}</h2>
             <p>{{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}</p>
-            <p>{{ formatRouteDateTime(route.updatedAt) }}</p>
+            <p>{{ formatRouteDateTime(route.createdAt) }}</p>
           </div>
           <div class="routes-history__actions">
             <button type="button" (click)="openRoute(route.id)" [disabled]="deletingRouteId() === route.id">

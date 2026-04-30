@@ -117,12 +117,17 @@ public class RouteService implements RouteContractsFacade {
   }
 
   private RouteSummaryDto toSummary(Route route) {
+    String createdAt =
+        route.getCreatedAt() != null
+            ? route.getCreatedAt().toString()
+            : (route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString());
     return new RouteSummaryDto(
         route.getId(),
         route.getTitle(),
         toDouble(route.getDistanceKm()),
         route.getDurationMin(),
         route.getPoints() == null ? 0 : route.getPoints().size(),
+        createdAt,
         route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
         route.getLastOpenedAt() == null ? null : route.getLastOpenedAt().toString());
   }

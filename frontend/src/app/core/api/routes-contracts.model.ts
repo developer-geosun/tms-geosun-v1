@@ -35,6 +35,7 @@ export interface RouteSummaryContractDto {
   distanceKm: number | null;
   durationMin: number | null;
   pointsCount: number;
+  createdAt: string;
   updatedAt: string;
   lastOpenedAt: string | null;
 }

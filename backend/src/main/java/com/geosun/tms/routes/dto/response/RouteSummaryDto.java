@@ -9,5 +9,6 @@ public record RouteSummaryDto(
     Double distanceKm,
     Integer durationMin,
     Integer pointsCount,
+    String createdAt,
     String updatedAt,
     String lastOpenedAt) {}
