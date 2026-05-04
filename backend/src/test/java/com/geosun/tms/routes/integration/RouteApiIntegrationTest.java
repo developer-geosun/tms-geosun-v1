@@ -133,6 +133,55 @@ class RouteApiIntegrationTest {
         .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
   }
 
+  @Test
+  void saveRouteWithOperations_roundTrip() throws Exception {
+    User user = createUser("routes-ops-owner@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+
+    String body = toJson(routePayloadWithBorderAndCustoms("Kyiv -> EU"));
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(jsonMediaType())
+                    .content(body))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.points.length()").value(4))
+            .andExpect(jsonPath("$.points[0].operations[0]").value("LOADING"))
+            .andExpect(jsonPath("$.points[1].operations[0]").value("EXPORT_CUSTOMS"))
+            .andExpect(jsonPath("$.points[3].operations.length()").value(2))
+            .andExpect(jsonPath("$.points[3].operations[0]").value("IMPORT_CUSTOMS"))
+            .andExpect(jsonPath("$.points[3].operations[1]").value("UNLOADING"))
+            .andReturn();
+
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+
+    mockMvc
+        .perform(get("/api/v1/routes/my/" + routeId).header("Authorization", bearer(access)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.points.length()").value(4))
+        .andExpect(jsonPath("$.points[0].operations[0]").value("LOADING"))
+        .andExpect(jsonPath("$.points[3].operations[1]").value("UNLOADING"));
+  }
+
+  @Test
+  void saveRouteWithCustomsButNoBorder_returns400() throws Exception {
+    User user = createUser("routes-ops-bad@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+
+    String body = toJson(routePayloadCustomsWithoutBorder("Bad route"));
+    mockMvc
+        .perform(
+            post("/api/v1/routes")
+                .header("Authorization", bearer(access))
+                .contentType(jsonMediaType())
+                .content(body))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("ROUTE_OPERATIONS_CUSTOMS_WITHOUT_BORDER"));
+  }
+
   private User createUser(String email, String password) {
     User user = new User();
     user.setEmail(email);
@@ -200,6 +249,89 @@ class RouteApiIntegrationTest {
         List.of(startPoint, finishPoint),
         "hereRouteMeta",
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
+  }
+
+  private Map<String, Object> routePayloadWithBorderAndCustoms(String title) {
+    Map<String, Object> start = pointWithOps(1, "START", "Kyiv", 50.4501, 30.5234, "UA", false,
+        120.0, List.of("LOADING"));
+    Map<String, Object> exportStop = pointWithOps(2, "STOP", "Lviv warehouse", 49.8397, 24.0297,
+        "UA", false, 80.0, List.of("EXPORT_CUSTOMS"));
+    Map<String, Object> border = pointWithOps(3, "BORDER", "Krakovets", 49.9425, 23.1745, "UA",
+        true, 350.0, List.of());
+    Map<String, Object> finish = pointWithOps(4, "FINISH", "Warsaw", 52.2297, 21.0122, "PL", false,
+        null, List.of("IMPORT_CUSTOMS", "UNLOADING"));
+
+    return Map.of(
+        "title",
+        title,
+        "routingProfile",
+        "truck",
+        "routingMode",
+        "fast",
+        "routePolyline",
+        "BFoz5xJ67i1B1B7PzIhaxL7Y",
+        "distanceKm",
+        812.34,
+        "durationMin",
+        742,
+        "routeComment",
+        "with-customs",
+        "points",
+        List.of(start, exportStop, border, finish),
+        "hereRouteMeta",
+        Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
+  }
+
+  private Map<String, Object> routePayloadCustomsWithoutBorder(String title) {
+    Map<String, Object> start = pointWithOps(1, "START", "Kyiv", 50.4501, 30.5234, "UA", false,
+        100.0, List.of("LOADING"));
+    Map<String, Object> bogus = pointWithOps(2, "STOP", "Phantom customs", 49.0, 24.0, "UA", false,
+        50.0, List.of("EXPORT_CUSTOMS"));
+    Map<String, Object> finish = pointWithOps(3, "FINISH", "Warsaw", 52.2297, 21.0122, "PL", false,
+        null, List.of("UNLOADING"));
+
+    return Map.of(
+        "title",
+        title,
+        "routingProfile",
+        "truck",
+        "routingMode",
+        "fast",
+        "routePolyline",
+        "BFoz5xJ67i1B1B7PzIhaxL7Y",
+        "distanceKm",
+        500.0,
+        "durationMin",
+        500,
+        "routeComment",
+        "bad-customs",
+        "points",
+        List.of(start, bogus, finish),
+        "hereRouteMeta",
+        Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
+  }
+
+  private Map<String, Object> pointWithOps(
+      int order,
+      String type,
+      String address,
+      double lat,
+      double lng,
+      String country,
+      boolean isBorder,
+      Double segmentDistanceKm,
+      List<String> operations) {
+    Map<String, Object> point = new HashMap<>();
+    point.put("order", order);
+    point.put("type", type);
+    point.put("address", address);
+    point.put("lat", lat);
+    point.put("lng", lng);
+    point.put("country", country);
+    point.put("isBorder", isBorder);
+    point.put("segmentDistanceKmToNext", segmentDistanceKm);
+    point.put("operations", operations);
+    return point;
   }
 
   private @NonNull String toJson(Object value) throws Exception {

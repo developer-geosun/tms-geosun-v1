@@ -36,7 +36,7 @@
             color="primary"
             type="button"
             (click)="openRequestPage()"
-            [disabled]="!hasRoute()"
+            [disabled]="!hasRoute() || hasOperationsError()"
           >
             {{ 'pages.freightCalculation.openRequest' | translate }}
           </button>
@@ -57,7 +57,7 @@
             color="primary"
             type="button"
             (click)="saveCurrentRoute()"
-            [disabled]="!hasRoute() || hasPendingBorder() || isSavingRoute() || isLoadingSavedRoute()"
+            [disabled]="!hasRoute() || hasPendingBorder() || hasOperationsError() || isSavingRoute() || isLoadingSavedRoute()"
           >
             {{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}
           </button>
@@ -141,6 +141,30 @@
             <strong>{{ getPointLabel($index) | translate }}</strong>
             <span>{{ point.address }}</span>
             <small>{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</small>
+            <mat-form-field
+              class="point-operations-field"
+              appearance="outline"
+              subscriptSizing="dynamic"
+              (click)="$event.stopPropagation()"
+            >
+              <mat-label>{{ 'pages.routeBuilder.operations.title' | translate }}</mat-label>
+              <mat-select
+                multiple
+                [value]="getPointOperations($index)"
+                (selectionChange)="onPointOperationsChange($index, $event.value)"
+                [disabled]="!canEditRoute()"
+                panelClass="freight-operations-select-panel"
+              >
+                @for (op of getAllowedOperations($index); track op) {
+                  <mat-option [value]="op">{{ ('pages.routeBuilder.operations.' + op) | translate }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            @if (isOperationsErrorOnPoint($index); as hasError) {
+              @if (getOperationsErrorKey(); as errorKey) {
+                <small class="point-operations-error">{{ errorKey | translate }}</small>
+              }
+            }
           </div>
           <div class="point-actions">
             <button

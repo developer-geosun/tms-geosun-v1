@@ -130,7 +130,26 @@
       "createRoute": "Save",
       "newRoute": "New route",
       "cancelEdit": "Back to view",
-      "routeDeleted": "Route deleted"
+      "routeDeleted": "Route deleted",
+      "operations": {
+        "title": "Operations at point",
+        "LOADING": "Loading",
+        "EXPORT_CUSTOMS": "Export customs",
+        "IMPORT_CUSTOMS": "Import customs",
+        "UNLOADING": "Unloading"
+      },
+      "errors": {
+        "operationsMaxTwo": "A point cannot have more than two operations",
+        "operationsCombo": "This combination of operations is not allowed for the point",
+        "customsWithoutBorder": "Customs operations are only allowed when the route has a border point",
+        "borderTooMany": "Only one border point is allowed per route",
+        "missingExportBeforeBorder": "An export-customs point is required before the border",
+        "missingImportAfterBorder": "An import-customs point is required after the border",
+        "operationInTransit": "Only empty points are allowed between export-customs and import-customs",
+        "unclosedCustoms": "Route cannot end without an import-customs point",
+        "operationAfterUnload": "No further cargo operations are allowed after unloading",
+        "importBeforeExport": "Import customs cannot appear before export customs"
+      }
     },
     "routesHistory": {
       "title": "My saved routes",

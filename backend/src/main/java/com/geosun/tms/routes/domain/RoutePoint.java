@@ -1,6 +1,7 @@
 package com.geosun.tms.routes.domain;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -12,6 +13,8 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -33,6 +36,10 @@ public class RoutePoint {
   @Enumerated(EnumType.STRING)
   @Column(name = "point_type", nullable = false, length = 16)
   private RoutePointKind pointType;
+
+  @Convert(converter = RoutePointOperationsConverter.class)
+  @Column(name = "operations", columnDefinition = "text")
+  private List<RoutePointOperation> operations = new ArrayList<>();
 
   @Column(name = "address", nullable = false, length = 500)
   private String address;
@@ -97,6 +104,14 @@ public class RoutePoint {
 
   public void setPointType(RoutePointKind pointType) {
     this.pointType = pointType;
+  }
+
+  public List<RoutePointOperation> getOperations() {
+    return operations;
+  }
+
+  public void setOperations(List<RoutePointOperation> operations) {
+    this.operations = operations == null ? new ArrayList<>() : operations;
   }
 
   public String getAddress() {

@@ -33,8 +33,20 @@ import {
 } from '../../core/api';
 import { RouteRequestsApiService } from '../../core/api/route-requests-api.service';
 import { CHECKPOINTS_DATA } from './route-builder-checkpoints.data';
-import { Checkpoint, FreightLang, Waypoint } from './route-builder.models';
+import {
+  Checkpoint,
+  FreightLang,
+  ROUTE_POINT_OPERATIONS,
+  RoutePointOperation,
+  Waypoint
+} from './route-builder.models';
 import { hasPendingBorderCheckpoint } from './route-builder.utils';
+import {
+  RoutePointOperationsError,
+  checkSetOperationsForPoint,
+  getAllowedOperationsForPoint,
+  validateWaypointOperations
+} from './route-point-operations.utils';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
@@ -101,6 +113,11 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly isEditMode = computed(() => this.mode() === 'edit');
   readonly isCreateMode = computed(() => this.mode() === 'create');
   readonly canEditRoute = computed(() => this.isEditMode() || this.isCreateMode());
+  readonly operationsValidationError = computed<RoutePointOperationsError | null>(() =>
+    validateWaypointOperations(this.waypoints())
+  );
+  readonly hasOperationsError = computed(() => this.operationsValidationError() !== null);
+  readonly allOperations = ROUTE_POINT_OPERATIONS;
   readonly lang = computed<FreightLang>(() => {
     const current = this.translate.currentLang || this.translate.getDefaultLang() || 'uk';
     return (['uk', 'ru', 'en'].includes(current) ? current : 'uk') as FreightLang;
@@ -239,6 +256,11 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       this.showToast('pages.freightCalculation.errors.selectBorderRequired');
       return;
     }
+    const opsErrorKey = this.getOperationsErrorKey();
+    if (opsErrorKey) {
+      this.showToast(opsErrorKey);
+      return;
+    }
     this.isSavingRoute.set(true);
     try {
       const selectedRouteId = this.getSelectedRouteId();
@@ -323,7 +345,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       lng: checkpoint.lng,
       address: name,
       country,
-      isBorder: true
+      isBorder: true,
+      operations: []
     });
     this.waypoints.set(next);
     this.selectedWaypointIndex.set(segmentIndex + 1);
@@ -342,6 +365,11 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
     if (this.hasPendingBorder()) {
       this.showToast('pages.freightCalculation.errors.selectBorderRequired');
+      return;
+    }
+    const opsErrorKey = this.getOperationsErrorKey();
+    if (opsErrorKey) {
+      this.showToast(opsErrorKey);
       return;
     }
     if (!this.getSelectedRouteId()) {
@@ -447,6 +475,79 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  getPointOperations(index: number): RoutePointOperation[] {
+    return this.waypoints()[index]?.operations ?? [];
+  }
+
+  getAllowedOperations(index: number): RoutePointOperation[] {
+    const point = this.waypoints()[index];
+    if (!point) {
+      return [];
+    }
+    return getAllowedOperationsForPoint(point.isBorder);
+  }
+
+  isOperationsErrorOnPoint(index: number): boolean {
+    const error = this.operationsValidationError();
+    return error !== null && error.pointIndex === index;
+  }
+
+  getOperationsErrorKey(): string | null {
+    const error = this.operationsValidationError();
+    if (!error) {
+      return null;
+    }
+    return `pages.routeBuilder.errors.${this.errorCodeToKey(error.code)}`;
+  }
+
+  onPointOperationsChange(index: number, value: unknown): void {
+    if (!this.canEditRoute()) {
+      return;
+    }
+    const next = Array.isArray(value)
+      ? (value.filter((op): op is RoutePointOperation => typeof op === 'string') as RoutePointOperation[])
+      : [];
+    const point = this.waypoints()[index];
+    if (!point) {
+      return;
+    }
+    const problem = checkSetOperationsForPoint(point.isBorder, next);
+    if (problem) {
+      this.showToast('pages.routeBuilder.errors.operationsCombo');
+      // Не зберігаємо некоректний набір — змусимо UI відобразити поточне (валідне) значення.
+      this.waypoints.update((items) =>
+        items.map((item, idx) => (idx === index ? { ...item, operations: [...item.operations] } : item))
+      );
+      return;
+    }
+    this.waypoints.update((items) =>
+      items.map((item, idx) => (idx === index ? { ...item, operations: next } : item))
+    );
+  }
+
+  private errorCodeToKey(code: RoutePointOperationsError['code']): string {
+    switch (code) {
+      case 'OPERATION_SET_INVALID':
+        return 'operationsCombo';
+      case 'BORDER_TOO_MANY':
+        return 'borderTooMany';
+      case 'CUSTOMS_WITHOUT_BORDER':
+        return 'customsWithoutBorder';
+      case 'MISSING_EXPORT_BEFORE_BORDER':
+        return 'missingExportBeforeBorder';
+      case 'MISSING_IMPORT_AFTER_BORDER':
+        return 'missingImportAfterBorder';
+      case 'IMPORT_BEFORE_EXPORT':
+        return 'importBeforeExport';
+      case 'OPERATION_IN_TRANSIT':
+        return 'operationInTransit';
+      case 'UNCLOSED_CUSTOMS':
+        return 'unclosedCustoms';
+      case 'OPERATION_AFTER_UNLOAD':
+        return 'operationAfterUnload';
+    }
+  }
+
   private initializeMap(): void {
     const container = this.mapContainer.nativeElement;
     container.style.width = '100%';
@@ -506,7 +607,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
           lng,
           address: address ?? fallbackAddress,
           country: country?.toLowerCase() ?? null,
-          isBorder: false
+          isBorder: false,
+          operations: [] as RoutePointOperation[]
         }
       ];
       this.selectedWaypointIndex.set(next.length - 1);
@@ -694,7 +796,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       lng: Number(point.lng.toFixed(6)),
       country: point.country ?? '',
       isBorder: point.isBorder,
-      segmentDistanceKmToNext: index < lastIndex && distances[index] !== undefined ? Number((distances[index] / 1000).toFixed(3)) : null
+      segmentDistanceKmToNext: index < lastIndex && distances[index] !== undefined ? Number((distances[index] / 1000).toFixed(3)) : null,
+      operations: [...(point.operations ?? [])]
     }));
   }
 
@@ -737,7 +840,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         lng: point.lng,
         address: point.address,
         country: point.country ? point.country.toLowerCase() : null,
-        isBorder: point.isBorder
+        isBorder: point.isBorder,
+        operations: [...((point.operations ?? []) as RoutePointOperation[])]
       }));
     this.waypoints.set(points);
     this.segmentDistances.set(

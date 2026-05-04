@@ -1,10 +1,10 @@
 package com.geosun.tms.routes.dto.response;
 
+import com.geosun.tms.routes.dto.RoutePointOperationDto;
 import com.geosun.tms.routes.dto.RoutePointType;
+import java.util.List;
 
-/**
- * DTO точки маршруту для read-відповідей.
- */
+/** DTO точки маршруту для read-відповідей. */
 public record RoutePointDto(
     Integer order,
     RoutePointType type,
@@ -13,4 +13,5 @@ public record RoutePointDto(
     Double lng,
     String country,
     Boolean isBorder,
-    Double segmentDistanceKmToNext) {}
+    Double segmentDistanceKmToNext,
+    List<RoutePointOperationDto> operations) {}

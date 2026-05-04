@@ -1,5 +1,11 @@
 export type RoutePointType = 'START' | 'STOP' | 'FINISH' | 'BORDER';
 
+export type RoutePointOperationContract =
+  | 'LOADING'
+  | 'EXPORT_CUSTOMS'
+  | 'IMPORT_CUSTOMS'
+  | 'UNLOADING';
+
 export interface RoutePointContract {
   order: number;
   type: RoutePointType;
@@ -9,6 +15,7 @@ export interface RoutePointContract {
   country: string;
   isBorder: boolean;
   segmentDistanceKmToNext: number | null;
+  operations: RoutePointOperationContract[];
 }
 
 export interface HereRouteMetaContract {

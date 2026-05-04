@@ -2,6 +2,15 @@ export type FreightLang = 'uk' | 'ru' | 'en';
 
 export type CountryCode = 'ua' | 'pl' | 'sk' | 'hu' | 'ro' | 'md' | string;
 
+export type RoutePointOperation = 'LOADING' | 'EXPORT_CUSTOMS' | 'IMPORT_CUSTOMS' | 'UNLOADING';
+
+export const ROUTE_POINT_OPERATIONS: readonly RoutePointOperation[] = [
+  'LOADING',
+  'EXPORT_CUSTOMS',
+  'IMPORT_CUSTOMS',
+  'UNLOADING'
+] as const;
+
 export interface Checkpoint {
   name: Record<FreightLang, string>;
   lat: number;
@@ -14,6 +23,7 @@ export interface Waypoint {
   address: string;
   country: CountryCode | null;
   isBorder: boolean;
+  operations: RoutePointOperation[];
 }
 
 export interface RoutePointPayload {
@@ -25,6 +35,7 @@ export interface RoutePointPayload {
   country: string;
   isBorder: boolean;
   segmentDistanceKmToNext: number | null;
+  operations: RoutePointOperation[];
 }
 
 export interface FreightRequestPayload {

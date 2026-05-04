@@ -6,6 +6,11 @@ import com.geosun.tms.auth.repository.UserRepository;
 import com.geosun.tms.routes.domain.Route;
 import com.geosun.tms.routes.domain.RoutePoint;
 import com.geosun.tms.routes.domain.RoutePointKind;
+import com.geosun.tms.routes.domain.RoutePointOperation;
+import com.geosun.tms.routes.domain.RoutePointOperationsRules;
+import com.geosun.tms.routes.domain.RoutePointOperationsRules.RoutePointWithOperations;
+import com.geosun.tms.routes.domain.RoutePointOperationsRules.ValidationError;
+import com.geosun.tms.routes.dto.RoutePointOperationDto;
 import com.geosun.tms.routes.dto.RoutePointType;
 import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
 import com.geosun.tms.routes.dto.request.RoutePointRequest;
@@ -17,9 +22,12 @@ import com.geosun.tms.routes.dto.response.RouteSummaryDto;
 import com.geosun.tms.routes.repository.RouteRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -117,7 +125,35 @@ public class RouteService implements RouteContractsFacade {
     point.setCountry(request.country());
     point.setBorder(Boolean.TRUE.equals(request.isBorder()));
     point.setSegmentDistanceKmToNext(toBigDecimal(request.segmentDistanceKmToNext()));
+    point.setOperations(toDomainOperations(request.operations()));
     return point;
+  }
+
+  private static List<RoutePointOperation> toDomainOperations(
+      List<RoutePointOperationDto> operations) {
+    if (operations == null || operations.isEmpty()) {
+      return new ArrayList<>();
+    }
+    List<RoutePointOperation> result = new ArrayList<>(operations.size());
+    for (RoutePointOperationDto op : operations) {
+      if (op != null) {
+        result.add(RoutePointOperation.valueOf(op.name()));
+      }
+    }
+    return result;
+  }
+
+  static List<RoutePointOperationDto> toDtoOperations(List<RoutePointOperation> operations) {
+    if (operations == null || operations.isEmpty()) {
+      return List.of();
+    }
+    List<RoutePointOperationDto> result = new ArrayList<>(operations.size());
+    for (RoutePointOperation op : operations) {
+      if (op != null) {
+        result.add(RoutePointOperationDto.valueOf(op.name()));
+      }
+    }
+    return result;
   }
 
   private RouteSummaryDto toSummary(Route route) {
@@ -169,13 +205,45 @@ public class RouteService implements RouteContractsFacade {
         toDouble(point.getLng()),
         point.getCountry(),
         point.isBorder(),
-        toDouble(point.getSegmentDistanceKmToNext()));
+        toDouble(point.getSegmentDistanceKmToNext()),
+        toDtoOperations(point.getOperations()));
   }
 
   private static void validatePoints(List<RoutePointRequest> points) {
     if (points == null || points.size() < 2) {
       throw ApiException.badRequest("ROUTE_POINTS_INVALID", "Route must contain at least 2 points");
     }
+    validateOperations(points);
+  }
+
+  private static void validateOperations(List<RoutePointRequest> points) {
+    List<RoutePointWithOperations> ordered =
+        points.stream()
+            .sorted(Comparator.comparing(RoutePointRequest::order))
+            .map(RouteService::toValidationPoint)
+            .toList();
+    ValidationError error = RoutePointOperationsRules.validateRoute(ordered);
+    if (error == null) {
+      return;
+    }
+    String message =
+        error.pointIndex() >= 0
+            ? "Invalid route point operations at index " + error.pointIndex()
+            : "Invalid route point operations";
+    throw ApiException.badRequest(
+        "ROUTE_OPERATIONS_" + error.code().name(), message);
+  }
+
+  private static RoutePointWithOperations toValidationPoint(RoutePointRequest request) {
+    Set<RoutePointOperation> ops = EnumSet.noneOf(RoutePointOperation.class);
+    if (request.operations() != null) {
+      for (RoutePointOperationDto op : request.operations()) {
+        if (op != null) {
+          ops.add(RoutePointOperation.valueOf(op.name()));
+        }
+      }
+    }
+    return new RoutePointWithOperations(RoutePointKind.valueOf(request.type().name()), ops);
   }
 
   private static BigDecimal toBigDecimal(Double value) {

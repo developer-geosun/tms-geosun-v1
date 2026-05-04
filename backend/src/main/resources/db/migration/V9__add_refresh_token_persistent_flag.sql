@@ -1,0 +1,2 @@
+ALTER TABLE refresh_tokens
+  ADD COLUMN IF NOT EXISTS persistent TINYINT(1) NOT NULL DEFAULT 0;

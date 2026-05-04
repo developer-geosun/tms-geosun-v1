@@ -624,7 +624,8 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
       lng: Number(point.lng.toFixed(6)),
       country: point.country ?? '',
       isBorder: point.isBorder,
-      segmentDistanceKmToNext: index < lastIndex && distances[index] !== undefined ? Number((distances[index] / 1000).toFixed(3)) : null
+      segmentDistanceKmToNext: index < lastIndex && distances[index] !== undefined ? Number((distances[index] / 1000).toFixed(3)) : null,
+      operations: []
     }));
   }
 

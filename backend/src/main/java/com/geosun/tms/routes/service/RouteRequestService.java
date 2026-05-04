@@ -160,7 +160,8 @@ public class RouteRequestService {
                             toDouble(point.getLng()),
                             point.getCountry(),
                             point.isBorder(),
-                            toDouble(point.getSegmentDistanceKmToNext())))
+                            toDouble(point.getSegmentDistanceKmToNext()),
+                            RouteService.toDtoOperations(point.getOperations())))
                 .toList();
 
     return new RouteSnapshotDto(
