@@ -127,7 +127,7 @@
       "deleteRoute": "Delete route",
       "editRoute": "Edit route",
       "saveChanges": "Save changes",
-      "createRoute": "Create route",
+      "createRoute": "Save",
       "newRoute": "New route",
       "cancelEdit": "Back to view",
       "routeDeleted": "Route deleted"
