@@ -57,7 +57,7 @@
             color="primary"
             type="button"
             (click)="saveCurrentRoute()"
-            [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
+            [disabled]="!hasRoute() || hasPendingBorder() || isSavingRoute() || isLoadingSavedRoute()"
           >
             {{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}
           </button>

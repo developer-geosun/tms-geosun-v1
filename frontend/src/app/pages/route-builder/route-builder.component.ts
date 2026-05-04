@@ -235,6 +235,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       this.showToast('pages.freightCalculation.errors.routeRequired');
       return;
     }
+    if (this.hasPendingBorder()) {
+      this.showToast('pages.freightCalculation.errors.selectBorderRequired');
+      return;
+    }
     this.isSavingRoute.set(true);
     try {
       const selectedRouteId = this.getSelectedRouteId();
