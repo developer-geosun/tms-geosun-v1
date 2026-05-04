@@ -22,8 +22,8 @@ app-root {
 mat-button-toggle.ua-button.mat-button-toggle-checked {
   background-color: #FFD700 !important;
   color: #0000FF !important;
-  border: 1px solid var(--mat-sys-outline) !important;
-  
+  // Рамку групи задає mat-button-toggle-group; власний border давав подвійну темну обводку на першому сегменті
+
   .mat-button-toggle-button,
   .mat-button-toggle-label-content {
     background-color: #FFD700 !important;
@@ -34,8 +34,7 @@ mat-button-toggle.ua-button.mat-button-toggle-checked {
 mat-button-toggle.en-button.mat-button-toggle-checked {
   background-color: #0000FF !important;
   color: #FFFFFF !important;
-  border: 1px solid var(--mat-sys-outline) !important;
-  
+
   .mat-button-toggle-button,
   .mat-button-toggle-label-content {
     background-color: #0000FF !important;
@@ -46,8 +45,7 @@ mat-button-toggle.en-button.mat-button-toggle-checked {
 mat-button-toggle.ru-button.mat-button-toggle-checked {
   background-color: #FF0000 !important;
   color: #FFFFFF !important;
-  border: 1px solid var(--mat-sys-outline) !important;
-  
+
   .mat-button-toggle-button,
   .mat-button-toggle-label-content {
     background-color: #FF0000 !important;
@@ -60,7 +58,6 @@ mat-button-toggle.en-button:not(.mat-button-toggle-checked),
 mat-button-toggle.ru-button:not(.mat-button-toggle-checked) {
   background-color: var(--mat-sys-surface-container) !important;
   color: var(--mat-sys-on-surface-variant) !important;
-  border: 1px solid var(--mat-sys-outline-variant) !important;
 
   .mat-button-toggle-button,
   .mat-button-toggle-label-content,

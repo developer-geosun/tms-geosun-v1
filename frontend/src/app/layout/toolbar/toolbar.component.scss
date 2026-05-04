@@ -277,6 +277,23 @@ a.company-site-button:active {
   height: 28px;
 }
 
+// Тільки вертикальні розділювачі між сегментами — без подвійної рамки з групою
+.settings-menu-content mat-button-toggle.ua-button,
+.settings-menu-content mat-button-toggle.en-button,
+.settings-menu-content mat-button-toggle.ru-button {
+  border: none !important;
+  box-shadow: none !important;
+
+  &:not(:last-child) {
+    border-right: 1px solid var(--mat-sys-outline-variant) !important;
+  }
+
+  .mat-mdc-button-toggle-button {
+    border: none !important;
+    box-shadow: none !important;
+  }
+}
+
 .theme-options {
   display: flex;
   flex-direction: column;
@@ -309,10 +326,15 @@ a.company-site-button:active {
   border-color: var(--mat-sys-outline);
 }
 
-.theme-option:focus-visible,
-.settings-menu-content mat-button-toggle:focus-visible {
+.theme-option:focus-visible {
   outline: 2px solid var(--mat-sys-primary);
   outline-offset: 2px;
+}
+
+// Внутрішнє кільце фокусу — outline з offset обрізався б overflow групи і виглядав як темна «Г» на UA
+.settings-menu-content mat-button-toggle .mat-mdc-button-toggle-button:focus-visible {
+  outline: none !important;
+  box-shadow: inset 0 0 0 2px var(--mat-sys-primary);
 }
 
 .theme-option-radio {
