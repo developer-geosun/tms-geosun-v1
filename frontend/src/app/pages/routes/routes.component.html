@@ -1,6 +1,10 @@
 <section class="routes-page">
   <h1>{{ 'pages.routes.title' | translate }}</h1>
 
+  @if (deleteFailed()) {
+    <p>{{ 'pages.routes.deleteFailed' | translate }}</p>
+  }
+
   @if (isLoading()) {
     <p>{{ 'pages.routes.loading' | translate }}</p>
   } @else if (loadFailed()) {
@@ -48,10 +52,18 @@
                   mat-mini-fab
                   type="button"
                   class="route-card__delete-action"
+                  (click)="requestRouteDelete(route.id, route.title, route.createdAt, route.distanceKm)"
+                  [disabled]="deletingRouteId() !== null"
                   [attr.aria-label]="'pages.routesHistory.deleteRoute' | translate"
                   [title]="'pages.routesHistory.deleteRoute' | translate"
                 >
-                  <mat-icon>delete</mat-icon>
+                  <mat-icon>
+                    @if (deletingRouteId() === route.id) {
+                      hourglass_top
+                    } @else {
+                      delete
+                    }
+                  </mat-icon>
                 </button>
                 <button
                   mat-mini-fab

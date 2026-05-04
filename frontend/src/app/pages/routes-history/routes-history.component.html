@@ -25,7 +25,12 @@
             <button type="button" (click)="openRoute(route.id)" [disabled]="deletingRouteId() === route.id">
               {{ 'pages.routesHistory.openRoute' | translate }}
             </button>
-            <button type="button" class="routes-history__delete" (click)="requestRouteDelete(route.id)" [disabled]="deletingRouteId() !== null">
+            <button
+              type="button"
+              class="routes-history__delete"
+              (click)="requestRouteDelete(route.id, route.title, route.createdAt, route.distanceKm)"
+              [disabled]="deletingRouteId() !== null"
+            >
               @if (deletingRouteId() === route.id) {
                 {{ 'pages.routesHistory.deleting' | translate }}
               } @else {
@@ -38,25 +43,4 @@
     </div>
   }
 </section>
-
-@if (pendingDeleteRouteId()) {
-  <div class="routes-history__modal-backdrop" (click)="cancelRouteDelete()">
-    <div class="routes-history__modal" (click)="$event.stopPropagation()">
-      <h3>{{ 'pages.routesHistory.deleteConfirmTitle' | translate }}</h3>
-      <p>{{ 'pages.routesHistory.deleteConfirmText' | translate }}</p>
-      <div class="routes-history__modal-actions">
-        <button type="button" (click)="cancelRouteDelete()" [disabled]="deletingRouteId() !== null">
-          {{ 'pages.routesHistory.deleteCancel' | translate }}
-        </button>
-        <button type="button" class="routes-history__delete" (click)="confirmRouteDelete()" [disabled]="deletingRouteId() !== null">
-          @if (deletingRouteId() !== null) {
-            {{ 'pages.routesHistory.deleting' | translate }}
-          } @else {
-            {{ 'pages.routesHistory.deleteConfirmAction' | translate }}
-          }
-        </button>
-      </div>
-    </div>
-  </div>
-}
 

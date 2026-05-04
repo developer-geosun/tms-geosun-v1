@@ -1,12 +1,15 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 import { RoutesApiService } from '../../core/api/routes-api.service';
 import { RoutePointContract, RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
+import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-routes',
@@ -19,6 +22,7 @@ import { RoutePointContract, RouteSummaryContractDto } from '../../core/api/rout
 export class RoutesComponent {
   private readonly routesApi = inject(RoutesApiService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
   private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
     month: '2-digit',
@@ -30,6 +34,8 @@ export class RoutesComponent {
   readonly routeCards = signal<RouteCardViewModel[]>([]);
   readonly isLoading = signal(true);
   readonly loadFailed = signal(false);
+  readonly deletingRouteId = signal<string | null>(null);
+  readonly deleteFailed = signal(false);
 
   constructor() {
     void this.loadRouteCards();
@@ -54,6 +60,34 @@ export class RoutesComponent {
 
   async editRoute(routeId: string): Promise<void> {
     await this.router.navigate(['/route-builder'], { queryParams: { routeId, mode: 'edit' } });
+  }
+
+  async requestRouteDelete(
+    routeId: string,
+    routeTitle: string,
+    routeCreatedAt: string | null | undefined,
+    routeDistanceKm: number | null | undefined
+  ): Promise<void> {
+    if (this.deletingRouteId()) {
+      return;
+    }
+
+    const dialogRef = this.dialog.open(RouteDeleteConfirmDialogComponent, {
+      width: '420px',
+      disableClose: true,
+      data: {
+        routeTitle,
+        routeCreatedAt: this.formatRouteDateTime(routeCreatedAt),
+        routeDistanceKm: routeDistanceKm?.toFixed(1) ?? '0.0'
+      }
+    });
+
+    const shouldDelete = await firstValueFrom(dialogRef.afterClosed());
+    if (!shouldDelete) {
+      return;
+    }
+
+    await this.deleteRoute(routeId);
   }
 
   private async loadRouteCards(): Promise<void> {
@@ -89,6 +123,19 @@ export class RoutesComponent {
       createdAt: summary.createdAt,
       points: [...points].sort((first: RoutePointContract, second: RoutePointContract) => first.order - second.order)
     };
+  }
+
+  private async deleteRoute(routeId: string): Promise<void> {
+    this.deleteFailed.set(false);
+    this.deletingRouteId.set(routeId);
+    try {
+      await this.routesApi.deleteMyRoute(routeId);
+      this.routeCards.update((currentCards) => currentCards.filter((card) => card.id !== routeId));
+    } catch {
+      this.deleteFailed.set(true);
+    } finally {
+      this.deletingRouteId.set(null);
+    }
   }
 }
 

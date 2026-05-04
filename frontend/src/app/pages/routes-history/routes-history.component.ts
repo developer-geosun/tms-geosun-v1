@@ -1,8 +1,11 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { firstValueFrom } from 'rxjs';
 import { RoutesApiService } from '../../core/api/routes-api.service';
 import { RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
+import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-routes-history',
@@ -15,6 +18,7 @@ import { RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
 export class RoutesHistoryComponent {
   private readonly routesApi = inject(RoutesApiService);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
   private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
     month: '2-digit',
@@ -27,7 +31,6 @@ export class RoutesHistoryComponent {
   readonly isLoading = signal(true);
   readonly loadFailed = signal(false);
   readonly deletingRouteId = signal<string | null>(null);
-  readonly pendingDeleteRouteId = signal<string | null>(null);
   readonly deleteFailed = signal(false);
 
   constructor() {
@@ -42,25 +45,28 @@ export class RoutesHistoryComponent {
     await this.router.navigate(['/freight-calculation']);
   }
 
-  requestRouteDelete(routeId: string): void {
+  async requestRouteDelete(
+    routeId: string,
+    routeTitle: string,
+    routeCreatedAt: string | null | undefined,
+    routeDistanceKm: number | null | undefined
+  ): Promise<void> {
     if (this.deletingRouteId()) {
       return;
     }
 
-    this.pendingDeleteRouteId.set(routeId);
-  }
+    const dialogRef = this.dialog.open(RouteDeleteConfirmDialogComponent, {
+      width: '420px',
+      disableClose: true,
+      data: {
+        routeTitle,
+        routeCreatedAt: this.formatRouteDateTime(routeCreatedAt),
+        routeDistanceKm: routeDistanceKm?.toFixed(1) ?? '0.0'
+      }
+    });
 
-  cancelRouteDelete(): void {
-    if (this.deletingRouteId()) {
-      return;
-    }
-
-    this.pendingDeleteRouteId.set(null);
-  }
-
-  async confirmRouteDelete(): Promise<void> {
-    const routeId = this.pendingDeleteRouteId();
-    if (!routeId || this.deletingRouteId()) {
+    const shouldDelete = await firstValueFrom(dialogRef.afterClosed());
+    if (!shouldDelete) {
       return;
     }
 
@@ -69,7 +75,6 @@ export class RoutesHistoryComponent {
     try {
       await this.routesApi.deleteMyRoute(routeId);
       this.routes.update((currentRoutes) => currentRoutes.filter((route) => route.id !== routeId));
-      this.pendingDeleteRouteId.set(null);
     } catch {
       this.deleteFailed.set(true);
     } finally {
