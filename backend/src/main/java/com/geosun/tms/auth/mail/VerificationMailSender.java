@@ -6,6 +6,7 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.MailException;
@@ -37,16 +38,22 @@ public class VerificationMailSender {
   }
 
   public void sendVerificationEmail(String toAddress, String rawToken) throws MailException {
+    String nonNullToAddress = Objects.requireNonNull(toAddress, "toAddress must not be null");
+    String nonNullRawToken = Objects.requireNonNull(rawToken, "rawToken must not be null");
+    String nonNullFromAddress =
+        Objects.requireNonNull(emailProperties.getFrom(), "from address must not be null");
     String verificationLink =
-        buildVerificationLink(emailProperties.getVerificationLinkBase(), rawToken);
+        buildVerificationLink(emailProperties.getVerificationLinkBase(), nonNullRawToken);
     MimeMessage message = mailSender.createMimeMessage();
     try {
       MimeMessageHelper helper =
           new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
-      helper.setFrom(emailProperties.getFrom());
-      helper.setTo(toAddress);
+      helper.setFrom(nonNullFromAddress);
+      helper.setTo(nonNullToAddress);
       helper.setSubject(MAIL_SUBJECT);
-      helper.setText(buildPlainTextBody(verificationLink), buildHtmlBody(verificationLink));
+      helper.setText(
+          Objects.requireNonNull(buildPlainTextBody(verificationLink)),
+          Objects.requireNonNull(buildHtmlBody(verificationLink)));
     } catch (MessagingException | IOException ex) {
       throw new MailPreparationException("Failed to prepare verification email", ex);
     }
@@ -63,7 +70,7 @@ public class VerificationMailSender {
 
   private static String readTemplate(Resource resource) throws IOException {
     try (var inputStream = resource.getInputStream()) {
-      return StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+      return StreamUtils.copyToString(inputStream, Objects.requireNonNull(StandardCharsets.UTF_8));
     }
   }
 

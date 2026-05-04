@@ -16,11 +16,13 @@ import com.geosun.tms.auth.repository.UserRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,7 +50,7 @@ class RouteApiIntegrationTest {
             .perform(
                 post("/api/v1/routes")
                     .header("Authorization", bearer(access))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonMediaType())
                     .content(body))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.title").value("Kyiv -> Warsaw"))
@@ -82,7 +84,7 @@ class RouteApiIntegrationTest {
             .perform(
                 post("/api/v1/routes")
                     .header("Authorization", bearer(ownerAccess))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonMediaType())
                     .content(toJson(routePayload("Private route"))))
             .andExpect(status().isCreated())
             .andReturn();
@@ -106,7 +108,7 @@ class RouteApiIntegrationTest {
             .perform(
                 post("/api/v1/routes")
                     .header("Authorization", bearer(access))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonMediaType())
                     .content(toJson(routePayload("Delete me"))))
             .andExpect(status().isCreated())
             .andReturn();
@@ -146,7 +148,7 @@ class RouteApiIntegrationTest {
         mockMvc
             .perform(
                 post("/api/v1/auth/login")
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonMediaType())
                     .content(toJson(new LoginRequest(email, password))))
             .andExpect(status().isOk())
             .andReturn();
@@ -200,7 +202,11 @@ class RouteApiIntegrationTest {
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
   }
 
-  private String toJson(Object value) throws Exception {
-    return objectMapper.writeValueAsString(value);
+  private @NonNull String toJson(Object value) throws Exception {
+    return Objects.requireNonNull(objectMapper.writeValueAsString(value));
+  }
+
+  private static @NonNull MediaType jsonMediaType() {
+    return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 }

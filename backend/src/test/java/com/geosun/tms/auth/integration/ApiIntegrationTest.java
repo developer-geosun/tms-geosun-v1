@@ -57,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@SuppressWarnings("null")
 class ApiIntegrationTest {
   private static final Pattern TOKEN_PATTERN = Pattern.compile("[?&]token=([^\\s\"'<>]+)");
 
@@ -154,8 +155,8 @@ class ApiIntegrationTest {
             .content(toJson(new RegisterRequest("flow@example.com", "Secret123"))));
 
     ArgumentCaptor<MimeMessage> mailCap = ArgumentCaptor.forClass(MimeMessage.class);
-    verify(javaMailSender, times(1)).send(mailCap.capture());
-    String token = extractVerificationToken(requireMailText(mailCap.getValue()));
+    verifyMailSentAndCapture(javaMailSender, mailCap);
+    String token = extractVerificationToken(requireMailText(capturedMail(mailCap)));
 
     mockMvc
         .perform(
@@ -290,14 +291,14 @@ class ApiIntegrationTest {
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest("ratelimit@example.com", "Secret123"))));
     ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
-    verify(javaMailSender).send(cap.capture());
+    verifyMailSentAndCapture(javaMailSender, cap);
     mockMvc.perform(
         post("/api/v1/auth/verify-email")
             .contentType(jsonContentType())
             .content(
                 toJson(
                     new VerifyEmailRequest(
-                        extractVerificationToken(requireMailText(cap.getValue()))))));
+                        extractVerificationToken(requireMailText(capturedMail(cap)))))));
 
     String loginBody = toJson(new LoginRequest("ratelimit@example.com", "WrongPass99"));
     for (int i = 0; i < 5; i++) {
@@ -412,8 +413,8 @@ class ApiIntegrationTest {
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest(email, "Secret123"))));
     ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
-    verify(javaMailSender, times(1)).send(cap.capture());
-    String token = extractVerificationToken(requireMailText(cap.getValue()));
+    verifyMailSentAndCapture(javaMailSender, cap);
+    String token = extractVerificationToken(requireMailText(capturedMail(cap)));
     mockMvc.perform(
         post("/api/v1/auth/verify-email")
             .contentType(jsonContentType())
@@ -476,9 +477,17 @@ class ApiIntegrationTest {
     }
   }
 
-  @NonNull
   private static MimeMessage anyMailMessage() {
-    return (MimeMessage) any(MimeMessage.class);
+    return any(MimeMessage.class);
+  }
+
+  private static void verifyMailSentAndCapture(
+      @NonNull JavaMailSender javaMailSender, @NonNull ArgumentCaptor<MimeMessage> mailCap) {
+    verify(javaMailSender, times(1)).send(mailCap.capture());
+  }
+
+  private static MimeMessage capturedMail(ArgumentCaptor<MimeMessage> mailCap) {
+    return Objects.requireNonNull(mailCap.getValue(), "Expected captured MimeMessage");
   }
 
   @NonNull

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.lang.NonNull;
 
 public interface RouteRequestRepository extends JpaRepository<RouteRequest, String> {
   @EntityGraph(attributePaths = {"route"})
@@ -17,5 +18,6 @@ public interface RouteRequestRepository extends JpaRepository<RouteRequest, Stri
   List<RouteRequest> findAllByOrderByCreatedAtDesc();
 
   @EntityGraph(attributePaths = {"route", "route.points"})
-  Optional<RouteRequest> findById(String id);
+  @NonNull
+  Optional<RouteRequest> findById(@NonNull String id);
 }

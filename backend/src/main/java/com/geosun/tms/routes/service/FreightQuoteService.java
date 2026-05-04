@@ -20,6 +20,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Objects;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -50,7 +52,10 @@ public class FreightQuoteService {
 
   @Transactional
   public QuoteDto createDraftQuote(
-      String requestId, String adminUserId, String idempotencyKey, CreateQuoteRequest request) {
+      @NonNull String requestId,
+      @NonNull String adminUserId,
+      @NonNull String idempotencyKey,
+      @NonNull CreateQuoteRequest request) {
     String key = requireIdempotencyKey(idempotencyKey);
     QuoteIdempotencyKey existing = loadIdempotency(OP_CREATE, key, adminUserId);
     if (existing != null && existing.getQuote() != null) {
@@ -94,7 +99,9 @@ public class FreightQuoteService {
   }
 
   @Transactional
-  public QuoteDto sendQuote(String quoteId, String adminUserId, String idempotencyKey) {
+  public QuoteDto sendQuote(
+      @NonNull String quoteId, @NonNull String adminUserId, @NonNull String idempotencyKey) {
+    String normalizedQuoteId = requireQuoteId(quoteId);
     String key = requireIdempotencyKey(idempotencyKey);
     QuoteIdempotencyKey existing = loadIdempotency(OP_SEND, key, adminUserId);
     if (existing != null && existing.getQuote() != null) {
@@ -107,7 +114,7 @@ public class FreightQuoteService {
             .orElseThrow(() -> ApiException.notFound("User not found"));
     FreightQuote quote =
         freightQuoteRepository
-            .findById(quoteId)
+            .findById(Objects.requireNonNull(normalizedQuoteId))
             .orElseThrow(() -> ApiException.notFound("Quote not found"));
     if (quote.getStatus() == QuoteStatus.SENT) {
       persistIdempotency(OP_SEND, key, adminUser, quote.getRequest(), quote);
@@ -139,7 +146,7 @@ public class FreightQuoteService {
   }
 
   @Transactional(readOnly = true)
-  public List<QuoteDto> getQuotesForRequest(String requestId) {
+  public List<QuoteDto> getQuotesForRequest(@NonNull String requestId) {
     routeRequestRepository
         .findById(requestId)
         .orElseThrow(() -> ApiException.notFound("Route request not found"));
@@ -149,7 +156,7 @@ public class FreightQuoteService {
   }
 
   @Transactional(readOnly = true)
-  public QuoteDto getCurrentQuoteForRequest(String requestId) {
+  public QuoteDto getCurrentQuoteForRequest(@NonNull String requestId) {
     return freightQuoteRepository
         .findFirstByRequestIdAndStatusInOrderByCreatedAtDesc(
             requestId, List.of(QuoteStatus.SENT, QuoteStatus.DRAFT))
@@ -199,6 +206,13 @@ public class FreightQuoteService {
           "IDEMPOTENCY_KEY_REQUIRED", "Idempotency-Key header is required");
     }
     return idempotencyKey.trim();
+  }
+
+  private static String requireQuoteId(String quoteId) {
+    if (!StringUtils.hasText(quoteId)) {
+      throw ApiException.badRequest("VALIDATION_ERROR", "Quote id is required");
+    }
+    return Objects.requireNonNull(quoteId).trim();
   }
 
   private static LocalDate parseDateOrNull(String rawDate) {

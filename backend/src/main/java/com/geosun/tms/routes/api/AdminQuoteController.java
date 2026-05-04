@@ -11,8 +11,10 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,15 +39,16 @@ public class AdminQuoteController {
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping(RoutesApiPaths.ADMIN_ROUTE_REQUESTS_BASE + "/{requestId}/quotes")
   public ResponseEntity<QuoteDto> createDraftQuote(
-      @AuthenticationPrincipal UserPrincipal principal,
-      @PathVariable String requestId,
-      @RequestHeader(name = "Idempotency-Key", required = false)
+      @AuthenticationPrincipal @NonNull UserPrincipal principal,
+      @PathVariable @NonNull String requestId,
+      @RequestHeader(name = "Idempotency-Key")
           @Parameter(description = "Idempotency key for create operation")
+          @NonNull
           String idempotencyKey,
-      @Valid @RequestBody CreateQuoteRequest request) {
+      @Valid @RequestBody @NonNull CreateQuoteRequest request) {
+    String adminUserId = Objects.requireNonNull(principal.getUserId());
     QuoteDto quote =
-        freightQuoteService.createDraftQuote(
-            requestId, principal.getUserId(), idempotencyKey, request);
+        freightQuoteService.createDraftQuote(requestId, adminUserId, idempotencyKey, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(quote);
   }
 
@@ -54,18 +57,20 @@ public class AdminQuoteController {
   @PreAuthorize("hasRole('ADMIN')")
   @PostMapping(RoutesApiPaths.ADMIN_QUOTES_BASE + "/{quoteId}/send")
   public QuoteDto sendQuote(
-      @AuthenticationPrincipal UserPrincipal principal,
-      @PathVariable String quoteId,
-      @RequestHeader(name = "Idempotency-Key", required = false)
+      @AuthenticationPrincipal @NonNull UserPrincipal principal,
+      @PathVariable @NonNull String quoteId,
+      @RequestHeader(name = "Idempotency-Key")
           @Parameter(description = "Idempotency key for send operation")
+          @NonNull
           String idempotencyKey) {
-    return freightQuoteService.sendQuote(quoteId, principal.getUserId(), idempotencyKey);
+    String adminUserId = Objects.requireNonNull(principal.getUserId());
+    return freightQuoteService.sendQuote(quoteId, adminUserId, idempotencyKey);
   }
 
   @Operation(summary = "List quote history for route request")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping(RoutesApiPaths.ADMIN_ROUTE_REQUESTS_BASE + "/{requestId}/quotes")
-  public List<QuoteDto> getQuotesHistory(@PathVariable String requestId) {
+  public List<QuoteDto> getQuotesHistory(@PathVariable @NonNull String requestId) {
     return freightQuoteService.getQuotesForRequest(requestId);
   }
 }

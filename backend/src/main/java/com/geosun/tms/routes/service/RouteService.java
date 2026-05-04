@@ -19,6 +19,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,8 +42,11 @@ public class RouteService implements RouteContractsFacade {
   @Transactional
   public RouteSnapshotDto saveRoute(String userId, SaveRouteRequest request) {
     validatePoints(request.points());
+    String safeUserId = Objects.requireNonNull(userId, "userId must not be null");
     User user =
-        userRepository.findById(userId).orElseThrow(() -> ApiException.notFound("User not found"));
+        userRepository
+            .findById(safeUserId)
+            .orElseThrow(() -> ApiException.notFound("User not found"));
 
     Route route = new Route();
     route.setUser(user);

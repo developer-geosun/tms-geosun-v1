@@ -22,6 +22,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -98,21 +99,23 @@ public class RouteRequestService {
 
   @Transactional(readOnly = true)
   public RouteRequestDto getRequestByIdForAdmin(String requestId) {
+    String nonNullRequestId = Objects.requireNonNull(requestId, "requestId must not be null");
     RouteRequest request =
         routeRequestRepository
-            .findById(requestId)
+            .findById(nonNullRequestId)
             .orElseThrow(() -> ApiException.notFound("Route request not found"));
     return toDto(request, true);
   }
 
   private RouteRequestDto toDto(RouteRequest request, boolean includeRoutePoints) {
+    String requestId = Objects.requireNonNull(request.getId(), "Route request id must not be null");
     RouteSnapshotDto route =
         includeRoutePoints
             ? toRouteSnapshot(request.getRoute())
             : toRouteSummaryAsSnapshot(request.getRoute());
     List<CountryDistanceDto> countryDistances =
         countryBreakdownService.getOrCalculate(request.getRoute());
-    QuoteDto currentQuote = freightQuoteService.getCurrentQuoteForRequest(request.getId());
+    QuoteDto currentQuote = freightQuoteService.getCurrentQuoteForRequest(requestId);
     return new RouteRequestDto(
         request.getId(),
         request.getRoute().getId(),

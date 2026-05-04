@@ -15,11 +15,13 @@ import com.geosun.tms.auth.repository.UserRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -47,7 +49,7 @@ class RouteRequestApiIntegrationTest {
             .perform(
                 post("/api/v1/route-requests")
                     .header("Authorization", bearer(access))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonContentType())
                     .content(
                         toJson(
                             Map.of(
@@ -100,7 +102,7 @@ class RouteRequestApiIntegrationTest {
         .perform(
             post("/api/v1/route-requests")
                 .header("Authorization", bearer(intruderAccess))
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(jsonContentType())
                 .content(toJson(requestPayload)))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.code").value("NOT_FOUND"));
@@ -128,7 +130,7 @@ class RouteRequestApiIntegrationTest {
             .perform(
                 post("/api/v1/route-requests")
                     .header("Authorization", bearer(userAccess))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonContentType())
                     .content(toJson(requestPayload)))
             .andExpect(status().isCreated())
             .andReturn();
@@ -169,7 +171,7 @@ class RouteRequestApiIntegrationTest {
             .perform(
                 post("/api/v1/route-requests")
                     .header("Authorization", bearer(userAccess))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonContentType())
                     .content(
                         toJson(
                             Map.of(
@@ -193,7 +195,7 @@ class RouteRequestApiIntegrationTest {
                 post("/api/v1/admin/route-requests/" + requestId + "/quotes")
                     .header("Authorization", bearer(adminAccess))
                     .header("Idempotency-Key", createIdempotencyKey)
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonContentType())
                     .content(
                         toJson(
                             Map.of(
@@ -215,7 +217,7 @@ class RouteRequestApiIntegrationTest {
             post("/api/v1/admin/route-requests/" + requestId + "/quotes")
                 .header("Authorization", bearer(adminAccess))
                 .header("Idempotency-Key", createIdempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(jsonContentType())
                 .content(
                     toJson(
                         Map.of(
@@ -268,7 +270,7 @@ class RouteRequestApiIntegrationTest {
             post("/api/v1/admin/route-requests/" + requestId + "/quotes")
                 .header("Authorization", bearer(managerAccess))
                 .header("Idempotency-Key", "manager-create-key")
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(jsonContentType())
                 .content(
                     toJson(
                         Map.of(
@@ -290,7 +292,7 @@ class RouteRequestApiIntegrationTest {
             .perform(
                 post("/api/v1/routes")
                     .header("Authorization", bearer(access))
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonContentType())
                     .content(toJson(routePayload(title))))
             .andExpect(status().isCreated())
             .andReturn();
@@ -313,7 +315,7 @@ class RouteRequestApiIntegrationTest {
         mockMvc
             .perform(
                 post("/api/v1/auth/login")
-                    .contentType(MediaType.APPLICATION_JSON)
+                    .contentType(jsonContentType())
                     .content(toJson(new LoginRequest(email, password))))
             .andExpect(status().isOk())
             .andReturn();
@@ -367,7 +369,11 @@ class RouteRequestApiIntegrationTest {
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
   }
 
-  private String toJson(Object value) throws Exception {
-    return objectMapper.writeValueAsString(value);
+  private @NonNull String toJson(Object value) throws Exception {
+    return Objects.requireNonNull(objectMapper.writeValueAsString(value));
+  }
+
+  private @NonNull MediaType jsonContentType() {
+    return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 }
