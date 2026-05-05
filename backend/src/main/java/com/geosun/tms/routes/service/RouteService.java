@@ -230,8 +230,7 @@ public class RouteService implements RouteContractsFacade {
         error.pointIndex() >= 0
             ? "Invalid route point operations at index " + error.pointIndex()
             : "Invalid route point operations";
-    throw ApiException.badRequest(
-        "ROUTE_OPERATIONS_" + error.code().name(), message);
+    throw ApiException.badRequest("ROUTE_OPERATIONS_" + error.code().name(), message);
   }
 
   private static RoutePointWithOperations toValidationPoint(RoutePointRequest request) {

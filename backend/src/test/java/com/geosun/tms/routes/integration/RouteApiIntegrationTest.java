@@ -252,14 +252,32 @@ class RouteApiIntegrationTest {
   }
 
   private Map<String, Object> routePayloadWithBorderAndCustoms(String title) {
-    Map<String, Object> start = pointWithOps(1, "START", "Kyiv", 50.4501, 30.5234, "UA", false,
-        120.0, List.of("LOADING"));
-    Map<String, Object> exportStop = pointWithOps(2, "STOP", "Lviv warehouse", 49.8397, 24.0297,
-        "UA", false, 80.0, List.of("EXPORT_CUSTOMS"));
-    Map<String, Object> border = pointWithOps(3, "BORDER", "Krakovets", 49.9425, 23.1745, "UA",
-        true, 350.0, List.of());
-    Map<String, Object> finish = pointWithOps(4, "FINISH", "Warsaw", 52.2297, 21.0122, "PL", false,
-        null, List.of("IMPORT_CUSTOMS", "UNLOADING"));
+    Map<String, Object> start =
+        pointWithOps(1, "START", "Kyiv", 50.4501, 30.5234, "UA", false, 120.0, List.of("LOADING"));
+    Map<String, Object> exportStop =
+        pointWithOps(
+            2,
+            "STOP",
+            "Lviv warehouse",
+            49.8397,
+            24.0297,
+            "UA",
+            false,
+            80.0,
+            List.of("EXPORT_CUSTOMS"));
+    Map<String, Object> border =
+        pointWithOps(3, "BORDER", "Krakovets", 49.9425, 23.1745, "UA", true, 350.0, List.of());
+    Map<String, Object> finish =
+        pointWithOps(
+            4,
+            "FINISH",
+            "Warsaw",
+            52.2297,
+            21.0122,
+            "PL",
+            false,
+            null,
+            List.of("IMPORT_CUSTOMS", "UNLOADING"));
 
     return Map.of(
         "title",
@@ -283,12 +301,14 @@ class RouteApiIntegrationTest {
   }
 
   private Map<String, Object> routePayloadCustomsWithoutBorder(String title) {
-    Map<String, Object> start = pointWithOps(1, "START", "Kyiv", 50.4501, 30.5234, "UA", false,
-        100.0, List.of("LOADING"));
-    Map<String, Object> bogus = pointWithOps(2, "STOP", "Phantom customs", 49.0, 24.0, "UA", false,
-        50.0, List.of("EXPORT_CUSTOMS"));
-    Map<String, Object> finish = pointWithOps(3, "FINISH", "Warsaw", 52.2297, 21.0122, "PL", false,
-        null, List.of("UNLOADING"));
+    Map<String, Object> start =
+        pointWithOps(1, "START", "Kyiv", 50.4501, 30.5234, "UA", false, 100.0, List.of("LOADING"));
+    Map<String, Object> bogus =
+        pointWithOps(
+            2, "STOP", "Phantom customs", 49.0, 24.0, "UA", false, 50.0, List.of("EXPORT_CUSTOMS"));
+    Map<String, Object> finish =
+        pointWithOps(
+            3, "FINISH", "Warsaw", 52.2297, 21.0122, "PL", false, null, List.of("UNLOADING"));
 
     return Map.of(
         "title",

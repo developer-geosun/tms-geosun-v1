@@ -120,8 +120,7 @@ public final class RoutePointOperationsRules {
         }
       }
       if (!exportBeforeOrAtBorder) {
-        return new ValidationError(
-            ValidationErrorCode.MISSING_EXPORT_BEFORE_BORDER, borderIndex);
+        return new ValidationError(ValidationErrorCode.MISSING_EXPORT_BEFORE_BORDER, borderIndex);
       }
       if (!importAtOrAfterBorder) {
         return new ValidationError(ValidationErrorCode.MISSING_IMPORT_AFTER_BORDER, borderIndex);
