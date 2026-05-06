@@ -70,10 +70,10 @@ app-social-icon {
 
 app-social-icon:hover {
   ::ng-deep {
-    color: var(--mat-sys-primary, #6750a4) !important;
+    color: #fff !important;
 
     svg {
-      fill: var(--mat-sys-primary, #6750a4) !important;
+      fill: #fff !important;
     }
   }
 }
