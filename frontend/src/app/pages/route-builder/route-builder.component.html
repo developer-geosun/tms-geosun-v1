@@ -57,7 +57,7 @@
             color="primary"
             type="button"
             (click)="clearAllOperations()"
-            [disabled]="!canEditRoute() || waypoints().length === 0"
+            [disabled]="!canEditRoute() || !hasAnySelectedOperations()"
           >
             {{ 'pages.routeBuilder.clearOperations' | translate }}
           </button>

@@ -110,6 +110,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
 
   readonly totalDistanceMeters = computed(() => this.segmentDistances().reduce((sum, distance) => sum + distance, 0));
   readonly hasRoute = computed(() => this.waypoints().length >= 2);
+  readonly hasAnySelectedOperations = computed(() =>
+    this.waypoints().some((point) => (point.operations?.length ?? 0) > 0)
+  );
   readonly hasPendingBorder = computed(() => hasPendingBorderCheckpoint(this.waypoints()));
   readonly isViewMode = computed(() => this.mode() === 'view');
   readonly isEditMode = computed(() => this.mode() === 'edit');
@@ -316,8 +319,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async goToRoutesHistory(): Promise<void> {
-    await this.loadMyRoutes();
-    await this.router.navigate(['/routes-history']);
+    await this.router.navigate(['/routes']);
   }
 
   onBorderExpansionChange(segmentIndex: number, expanded: boolean): void {

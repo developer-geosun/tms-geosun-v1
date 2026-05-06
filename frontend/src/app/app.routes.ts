@@ -33,10 +33,7 @@ export const routes: Routes = [
   },
   {
     path: 'freight-calculation',
-    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
-    data: { roles: ['user'] },
-    loadComponent: () =>
-      import('./pages/freight-calculation/freight-calculation.component').then((m) => m.FreightCalculationComponent)
+    redirectTo: '/404'
   },
   {
     path: 'route-builder',
@@ -46,9 +43,7 @@ export const routes: Routes = [
   },
   {
     path: 'routes-history',
-    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
-    data: { roles: ['user'] },
-    loadComponent: () => import('./pages/routes-history/routes-history.component').then((m) => m.RoutesHistoryComponent)
+    redirectTo: '/404'
   },
   {
     path: 'routes',
