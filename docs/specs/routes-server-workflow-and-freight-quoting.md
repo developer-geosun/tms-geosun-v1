@@ -16,6 +16,7 @@
 - **Frontend integration baseline / Базовая интеграция frontend:** При проектировании и реализации учитывать уже используемую страницу `freight-calculation` как основной клиентский экран маршрутного сценария.
 - **Related docs / Связанные документы:**
   - `docs/specs/auth-authentication-authorization.md` (**основной источник истины по auth и ролям**).
+  - `docs/specs/route-point-operations-rules.md` (**canonical source для правил операций точек маршрута**).
   - `docs/system.md`.
   - `backend/TECHNICAL_SPECIFICATION_API_SERVER_v1.0.md`.
 - **Environment constraints / Ограничения окружения:**
@@ -209,6 +210,7 @@
 - Не менять несвязанные модули и endpoint-ы `auth`.
 - Не закладывать backend-контракты под legacy-страницу `freight-calculation-here`; контракты проектируются под новый маршрутный flow (`routes`/`route_requests`/`quotes`).
 - При добавлении/изменении контрактов учитывать обратную совместимость для активного frontend-экрана `freight-calculation` (или предоставить явный migration plan для фронтенда).
+- Любые изменения правил операций точек маршрута выполнять с обязательной синхронизацией с `docs/specs/route-point-operations-rules.md`.
 
 ## Legacy Note / Примечание по legacy
 - Страница `freight-calculation-here` считается неиспользуемой в текущем продукте.

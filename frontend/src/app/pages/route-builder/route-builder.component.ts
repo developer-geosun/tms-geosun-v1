@@ -52,7 +52,7 @@ import {
   getAllowedOperationsForPoint,
   validateWaypointOperations
 } from './route-point-operations.utils';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
 
@@ -335,8 +335,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         queryParams: { routeId: snapshot.id, mode: 'view' },
         queryParamsHandling: 'merge'
       });
-    } catch {
-      this.showToast('pages.freightCalculation.errors.routeSaveFailed');
+    } catch (error) {
+      this.showToast(this.extractApiErrorMessage(error) ?? 'pages.freightCalculation.errors.routeSaveFailed');
     } finally {
       this.isSavingRoute.set(false);
     }
@@ -1117,6 +1117,27 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private showToast(key: string): void {
     this.toastMessage.set(key);
     setTimeout(() => this.toastMessage.set(''), 3000);
+  }
+
+  private extractApiErrorMessage(error: unknown): string | null {
+    if (!(error instanceof HttpErrorResponse)) {
+      return null;
+    }
+    const payload = error.error;
+    if (typeof payload === 'string' && payload.trim().length > 0) {
+      return payload.trim();
+    }
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+    const candidateKeys = ['message', 'error', 'detail', 'title'] as const;
+    for (const key of candidateKeys) {
+      const value = payload[key];
+      if (typeof value === 'string' && value.trim().length > 0) {
+        return value.trim();
+      }
+    }
+    return null;
   }
 
   private copyTextWithFallback(value: string): boolean {
