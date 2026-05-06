@@ -217,6 +217,17 @@
   min-height: 20px;
 }
 
+.route-point-operation-chip--coordinates {
+  cursor: pointer;
+  user-select: none;
+}
+
+.route-point-operation-chip--coordinates mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
+
 .route-card :is(.mat-mdc-card-title, .mat-mdc-card-subtitle, .mdc-list-item__primary-text, .mdc-button__label) {
   font-size: inherit;
   line-height: inherit;
@@ -228,4 +239,16 @@
     background: color-mix(in srgb, var(--mat-sys-surface-container-high) 92%, #101218);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
   }
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  z-index: 6000;
 }

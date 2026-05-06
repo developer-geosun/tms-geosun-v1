@@ -38,6 +38,7 @@ export class RoutesComponent {
   readonly loadFailed = signal(false);
   readonly deletingRouteId = signal<string | null>(null);
   readonly deleteFailed = signal(false);
+  readonly toastMessage = signal('');
 
   constructor() {
     void this.loadRouteCards();
@@ -92,6 +93,31 @@ export class RoutesComponent {
     await this.deleteRoute(routeId);
   }
 
+  formatPointCoordinates(point: RoutePointContract): string {
+    return `${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`;
+  }
+
+  async copyPointCoordinates(point: RoutePointContract): Promise<void> {
+    const value = this.formatPointCoordinates(point);
+    const isClipboardAvailable =
+      typeof navigator !== 'undefined' &&
+      'clipboard' in navigator &&
+      typeof navigator.clipboard?.writeText === 'function';
+
+    if (isClipboardAvailable) {
+      try {
+        await navigator.clipboard.writeText(value);
+        this.showToast('pages.routeBuilder.coordinatesCopied');
+        return;
+      } catch {
+        // Fall back to legacy clipboard API below.
+      }
+    }
+
+    const copied = this.copyTextWithFallback(value);
+    this.showToast(copied ? 'pages.routeBuilder.coordinatesCopied' : 'pages.routeBuilder.coordinatesCopyFailed');
+  }
+
   private async loadRouteCards(): Promise<void> {
     this.isLoading.set(true);
     this.loadFailed.set(false);
@@ -140,6 +166,33 @@ export class RoutesComponent {
     } finally {
       this.deletingRouteId.set(null);
     }
+  }
+
+  private showToast(key: string): void {
+    this.toastMessage.set(key);
+    setTimeout(() => this.toastMessage.set(''), 1800);
+  }
+
+  private copyTextWithFallback(value: string): boolean {
+    if (typeof document === 'undefined') {
+      return false;
+    }
+    const textarea = document.createElement('textarea');
+    textarea.value = value;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch {
+      copied = false;
+    }
+    document.body.removeChild(textarea);
+    return copied;
   }
 }
 
