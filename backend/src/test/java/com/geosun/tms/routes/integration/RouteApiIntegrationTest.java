@@ -182,6 +182,22 @@ class RouteApiIntegrationTest {
         .andExpect(jsonPath("$.code").value("ROUTE_OPERATIONS_CUSTOMS_WITHOUT_BORDER"));
   }
 
+  @Test
+  void saveRouteWithThreeOpsOnSinglePoint_succeeds() throws Exception {
+    User user = createUser("routes-ops-three@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+
+    String body = toJson(routePayloadWithThreeOpsOnExportPoint("Kyiv -> Border"));
+    mockMvc
+        .perform(
+            post("/api/v1/routes")
+                .header("Authorization", bearer(access))
+                .contentType(jsonMediaType())
+                .content(body))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.points[0].operations.length()").value(3));
+  }
+
   private User createUser(String email, String password) {
     User user = new User();
     user.setEmail(email);
@@ -219,6 +235,7 @@ class RouteApiIntegrationTest {
     startPoint.put("country", "UA");
     startPoint.put("isBorder", false);
     startPoint.put("segmentDistanceKmToNext", 120.5);
+    startPoint.put("operations", List.of("LOADING"));
 
     Map<String, Object> finishPoint = new HashMap<>();
     finishPoint.put("order", 2);
@@ -229,6 +246,7 @@ class RouteApiIntegrationTest {
     finishPoint.put("country", "PL");
     finishPoint.put("isBorder", false);
     finishPoint.put("segmentDistanceKmToNext", null);
+    finishPoint.put("operations", List.of("UNLOADING"));
 
     return Map.of(
         "title",
@@ -327,6 +345,53 @@ class RouteApiIntegrationTest {
         "bad-customs",
         "points",
         List.of(start, bogus, finish),
+        "hereRouteMeta",
+        Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
+  }
+
+  private Map<String, Object> routePayloadWithThreeOpsOnExportPoint(String title) {
+    Map<String, Object> start =
+        pointWithOps(
+            1,
+            "START",
+            "Ternopil",
+            49.5535,
+            25.5948,
+            "UA",
+            false,
+            60.0,
+            List.of("LOADING", "EXPORT_CUSTOMS", "UNLOADING"));
+    Map<String, Object> border =
+        pointWithOps(2, "BORDER", "Krakovets", 49.9425, 23.1745, "UA", true, 100.0, List.of());
+    Map<String, Object> finish =
+        pointWithOps(
+            3,
+            "FINISH",
+            "Przemysl",
+            49.7833,
+            22.7667,
+            "PL",
+            false,
+            null,
+            List.of("IMPORT_CUSTOMS", "UNLOADING"));
+
+    return Map.of(
+        "title",
+        title,
+        "routingProfile",
+        "truck",
+        "routingMode",
+        "fast",
+        "routePolyline",
+        "BFoz5xJ67i1B1B7PzIhaxL7Y",
+        "distanceKm",
+        180.0,
+        "durationMin",
+        220,
+        "routeComment",
+        "three-ops",
+        "points",
+        List.of(start, border, finish),
         "hereRouteMeta",
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
   }

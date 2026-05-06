@@ -20,4 +20,4 @@ public record RoutePointRequest(
     String country,
     @NotNull Boolean isBorder,
     Double segmentDistanceKmToNext,
-    @Size(max = 2) List<RoutePointOperationDto> operations) {}
+    @Size(max = 3) List<RoutePointOperationDto> operations) {}
