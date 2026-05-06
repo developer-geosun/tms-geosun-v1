@@ -155,9 +155,7 @@ class RoutePointOperationsRulesTest {
           List.of(
               point(RoutePointKind.START, RoutePointOperation.LOADING),
               point(
-                  RoutePointKind.STOP,
-                  RoutePointOperation.LOADING,
-                  RoutePointOperation.UNLOADING),
+                  RoutePointKind.STOP, RoutePointOperation.LOADING, RoutePointOperation.UNLOADING),
               point(RoutePointKind.FINISH, RoutePointOperation.UNLOADING));
       assertThat(RoutePointOperationsRules.validateRoute(route)).isNull();
     }
@@ -191,7 +189,9 @@ class RoutePointOperationsRulesTest {
     @Test
     void routeWithoutLoadingIsRejected() {
       List<RoutePointWithOperations> route =
-          List.of(point(RoutePointKind.START), point(RoutePointKind.FINISH, RoutePointOperation.UNLOADING));
+          List.of(
+              point(RoutePointKind.START),
+              point(RoutePointKind.FINISH, RoutePointOperation.UNLOADING));
       ValidationError error = RoutePointOperationsRules.validateRoute(route);
       assertThat(error).isNotNull();
       assertThat(error.code()).isEqualTo(ValidationErrorCode.LOADING_REQUIRED);
@@ -200,7 +200,9 @@ class RoutePointOperationsRulesTest {
     @Test
     void routeWithoutUnloadingIsRejected() {
       List<RoutePointWithOperations> route =
-          List.of(point(RoutePointKind.START, RoutePointOperation.LOADING), point(RoutePointKind.FINISH));
+          List.of(
+              point(RoutePointKind.START, RoutePointOperation.LOADING),
+              point(RoutePointKind.FINISH));
       ValidationError error = RoutePointOperationsRules.validateRoute(route);
       assertThat(error).isNotNull();
       assertThat(error.code()).isEqualTo(ValidationErrorCode.UNLOADING_REQUIRED);
@@ -231,7 +233,10 @@ class RoutePointOperationsRulesTest {
               point(RoutePointKind.STOP, RoutePointOperation.EXPORT_CUSTOMS),
               point(RoutePointKind.BORDER),
               point(RoutePointKind.STOP, RoutePointOperation.IMPORT_CUSTOMS),
-              point(RoutePointKind.FINISH, RoutePointOperation.LOADING, RoutePointOperation.UNLOADING));
+              point(
+                  RoutePointKind.FINISH,
+                  RoutePointOperation.LOADING,
+                  RoutePointOperation.UNLOADING));
       ValidationError error = RoutePointOperationsRules.validateRoute(route);
       assertThat(error).isNotNull();
       assertThat(error.code()).isEqualTo(ValidationErrorCode.OPERATION_SET_INVALID);
@@ -246,7 +251,10 @@ class RoutePointOperationsRulesTest {
               point(RoutePointKind.STOP, RoutePointOperation.EXPORT_CUSTOMS),
               point(RoutePointKind.BORDER),
               point(RoutePointKind.STOP, RoutePointOperation.IMPORT_CUSTOMS),
-              point(RoutePointKind.FINISH, RoutePointOperation.IMPORT_CUSTOMS, RoutePointOperation.UNLOADING));
+              point(
+                  RoutePointKind.FINISH,
+                  RoutePointOperation.IMPORT_CUSTOMS,
+                  RoutePointOperation.UNLOADING));
       ValidationError error = RoutePointOperationsRules.validateRoute(route);
       assertThat(error).isNotNull();
       assertThat(error.code()).isEqualTo(ValidationErrorCode.IMPORT_TOO_MANY);
@@ -378,7 +386,10 @@ class RoutePointOperationsRulesTest {
               point(RoutePointKind.STOP, RoutePointOperation.EXPORT_CUSTOMS),
               point(RoutePointKind.BORDER),
               point(RoutePointKind.STOP, RoutePointOperation.EXPORT_CUSTOMS),
-              point(RoutePointKind.FINISH, RoutePointOperation.IMPORT_CUSTOMS, RoutePointOperation.UNLOADING));
+              point(
+                  RoutePointKind.FINISH,
+                  RoutePointOperation.IMPORT_CUSTOMS,
+                  RoutePointOperation.UNLOADING));
       ValidationError error = RoutePointOperationsRules.validateRoute(route);
       assertThat(error).isNotNull();
       assertThat(error.code()).isEqualTo(ValidationErrorCode.EXPORT_TOO_MANY);
@@ -393,7 +404,10 @@ class RoutePointOperationsRulesTest {
               point(RoutePointKind.STOP, RoutePointOperation.EXPORT_CUSTOMS),
               point(RoutePointKind.BORDER),
               point(RoutePointKind.STOP, RoutePointOperation.IMPORT_CUSTOMS),
-              point(RoutePointKind.FINISH, RoutePointOperation.IMPORT_CUSTOMS, RoutePointOperation.UNLOADING));
+              point(
+                  RoutePointKind.FINISH,
+                  RoutePointOperation.IMPORT_CUSTOMS,
+                  RoutePointOperation.UNLOADING));
       ValidationError error = RoutePointOperationsRules.validateRoute(route);
       assertThat(error).isNotNull();
       assertThat(error.code()).isEqualTo(ValidationErrorCode.IMPORT_TOO_MANY);

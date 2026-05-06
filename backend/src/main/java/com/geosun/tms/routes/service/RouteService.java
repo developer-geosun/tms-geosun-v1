@@ -248,7 +248,8 @@ public class RouteService implements RouteContractsFacade {
     if (point.operations() == null || point.operations().size() != 2) {
       return false;
     }
-    // Дозволяємо комбінацію LOADING+UNLOADING на не-border точці навіть якщо старі правила повернули OPERATION_SET_INVALID.
+    // Дозволяємо комбінацію LOADING+UNLOADING на не-border точці навіть якщо старі правила
+    // повернули OPERATION_SET_INVALID.
     Set<RoutePointOperationDto> ops = EnumSet.copyOf(point.operations());
     return ops.contains(RoutePointOperationDto.LOADING)
         && ops.contains(RoutePointOperationDto.UNLOADING);

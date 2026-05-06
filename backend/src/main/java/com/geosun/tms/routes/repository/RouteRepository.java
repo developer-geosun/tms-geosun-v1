@@ -15,6 +15,5 @@ public interface RouteRepository extends JpaRepository<Route, Long> {
 
   @EntityGraph(attributePaths = "points")
   @Query("select r from Route r where r.id = :id and r.user.id = :userId and r.deleted = false")
-  Optional<Route> findByIdAndUserIdWithPoints(
-      @Param("id") Long id, @Param("userId") String userId);
+  Optional<Route> findByIdAndUserIdWithPoints(@Param("id") Long id, @Param("userId") String userId);
 }
