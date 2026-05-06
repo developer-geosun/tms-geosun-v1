@@ -86,6 +86,16 @@
 .sidebar-actions__distance-value {
   font-size: 0.95rem;
 }
+.sidebar-last-saved {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+.sidebar-route-timestamps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .sidebar-actions__buttons {
   display: flex;
   gap: 8px;
@@ -117,6 +127,18 @@
 .sidebar-login-button.mat-mdc-button-disabled,
 .sidebar-login-button.mdc-button--disabled {
   opacity: 1;
+}
+.sidebar-view-action {
+  --mdc-fab-small-container-color: var(--mat-sys-primary-container);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-primary-container);
+  background-color: var(--mat-sys-primary-container) !important;
+  color: var(--mat-sys-on-primary-container) !important;
+}
+.sidebar-view-action--danger {
+  --mdc-fab-small-container-color: var(--mat-sys-error);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-error);
+  background-color: var(--mat-sys-error) !important;
+  color: var(--mat-sys-on-error) !important;
 }
 .dialog input, .dialog textarea { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; }
 .results { margin-top: 8px; border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; overflow: hidden; background: var(--mat-sys-surface-container); }
@@ -378,6 +400,12 @@
 .sidebar-actions__buttons .mat-mdc-button-base {
   flex: 1 1 calc(50% - 4px);
   min-width: 0;
+}
+.sidebar-actions__buttons .sidebar-view-action {
+  flex: 1 1 calc(33.333% - 6px);
+}
+.sidebar-actions__buttons .sidebar-request-button {
+  flex: 1 1 100%;
 }
 .search-field {
   width: 100%;

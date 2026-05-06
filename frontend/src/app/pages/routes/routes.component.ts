@@ -28,7 +28,8 @@ export class RoutesComponent {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    second: '2-digit'
   });
 
   readonly routeCards = signal<RouteCardViewModel[]>([]);
@@ -121,6 +122,8 @@ export class RoutesComponent {
       title: summary.title,
       distanceKm: summary.distanceKm,
       createdAt: summary.createdAt,
+      updatedAt: summary.updatedAt,
+      lastOpenedAt: summary.lastOpenedAt,
       points: [...points].sort((first: RoutePointContract, second: RoutePointContract) => first.order - second.order)
     };
   }
@@ -144,5 +147,7 @@ interface RouteCardViewModel {
   title: string;
   distanceKm: number | null;
   createdAt: string;
+  updatedAt: string;
+  lastOpenedAt: string | null;
   points: RoutePointContract[];
 }

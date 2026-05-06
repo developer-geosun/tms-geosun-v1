@@ -19,6 +19,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -50,6 +51,7 @@ import {
 } from './route-point-operations.utils';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-route-builder',
@@ -78,6 +80,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private readonly backendApi = inject(BackendApiService);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly routesApi = inject(RoutesApiService);
+  private readonly dialog = inject(MatDialog);
   private readonly translate = inject(TranslateService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -99,6 +102,12 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly dropdownSegmentIndex = signal<number | null>(null);
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
   readonly mode = signal<RouteBuilderMode>('create');
+  readonly lastSavedAt = signal<string | null>(null);
+  readonly routeTimestamps = signal<{ createdAt: string | null; updatedAt: string | null; lastOpenedAt: string | null }>({
+    createdAt: null,
+    updatedAt: null,
+    lastOpenedAt: null
+  });
 
   readonly requestForm = this.formBuilder.nonNullable.group({
     preferredStartDate: [''],
@@ -305,6 +314,12 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         : await firstValueFrom(this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, payload));
       this.showToast('pages.freightCalculation.routeSaved');
       await this.loadMyRoutes();
+      this.lastSavedAt.set(snapshot.updatedAt || snapshot.createdAt || null);
+      this.routeTimestamps.set({
+        createdAt: snapshot.createdAt ?? null,
+        updatedAt: snapshot.updatedAt ?? snapshot.createdAt ?? null,
+        lastOpenedAt: this.routeTimestamps().lastOpenedAt
+      });
       this.mode.set('view');
       await this.router.navigate([], {
         relativeTo: this.activatedRoute,
@@ -471,6 +486,41 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return 'pages.routeBuilder.modeTitleEdit';
     }
     return 'pages.routeBuilder.modeTitleCreate';
+  }
+
+  getLastSavedAtLabel(): string | null {
+    return this.formatRouteDateTime(this.routeTimestamps().updatedAt);
+  }
+
+  getRouteCreatedAtLabel(): string | null {
+    return this.formatRouteDateTime(this.routeTimestamps().createdAt);
+  }
+
+  getRouteUpdatedAtLabel(): string | null {
+    return this.formatRouteDateTime(this.routeTimestamps().updatedAt);
+  }
+
+  getRouteLastOpenedAtLabel(): string | null {
+    return this.formatRouteDateTime(this.routeTimestamps().lastOpenedAt);
+  }
+
+  private formatRouteDateTime(isoDateTime: string | null): string | null {
+    if (!isoDateTime) {
+      return null;
+    }
+    const parsedDate = new Date(isoDateTime);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return null;
+    }
+    const locale = this.lang() === 'uk' ? 'uk-UA' : this.lang() === 'ru' ? 'ru-RU' : 'en-US';
+    return new Intl.DateTimeFormat(locale, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(parsedDate);
   }
 
   async onSearchKeydown(event: KeyboardEvent, input: HTMLInputElement): Promise<void> {
@@ -910,6 +960,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         this.http.get<RouteSnapshotContractDto>(`${this.backendApi.myRoutes}/${encodeURIComponent(routeId)}`)
       );
       await this.applySavedRoute(snapshot);
+      await this.syncRouteTimestampsFromSummary(routeId);
       this.showToast('pages.freightCalculation.routeLoaded');
     } catch {
       this.showToast('pages.freightCalculation.errors.routeLoadFailed');
@@ -939,6 +990,12 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     );
     this.selectedWaypointIndex.set(points.length ? 0 : null);
     this.requestForm.patchValue({ routeComment: snapshot.routeComment ?? '' });
+    this.lastSavedAt.set(snapshot.updatedAt || snapshot.createdAt || null);
+    this.routeTimestamps.set({
+      createdAt: snapshot.createdAt ?? null,
+      updatedAt: snapshot.updatedAt ?? snapshot.createdAt ?? null,
+      lastOpenedAt: null
+    });
     await this.drawSavedPolyline(snapshot.routePolyline, points);
   }
 
@@ -992,6 +1049,19 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  private async syncRouteTimestampsFromSummary(routeId: string): Promise<void> {
+    await this.loadMyRoutes();
+    const summary = this.myRoutes().find((route) => route.id === routeId);
+    if (!summary) {
+      return;
+    }
+    this.routeTimestamps.set({
+      createdAt: this.routeTimestamps().createdAt,
+      updatedAt: this.routeTimestamps().updatedAt,
+      lastOpenedAt: summary.lastOpenedAt ?? null
+    });
+  }
+
   private showToast(key: string): void {
     this.toastMessage.set(key);
     setTimeout(() => this.toastMessage.set(''), 3000);
@@ -1012,6 +1082,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
 
   async switchToCreateMode(): Promise<void> {
     this.mode.set('create');
+    this.lastSavedAt.set(null);
+    this.routeTimestamps.set({ createdAt: null, updatedAt: null, lastOpenedAt: null });
     await this.router.navigate([], {
       relativeTo: this.activatedRoute,
       queryParams: { routeId: null, mode: 'create' },
@@ -1049,6 +1121,33 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     } finally {
       this.isSavingRoute.set(false);
     }
+  }
+
+  async requestCurrentRouteDelete(): Promise<void> {
+    const routeId = this.getSelectedRouteId();
+    if (!routeId || this.isSavingRoute()) {
+      return;
+    }
+
+    const points = this.waypoints();
+    const routeTitle =
+      points.length >= 2 ? `${points[0].address} -> ${points[points.length - 1].address}` : '';
+    const dialogRef = this.dialog.open(RouteDeleteConfirmDialogComponent, {
+      width: '420px',
+      disableClose: true,
+      data: {
+        routeTitle,
+        routeCreatedAt: this.getLastSavedAtLabel() ?? '-',
+        routeDistanceKm: (this.totalDistanceMeters() / 1000).toFixed(1)
+      }
+    });
+
+    const shouldDelete = await firstValueFrom(dialogRef.afterClosed());
+    if (!shouldDelete) {
+      return;
+    }
+
+    await this.deleteCurrentRoute();
   }
 
   private parseMode(value: string | null): RouteBuilderMode | null {

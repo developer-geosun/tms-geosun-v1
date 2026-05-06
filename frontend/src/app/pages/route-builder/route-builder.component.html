@@ -8,30 +8,55 @@
           <span>{{ 'pages.freightCalculation.km' | translate }}</span>
         </div>
       </div>
+      @if (isViewMode()) {
+        <div class="sidebar-route-timestamps">
+          <small class="sidebar-last-saved">
+            {{ 'pages.routes.createdAt' | translate }}: {{ getRouteCreatedAtLabel() ?? '-' }}
+          </small>
+          <small class="sidebar-last-saved">
+            {{ 'pages.routes.savedAt' | translate }}: {{ getRouteUpdatedAtLabel() ?? '-' }}
+          </small>
+          <small class="sidebar-last-saved">
+            {{ 'pages.routes.lastOpenedAt' | translate }}: {{ getRouteLastOpenedAtLabel() ?? '-' }}
+          </small>
+        </div>
+      }
       <div class="sidebar-actions__buttons">
         @if (isViewMode()) {
           <button
-            class="sidebar-login-button"
-            mat-raised-button
-            color="primary"
+            mat-mini-fab
             type="button"
-            (click)="deleteCurrentRoute()"
+            class="sidebar-view-action sidebar-view-action--danger"
+            (click)="requestCurrentRouteDelete()"
             [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
+            [attr.aria-label]="'pages.routeBuilder.deleteRoute' | translate"
+            [title]="'pages.routeBuilder.deleteRoute' | translate"
           >
-            {{ 'pages.routeBuilder.deleteRoute' | translate }}
+            <mat-icon>delete</mat-icon>
           </button>
           <button
-            class="sidebar-login-button"
-            mat-raised-button
-            color="primary"
+            mat-mini-fab
             type="button"
+            class="sidebar-view-action"
             (click)="switchToEditMode()"
             [disabled]="!hasRoute() || isLoadingSavedRoute()"
+            [attr.aria-label]="'pages.routeBuilder.editRoute' | translate"
+            [title]="'pages.routeBuilder.editRoute' | translate"
           >
-            {{ 'pages.routeBuilder.editRoute' | translate }}
+            <mat-icon>edit</mat-icon>
           </button>
           <button
-            class="sidebar-login-button"
+            mat-mini-fab
+            type="button"
+            class="sidebar-view-action"
+            (click)="switchToCreateMode()"
+            [attr.aria-label]="'pages.routeBuilder.newRoute' | translate"
+            [title]="'pages.routeBuilder.newRoute' | translate"
+          >
+            <mat-icon>add</mat-icon>
+          </button>
+          <button
+            class="sidebar-login-button sidebar-request-button"
             mat-raised-button
             color="primary"
             type="button"
@@ -87,7 +112,7 @@
         <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="goToRoutesHistory()">
           {{ 'pages.freightCalculation.myRoutes' | translate }}
         </button>
-        @if (!isCreateMode()) {
+        @if (isEditMode()) {
           <button
             class="sidebar-login-button"
             mat-raised-button

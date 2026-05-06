@@ -45,6 +45,20 @@
   gap: 0.75rem;
 }
 
+.route-card__timestamps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.route-card__timestamp-line {
+  margin: 0;
+  color: var(--mat-sys-on-surface);
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  font-weight: 500;
+}
+
 .route-card__content {
   padding: 0.75rem 1rem 0.5rem;
 }

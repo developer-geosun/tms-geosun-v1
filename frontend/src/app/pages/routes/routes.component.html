@@ -17,9 +17,17 @@
         <mat-card class="route-card" appearance="outlined">
           <mat-card-header class="route-card__header">
             <div class="route-card__header-row">
-              <mat-card-title class="route-card__meta">
-                {{ formatRouteDateTime(route.createdAt) }}
-              </mat-card-title>
+              <div class="route-card__timestamps">
+                <div class="route-card__timestamp-line">
+                  {{ 'pages.routes.createdAt' | translate }}: {{ formatRouteDateTime(route.createdAt) }}
+                </div>
+                <div class="route-card__timestamp-line">
+                  {{ 'pages.routes.savedAt' | translate }}: {{ formatRouteDateTime(route.updatedAt) }}
+                </div>
+                <div class="route-card__timestamp-line">
+                  {{ 'pages.routes.lastOpenedAt' | translate }}: {{ formatRouteDateTime(route.lastOpenedAt) || '-' }}
+                </div>
+              </div>
               <mat-card-subtitle class="route-card__meta route-card__meta--secondary">
                 {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
               </mat-card-subtitle>
