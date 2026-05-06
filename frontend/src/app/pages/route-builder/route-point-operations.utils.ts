@@ -57,17 +57,22 @@ const ALLOWED_NON_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
 
 const ALLOWED_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
   [],
+  ['LOADING'],
+  ['UNLOADING'],
+  ['LOADING', 'UNLOADING'],
   ['EXPORT_CUSTOMS'],
   ['IMPORT_CUSTOMS'],
   ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS']
 ];
 
 function setsEqual(a: readonly RoutePointOperation[], b: readonly RoutePointOperation[]): boolean {
-  if (a.length !== b.length) {
+  const uniqueA = Array.from(new Set(a));
+  const uniqueB = Array.from(new Set(b));
+  if (uniqueA.length !== uniqueB.length) {
     return false;
   }
-  const sortedA = [...a].sort();
-  const sortedB = [...b].sort();
+  const sortedA = [...uniqueA].sort();
+  const sortedB = [...uniqueB].sort();
   return sortedA.every((op, idx) => op === sortedB[idx]);
 }
 
@@ -77,8 +82,8 @@ export function isOperationSetAllowed(isBorder: boolean, ops: readonly RoutePoin
 }
 
 /** Допустимі набори опцій для побудови UI-чекбоксів. */
-export function getAllowedOperationsForPoint(isBorder: boolean): RoutePointOperation[] {
-  return isBorder ? ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS'] : ['LOADING', 'EXPORT_CUSTOMS', 'IMPORT_CUSTOMS', 'UNLOADING'];
+export function getAllowedOperationsForPoint(_isBorder: boolean): RoutePointOperation[] {
+  return ['LOADING', 'EXPORT_CUSTOMS', 'IMPORT_CUSTOMS', 'UNLOADING'];
 }
 
 export function validateRouteOperations(points: readonly ValidationPoint[]): RoutePointOperationsError | null {

@@ -22,12 +22,13 @@ describe('route-point-operations.utils', () => {
       expect(isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS', 'UNLOADING'])).toBe(true);
     });
 
-    it('allows customs combos on border, rejects cargo on border', () => {
+    it('allows customs combos and cargo pair on border', () => {
       expect(isOperationSetAllowed(true, ['EXPORT_CUSTOMS'])).toBe(true);
       expect(isOperationSetAllowed(true, ['IMPORT_CUSTOMS'])).toBe(true);
       expect(isOperationSetAllowed(true, ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS'])).toBe(true);
-      expect(isOperationSetAllowed(true, ['LOADING'])).toBe(false);
-      expect(isOperationSetAllowed(true, ['UNLOADING'])).toBe(false);
+      expect(isOperationSetAllowed(true, ['LOADING'])).toBe(true);
+      expect(isOperationSetAllowed(true, ['UNLOADING'])).toBe(true);
+      expect(isOperationSetAllowed(true, ['LOADING', 'UNLOADING'])).toBe(true);
     });
 
     it('rejects sets larger than 3', () => {
@@ -188,14 +189,14 @@ describe('route-point-operations.utils', () => {
       expect(result?.pointIndex).toBe(2);
     });
 
-    it('rejects cargo ops on border', () => {
+    it('allows loading and unloading on border by whitelist, but border still needs customs flow', () => {
       const route: ValidationPoint[] = [
         { isBorder: false, operations: ['LOADING'] },
-        { isBorder: true, operations: ['LOADING'] },
+        { isBorder: true, operations: ['LOADING', 'UNLOADING'] },
         { isBorder: false, operations: ['UNLOADING'] }
       ];
       const result = validateRouteOperations(route);
-      expect(result?.code).toBe('OPERATION_SET_INVALID');
+      expect(result?.code).toBe('MISSING_EXPORT_BEFORE_BORDER');
       expect(result?.pointIndex).toBe(1);
     });
 

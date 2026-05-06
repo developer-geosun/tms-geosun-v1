@@ -94,7 +94,14 @@
             (click)="saveCurrentRoute()"
             [disabled]="!hasRoute() || hasPendingBorder() || hasOperationsError() || isSavingRoute() || isLoadingSavedRoute()"
           >
-            {{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}
+            @if (isSavingRoute()) {
+              <span class="loading-content">
+                <mat-spinner diameter="18"></mat-spinner>
+                <span>{{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}</span>
+              </span>
+            } @else {
+              {{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}
+            }
           </button>
           @if (isEditMode()) {
             <button
@@ -343,6 +350,6 @@
   }
 
   @if (toastMessage()) {
-    <div class="toast">{{ toastMessage() | translate }}</div>
+    <div class="toast">{{ toastMessage() | translate: toastMessageParams() }}</div>
   }
 </div>

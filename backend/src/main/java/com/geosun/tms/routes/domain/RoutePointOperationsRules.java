@@ -41,10 +41,13 @@ public final class RoutePointOperationsRules {
               RoutePointOperation.EXPORT_CUSTOMS,
               RoutePointOperation.UNLOADING));
 
-  /** Whitelist допустимих наборів операцій на BORDER-точці (вантажні операції заборонені). */
+  /** Whitelist допустимих наборів операцій на BORDER-точці. */
   private static final Set<Set<RoutePointOperation>> ALLOWED_BORDER =
       Set.of(
           EnumSet.noneOf(RoutePointOperation.class),
+          EnumSet.of(RoutePointOperation.LOADING),
+          EnumSet.of(RoutePointOperation.UNLOADING),
+          EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.UNLOADING),
           EnumSet.of(RoutePointOperation.EXPORT_CUSTOMS),
           EnumSet.of(RoutePointOperation.IMPORT_CUSTOMS),
           EnumSet.of(RoutePointOperation.EXPORT_CUSTOMS, RoutePointOperation.IMPORT_CUSTOMS));

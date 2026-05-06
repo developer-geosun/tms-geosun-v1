@@ -217,20 +217,58 @@ public class RouteService implements RouteContractsFacade {
   }
 
   private static void validateOperations(List<RoutePointRequest> points) {
+    List<RoutePointRequest> orderedRequests =
+        points.stream().sorted(Comparator.comparing(RoutePointRequest::order)).toList();
     List<RoutePointWithOperations> ordered =
-        points.stream()
-            .sorted(Comparator.comparing(RoutePointRequest::order))
-            .map(RouteService::toValidationPoint)
-            .toList();
+        orderedRequests.stream().map(RouteService::toValidationPoint).toList();
     ValidationError error = RoutePointOperationsRules.validateRoute(ordered);
     if (error == null) {
       return;
     }
-    String message =
-        error.pointIndex() >= 0
-            ? "Invalid route point operations at index " + error.pointIndex()
-            : "Invalid route point operations";
+    if (shouldIgnoreOperationSetInvalidForCargoPair(error, orderedRequests)) {
+      return;
+    }
+    String message = buildOperationsValidationMessage(error, orderedRequests);
     throw ApiException.badRequest("ROUTE_OPERATIONS_" + error.code().name(), message);
+  }
+
+  private static boolean shouldIgnoreOperationSetInvalidForCargoPair(
+      ValidationError error, List<RoutePointRequest> orderedRequests) {
+    if (error.code() != RoutePointOperationsRules.ValidationErrorCode.OPERATION_SET_INVALID) {
+      return false;
+    }
+    int index = error.pointIndex();
+    if (index < 0 || index >= orderedRequests.size()) {
+      return false;
+    }
+    RoutePointRequest point = orderedRequests.get(index);
+    if (point.type() == RoutePointType.BORDER || Boolean.TRUE.equals(point.isBorder())) {
+      return false;
+    }
+    if (point.operations() == null || point.operations().size() != 2) {
+      return false;
+    }
+    // Дозволяємо комбінацію LOADING+UNLOADING на не-border точці навіть якщо старі правила повернули OPERATION_SET_INVALID.
+    Set<RoutePointOperationDto> ops = EnumSet.copyOf(point.operations());
+    return ops.contains(RoutePointOperationDto.LOADING)
+        && ops.contains(RoutePointOperationDto.UNLOADING);
+  }
+
+  private static String buildOperationsValidationMessage(
+      ValidationError error, List<RoutePointRequest> orderedRequests) {
+    if (error.pointIndex() < 0 || error.pointIndex() >= orderedRequests.size()) {
+      return "Invalid route point operations";
+    }
+    RoutePointRequest request = orderedRequests.get(error.pointIndex());
+    return "Invalid route point operations at index "
+        + error.pointIndex()
+        + " (type="
+        + request.type()
+        + ", isBorder="
+        + request.isBorder()
+        + ", operations="
+        + request.operations()
+        + ")";
   }
 
   private static RoutePointWithOperations toValidationPoint(RoutePointRequest request) {

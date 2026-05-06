@@ -94,15 +94,20 @@ class RoutePointOperationsRulesTest {
     }
 
     @Test
-    void rejectsCargoOpsOnBorder() {
+    void allowsCargoOpsOnBorder() {
       assertThat(
               RoutePointOperationsRules.isOperationSetAllowed(
                   RoutePointKind.BORDER, EnumSet.of(RoutePointOperation.LOADING)))
-          .isFalse();
+          .isTrue();
       assertThat(
               RoutePointOperationsRules.isOperationSetAllowed(
                   RoutePointKind.BORDER, EnumSet.of(RoutePointOperation.UNLOADING)))
-          .isFalse();
+          .isTrue();
+      assertThat(
+              RoutePointOperationsRules.isOperationSetAllowed(
+                  RoutePointKind.BORDER,
+                  EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.UNLOADING)))
+          .isTrue();
     }
 
     @Test
@@ -145,6 +150,19 @@ class RoutePointOperationsRulesTest {
               point(RoutePointKind.STOP, RoutePointOperation.LOADING),
               point(RoutePointKind.STOP),
               point(RoutePointKind.STOP, RoutePointOperation.UNLOADING),
+              point(RoutePointKind.FINISH, RoutePointOperation.UNLOADING));
+      assertThat(RoutePointOperationsRules.validateRoute(route)).isNull();
+    }
+
+    @Test
+    void middlePointWithLoadingAndUnloadingIsValid() {
+      List<RoutePointWithOperations> route =
+          List.of(
+              point(RoutePointKind.START, RoutePointOperation.LOADING),
+              point(
+                  RoutePointKind.STOP,
+                  RoutePointOperation.LOADING,
+                  RoutePointOperation.UNLOADING),
               point(RoutePointKind.FINISH, RoutePointOperation.UNLOADING));
       assertThat(RoutePointOperationsRules.validateRoute(route)).isNull();
     }
@@ -355,15 +373,15 @@ class RoutePointOperationsRulesTest {
     }
 
     @Test
-    void cargoOnBorderIsRejected() {
+    void cargoPairOnBorderPassesPointWhitelistButStillNeedsCustomsFlow() {
       List<RoutePointWithOperations> route =
           List.of(
               point(RoutePointKind.START, RoutePointOperation.LOADING),
-              borderWith(RoutePointOperation.LOADING),
+              borderWith(RoutePointOperation.LOADING, RoutePointOperation.UNLOADING),
               point(RoutePointKind.FINISH, RoutePointOperation.UNLOADING));
       ValidationError error = RoutePointOperationsRules.validateRoute(route);
       assertThat(error).isNotNull();
-      assertThat(error.code()).isEqualTo(ValidationErrorCode.OPERATION_SET_INVALID);
+      assertThat(error.code()).isEqualTo(ValidationErrorCode.MISSING_EXPORT_BEFORE_BORDER);
       assertThat(error.pointIndex()).isEqualTo(1);
     }
   }

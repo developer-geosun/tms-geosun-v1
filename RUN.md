@@ -115,7 +115,7 @@ docker compose --profile dev down --remove-orphans
 ### Dev-профиль через один домен (frontend-dev + backend + ngrok)
 
 ```bash
-docker compose --profile dev up -d mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+docker compose --profile dev up -d --build mysql mailhog backend frontend-dev gateway-dev ngrok-dev
 
 # остановка dev-профиля
 docker compose --profile dev down --remove-orphans
@@ -147,7 +147,7 @@ docker compose --profile dev up -d frontend-dev
 Dev через единый домен (с корректной verify-email ссылкой):
 
 ```bash
-docker compose --profile dev up -d mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+docker compose --profile dev up -d --build mysql mailhog backend frontend-dev gateway-dev ngrok-dev
 ```
 
 Полная остановка dev-профиля (без "Network ... Resource is still in use"):

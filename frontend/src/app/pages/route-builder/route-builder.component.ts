@@ -24,6 +24,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
@@ -73,7 +74,8 @@ import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
     MatChipsModule,
     MatIconModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    MatProgressSpinnerModule
   ]
 })
 export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
@@ -105,6 +107,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly myRoutes = signal<RouteSummaryContractDto[]>([]);
   readonly myRouteRequests = signal<RouteRequestContractDto[]>([]);
   readonly toastMessage = signal('');
+  readonly toastMessageParams = signal<Record<string, unknown>>({});
   readonly dropdownSegmentIndex = signal<number | null>(null);
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
   readonly mode = signal<RouteBuilderMode>('create');
@@ -310,17 +313,18 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.isSavingRoute.set(true);
+    let snapshotPayload: ReturnType<RouteBuilderComponent['createRouteSnapshotRequest']> | null = null;
     try {
       const selectedRouteId = this.getSelectedRouteId();
-      const payload = this.createRouteSnapshotRequest();
+      snapshotPayload = this.createRouteSnapshotRequest();
       const snapshot = selectedRouteId && this.isEditMode()
         ? await firstValueFrom(
             this.http.put<RouteSnapshotContractDto>(
               `${this.backendApi.myRoutes}/${encodeURIComponent(selectedRouteId)}`,
-              payload
+              snapshotPayload
             )
           )
-        : await firstValueFrom(this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, payload));
+        : await firstValueFrom(this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, snapshotPayload));
       this.showToast('pages.freightCalculation.routeSaved');
       await this.loadMyRoutes();
       this.lastSavedAt.set(snapshot.updatedAt || snapshot.createdAt || null);
@@ -336,7 +340,12 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         queryParamsHandling: 'merge'
       });
     } catch (error) {
-      this.showToast(this.extractApiErrorMessage(error) ?? 'pages.freightCalculation.errors.routeSaveFailed');
+      const routeOpsError = this.extractRouteOperationsErrorFromApi(error, snapshotPayload);
+      if (routeOpsError) {
+        this.showToast(routeOpsError.key, routeOpsError.params);
+      } else {
+        this.showToast(this.extractApiErrorMessage(error) ?? 'pages.freightCalculation.errors.routeSaveFailed');
+      }
     } finally {
       this.isSavingRoute.set(false);
     }
@@ -653,7 +662,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const next = Array.isArray(value)
-      ? (value.filter((op): op is RoutePointOperation => typeof op === 'string') as RoutePointOperation[])
+      ? this.normalizeOperationsValue(value)
       : [];
     const point = this.waypoints()[index];
     if (!point) {
@@ -661,7 +670,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
     const problem = checkSetOperationsForPoint(point.isBorder, next);
     if (problem) {
-      this.showToast('pages.routeBuilder.errors.operationsCombo');
+      this.showToast('pages.routeBuilder.errors.operationsComboWithPoint', { point: index + 1 });
       // Не зберігаємо некоректний набір — змусимо UI відобразити поточне (валідне) значення.
       this.waypoints.update((items) =>
         items.map((item, idx) => (idx === index ? { ...item, operations: [...item.operations] } : item))
@@ -671,6 +680,23 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.waypoints.update((items) =>
       items.map((item, idx) => (idx === index ? { ...item, operations: next } : item))
     );
+  }
+
+  private normalizeOperationsValue(value: unknown[]): RoutePointOperation[] {
+    // Нормалізуємо вхідні значення до відомого переліку операцій та прибираємо дублікати.
+    const allowedSet = new Set<RoutePointOperation>(ROUTE_POINT_OPERATIONS);
+    const unique = new Set<RoutePointOperation>();
+    for (const raw of value) {
+      if (typeof raw !== 'string') {
+        continue;
+      }
+      const normalized = raw.trim() as RoutePointOperation;
+      if (!allowedSet.has(normalized)) {
+        continue;
+      }
+      unique.add(normalized);
+    }
+    return ROUTE_POINT_OPERATIONS.filter((op) => unique.has(op));
   }
 
   isPointOperationChecked(index: number, operation: RoutePointOperation): boolean {
@@ -973,7 +999,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   private createRoutePointsContract(): RoutePointContract[] {
-    const points = this.waypoints();
+    // Перед відправкою на бекенд прибираємо приховані/застарілі операції за актуальним контекстом.
+    const points = this.normalizeWaypointOperations(this.waypoints());
     const distances = this.segmentDistances();
     const lastIndex = points.length - 1;
     return points.map((point, index) => ({
@@ -1114,9 +1141,13 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     });
   }
 
-  private showToast(key: string): void {
+  private showToast(key: string, params: Record<string, unknown> = {}): void {
     this.toastMessage.set(key);
-    setTimeout(() => this.toastMessage.set(''), 3000);
+    this.toastMessageParams.set(params);
+    setTimeout(() => {
+      this.toastMessage.set('');
+      this.toastMessageParams.set({});
+    }, 5000);
   }
 
   private extractApiErrorMessage(error: unknown): string | null {
@@ -1138,6 +1169,75 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       }
     }
     return null;
+  }
+
+  private extractRouteOperationsErrorFromApi(
+    error: unknown,
+    snapshotPayload: ReturnType<RouteBuilderComponent['createRouteSnapshotRequest']> | null = null
+  ): { key: string; params: Record<string, unknown> } | null {
+    if (!(error instanceof HttpErrorResponse)) {
+      return null;
+    }
+    const payload = error.error;
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+    const code = payload['code'];
+    if (typeof code !== 'string' || !code.startsWith('ROUTE_OPERATIONS_')) {
+      return null;
+    }
+    const backendCode = code.replace('ROUTE_OPERATIONS_', '');
+    const key = this.mapBackendOperationsErrorCodeToTranslationKey(backendCode);
+    if (!key) {
+      return null;
+    }
+    const message = payload['message'];
+    if (key === 'operationsCombo' && typeof message === 'string') {
+      const match = message.match(/index\s+(\d+)/i);
+      if (match) {
+        return {
+          key: 'pages.routeBuilder.errors.operationsComboWithPoint',
+          params: { point: Number(match[1]) + 1 }
+        };
+      }
+    }
+    return { key: `pages.routeBuilder.errors.${key}`, params: {} };
+  }
+
+  private mapBackendOperationsErrorCodeToTranslationKey(code: string): string | null {
+    // Тримаймо мапінг кодів бекенда в одному місці, щоб уникнути розсинхрону з toast-повідомленнями.
+    switch (code) {
+      case 'OPERATION_SET_INVALID':
+        return 'operationsCombo';
+      case 'BORDER_TOO_MANY':
+        return 'borderTooMany';
+      case 'CUSTOMS_WITHOUT_BORDER':
+        return 'customsWithoutBorder';
+      case 'LOADING_REQUIRED':
+        return 'loadingRequired';
+      case 'UNLOADING_REQUIRED':
+        return 'unloadingRequired';
+      case 'UNLOADING_BEFORE_LOADING':
+        return 'unloadingBeforeLoading';
+      case 'UNLOADING_REQUIRED_AFTER_LAST_LOADING':
+        return 'unloadingRequiredAfterLastLoading';
+      case 'EXPORT_TOO_MANY':
+        return 'exportTooMany';
+      case 'IMPORT_TOO_MANY':
+        return 'importTooMany';
+      case 'MISSING_EXPORT_BEFORE_BORDER':
+        return 'missingExportBeforeBorder';
+      case 'MISSING_IMPORT_AFTER_BORDER':
+        return 'missingImportAfterBorder';
+      case 'IMPORT_BEFORE_EXPORT':
+        return 'importBeforeExport';
+      case 'OPERATION_IN_TRANSIT':
+        return 'operationInTransit';
+      case 'UNCLOSED_CUSTOMS':
+        return 'unclosedCustoms';
+      default:
+        return null;
+    }
   }
 
   private copyTextWithFallback(value: string): boolean {
@@ -1252,7 +1352,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private normalizeWaypointOperations(points: Waypoint[]): Waypoint[] {
     return points.map((point, index) => {
       const allowed = this.getAllowedOperationsByContext(points, index);
-      const nextOps = point.operations.filter((op) => allowed.includes(op));
+      const nextOps = Array.from(new Set(point.operations.filter((op) => allowed.includes(op))));
       return { ...point, operations: nextOps };
     });
   }
@@ -1298,11 +1398,13 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         allowed = allowed.filter((op) => op !== 'LOADING' && op !== 'UNLOADING');
       }
     }
-    const hasLoadingBeforeCurrentPoint = points
-      .slice(0, index + 1)
-      .some((item) => item.operations.includes('LOADING'));
-    if (!hasLoadingBeforeCurrentPoint) {
+    const isFirstPoint = index === 0;
+    const isLastPoint = index === points.length - 1;
+    if (isFirstPoint) {
       allowed = allowed.filter((op) => op !== 'UNLOADING');
+    }
+    if (isLastPoint) {
+      allowed = allowed.filter((op) => op !== 'LOADING');
     }
     return allowed;
   }

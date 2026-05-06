@@ -146,6 +146,7 @@
       "errors": {
         "operationsMaxTwo": "A point cannot have more than two operations",
         "operationsCombo": "This combination of operations is not allowed for the point",
+        "operationsComboWithPoint": "This combination of operations is not allowed at point #{{point}}",
         "customsWithoutBorder": "Customs operations are only allowed when the route has a border point",
         "borderTooMany": "Only one border point is allowed per route",
         "missingExportBeforeBorder": "An export-customs point is required before the border",
