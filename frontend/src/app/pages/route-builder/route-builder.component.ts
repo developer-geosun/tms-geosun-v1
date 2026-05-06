@@ -401,12 +401,14 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return;
     }
     const name = checkpoint.name[this.lang()] ?? checkpoint.name.en;
+    const geocoded = await this.reverseGeocode(checkpoint.lat, checkpoint.lng);
     const next = [...this.waypoints()];
     next.splice(segmentIndex + 1, 0, {
       lat: checkpoint.lat,
       lng: checkpoint.lng,
       address: name,
-      country,
+      // Для border-точки визначаємо country так само, як і для звичайної точки: через reverse geocode.
+      country: geocoded.country ?? country.toLowerCase(),
       isBorder: true,
       operations: []
     });
@@ -1395,6 +1397,13 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     const selectedImportIndex = points.findIndex((item) => item.operations.includes('IMPORT_CUSTOMS'));
     if (selectedImportIndex >= 0 && index !== selectedImportIndex) {
       allowed = allowed.filter((op) => op !== 'IMPORT_CUSTOMS');
+    }
+    if (selectedImportIndex >= 0 && index >= selectedImportIndex) {
+      // Після точки розмитнення лишаємо тільки розвантаження;
+      // на самій точці додатково лишаємо саму операцію IMPORT_CUSTOMS.
+      allowed = allowed.filter(
+        (op) => op === 'UNLOADING' || (index === selectedImportIndex && op === 'IMPORT_CUSTOMS')
+      );
     }
     if (selectedExportIndex >= 0) {
       const isInCustomsTransit =

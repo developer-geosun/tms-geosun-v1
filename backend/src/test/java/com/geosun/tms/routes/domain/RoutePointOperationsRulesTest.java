@@ -224,6 +224,36 @@ class RoutePointOperationsRulesTest {
     }
 
     @Test
+    void loadingAfterImportCustomsIsRejected() {
+      List<RoutePointWithOperations> route =
+          List.of(
+              point(RoutePointKind.START, RoutePointOperation.LOADING),
+              point(RoutePointKind.STOP, RoutePointOperation.EXPORT_CUSTOMS),
+              point(RoutePointKind.BORDER),
+              point(RoutePointKind.STOP, RoutePointOperation.IMPORT_CUSTOMS),
+              point(RoutePointKind.FINISH, RoutePointOperation.LOADING, RoutePointOperation.UNLOADING));
+      ValidationError error = RoutePointOperationsRules.validateRoute(route);
+      assertThat(error).isNotNull();
+      assertThat(error.code()).isEqualTo(ValidationErrorCode.OPERATION_SET_INVALID);
+      assertThat(error.pointIndex()).isEqualTo(4);
+    }
+
+    @Test
+    void secondImportAfterImportCustomsIsRejected() {
+      List<RoutePointWithOperations> route =
+          List.of(
+              point(RoutePointKind.START, RoutePointOperation.LOADING),
+              point(RoutePointKind.STOP, RoutePointOperation.EXPORT_CUSTOMS),
+              point(RoutePointKind.BORDER),
+              point(RoutePointKind.STOP, RoutePointOperation.IMPORT_CUSTOMS),
+              point(RoutePointKind.FINISH, RoutePointOperation.IMPORT_CUSTOMS, RoutePointOperation.UNLOADING));
+      ValidationError error = RoutePointOperationsRules.validateRoute(route);
+      assertThat(error).isNotNull();
+      assertThat(error.code()).isEqualTo(ValidationErrorCode.IMPORT_TOO_MANY);
+      assertThat(error.pointIndex()).isEqualTo(4);
+    }
+
+    @Test
     void importOnBorderIsRejected() {
       List<RoutePointWithOperations> route =
           List.of(

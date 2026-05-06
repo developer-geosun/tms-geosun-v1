@@ -13,7 +13,7 @@ import java.util.Set;
  *   <li>per-point whitelist (різний для BORDER vs не-BORDER);
  *   <li>глобальні правила про BORDER (рівно 0 або 1 BORDER на маршрут, пов'язана з наявністю
  *       митних операцій);
- *   <li>фазову FSM {@code LOAD_PHASE -> CUSTOMS_TRANSIT}.
+ *   <li>фазову FSM {@code LOAD_PHASE -> CUSTOMS_TRANSIT -> UNLOAD_ONLY}.
  * </ul>
  */
 public final class RoutePointOperationsRules {
@@ -227,7 +227,13 @@ public final class RoutePointOperationsRules {
             return new ValidationError(ValidationErrorCode.OPERATION_IN_TRANSIT, i);
           }
           if (hasImport) {
-            phase = Phase.LOAD_PHASE;
+            phase = Phase.UNLOAD_ONLY;
+          }
+        }
+        case UNLOAD_ONLY -> {
+          // Після точки розмитнення дозволяємо лише розвантаження.
+          if (hasLoading || hasExport || hasImport) {
+            return new ValidationError(ValidationErrorCode.OPERATION_SET_INVALID, i);
           }
         }
       }
@@ -241,7 +247,8 @@ public final class RoutePointOperationsRules {
   /** Внутрішнє представлення фази FSM. */
   private enum Phase {
     LOAD_PHASE,
-    CUSTOMS_TRANSIT
+    CUSTOMS_TRANSIT,
+    UNLOAD_ONLY
   }
 
   /** Адаптер для алгоритму валідації — пара (тип точки, набір операцій). */
