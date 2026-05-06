@@ -43,10 +43,25 @@
               <mat-list class="route-card__points">
                 @for (point of route.points; track point.order) {
                   <mat-list-item class="route-point-row">
-                    <span matListItemIcon class="point-order" [class.point-order--regular]="!point.isBorder" [class.point-order--border]="point.isBorder">
-                      {{ point.order }}
+                    <span matListItemIcon class="route-point-index">
+                      <span class="point-order" [class.point-order--regular]="!point.isBorder" [class.point-order--border]="point.isBorder">
+                        {{ point.order }}
+                      </span>
                     </span>
-                    <span matListItemTitle class="route-point-address">{{ point.address }}</span>
+                    <div matListItemTitle class="route-point-content">
+                      <div class="route-point-main-line">
+                        <span class="route-point-address">{{ point.address }}</span>
+                      </div>
+                      @if (point.operations.length) {
+                        <mat-chip-set class="route-point-operations" aria-label="Point operations">
+                          @for (operation of point.operations; track operation) {
+                            <mat-chip class="route-point-operation-chip">
+                              {{ ('pages.routeBuilder.operations.' + operation) | translate }}
+                            </mat-chip>
+                          }
+                        </mat-chip-set>
+                      }
+                    </div>
                   </mat-list-item>
                 }
               </mat-list>

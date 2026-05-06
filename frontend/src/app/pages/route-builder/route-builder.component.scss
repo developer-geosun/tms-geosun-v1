@@ -250,6 +250,16 @@
   grid-template-columns: 1fr;
   gap: 0;
 }
+.point-operations-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.point-operation-chip {
+  --mdc-chip-label-text-size: 0.6875rem;
+  --mdc-chip-label-text-line-height: 1.2;
+  min-height: 22px;
+}
 .point-operation-checkbox {
   font-size: 0.71875rem;
   line-height: 1.05;

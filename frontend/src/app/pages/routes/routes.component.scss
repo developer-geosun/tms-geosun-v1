@@ -128,12 +128,29 @@
   padding: 0;
 }
 
-.route-card__points .mat-mdc-list-item {
-  --mdc-list-list-item-one-line-container-height: 18px;
+.route-point-row {
+  min-height: 26px;
 }
 
-.route-point-row {
-  min-height: 18px;
+.route-card__points .mat-mdc-list-item {
+  height: auto !important;
+  min-height: 40px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.route-card__points .mat-mdc-list-item .mdc-list-item__start {
+  align-self: center;
+  margin-inline-end: 10px;
+  margin-top: 0;
+}
+
+.route-card__points .mat-mdc-list-item .mdc-list-item__content {
+  overflow: visible;
+}
+
+.route-card__points .mat-mdc-list-item .mat-mdc-list-item-title {
+  white-space: normal;
 }
 
 .point-order {
@@ -159,12 +176,45 @@
 }
 
 .route-point-address {
-  display: block;
+  display: inline-block;
   font-size: 0.75rem;
   line-height: 1.2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.route-point-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
+.route-point-main-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  min-width: 0;
+}
+
+.route-point-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-point-operations {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.route-point-operation-chip {
+  --mdc-chip-label-text-size: 0.75rem;
+  --mdc-chip-label-text-line-height: 1.2;
+  min-height: 20px;
 }
 
 .route-card :is(.mat-mdc-card-title, .mat-mdc-card-subtitle, .mdc-list-item__primary-text, .mdc-button__label) {

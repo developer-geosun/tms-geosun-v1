@@ -180,18 +180,28 @@
             <span>{{ point.address }}</span>
             <small>{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</small>
             <div class="point-operations-block" (click)="$event.stopPropagation()">
-              <div class="point-operations-list">
-                @for (op of getAllowedOperations(pointIndex); track op) {
-                  <mat-checkbox
-                    class="point-operation-checkbox"
-                    [checked]="isPointOperationChecked(pointIndex, op)"
-                    (change)="onPointOperationToggle(pointIndex, op, $event.checked)"
-                    [disabled]="!canEditRoute()"
-                  >
-                    {{ ('pages.routeBuilder.operations.' + op) | translate }}
-                  </mat-checkbox>
-                }
-              </div>
+              @if (isViewMode()) {
+                <mat-chip-set class="point-operations-chips" aria-label="Point operations">
+                  @for (op of getPointOperations(pointIndex); track op) {
+                    <mat-chip class="point-operation-chip">
+                      {{ ('pages.routeBuilder.operations.' + op) | translate }}
+                    </mat-chip>
+                  }
+                </mat-chip-set>
+              } @else {
+                <div class="point-operations-list">
+                  @for (op of getAllowedOperations(pointIndex); track op) {
+                    <mat-checkbox
+                      class="point-operation-checkbox"
+                      [checked]="isPointOperationChecked(pointIndex, op)"
+                      (change)="onPointOperationToggle(pointIndex, op, $event.checked)"
+                      [disabled]="!canEditRoute()"
+                    >
+                      {{ ('pages.routeBuilder.operations.' + op) | translate }}
+                    </mat-checkbox>
+                  }
+                </div>
+              }
             </div>
             @if (isOperationsErrorOnPoint(pointIndex); as hasError) {
               @if (getOperationsErrorKey(); as errorKey) {
@@ -199,17 +209,18 @@
               }
             }
           </div>
-          <div class="point-actions">
-            <button
-              mat-icon-button
-              type="button"
-              (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)"
-              [disabled]="!canEditRoute()"
-              [attr.aria-label]="'pages.freightCalculation.clear' | translate"
-            >
-              <mat-icon>close</mat-icon>
-            </button>
-          </div>
+          @if (canEditRoute()) {
+            <div class="point-actions">
+              <button
+                mat-icon-button
+                type="button"
+                (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)"
+                [attr.aria-label]="'pages.freightCalculation.clear' | translate"
+              >
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          }
         </div>
 
         @if ($index < waypoints().length - 1) {

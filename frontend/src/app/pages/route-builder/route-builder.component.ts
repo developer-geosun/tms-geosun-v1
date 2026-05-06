@@ -19,6 +19,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -67,6 +68,7 @@ import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
     MatExpansionModule,
     MatFormFieldModule,
     MatCheckboxModule,
+    MatChipsModule,
     MatIconModule,
     MatInputModule,
     MatSelectModule

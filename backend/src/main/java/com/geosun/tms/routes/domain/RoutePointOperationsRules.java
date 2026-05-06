@@ -32,6 +32,7 @@ public final class RoutePointOperationsRules {
           EnumSet.of(RoutePointOperation.EXPORT_CUSTOMS),
           EnumSet.of(RoutePointOperation.IMPORT_CUSTOMS),
           EnumSet.of(RoutePointOperation.UNLOADING),
+          EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.UNLOADING),
           EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.EXPORT_CUSTOMS),
           EnumSet.of(RoutePointOperation.IMPORT_CUSTOMS, RoutePointOperation.UNLOADING));
 

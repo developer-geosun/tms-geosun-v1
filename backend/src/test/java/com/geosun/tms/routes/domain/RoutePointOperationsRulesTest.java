@@ -38,6 +38,11 @@ class RoutePointOperationsRulesTest {
       assertThat(
               RoutePointOperationsRules.isOperationSetAllowed(
                   RoutePointKind.STOP,
+                  EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.UNLOADING)))
+          .isTrue();
+      assertThat(
+              RoutePointOperationsRules.isOperationSetAllowed(
+                  RoutePointKind.STOP,
                   EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.EXPORT_CUSTOMS)))
           .isTrue();
       assertThat(
@@ -49,11 +54,6 @@ class RoutePointOperationsRulesTest {
 
     @Test
     void rejectsInvalidPairsOnNonBorder() {
-      assertThat(
-              RoutePointOperationsRules.isOperationSetAllowed(
-                  RoutePointKind.STOP,
-                  EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.UNLOADING)))
-          .isFalse();
       assertThat(
               RoutePointOperationsRules.isOperationSetAllowed(
                   RoutePointKind.STOP,
