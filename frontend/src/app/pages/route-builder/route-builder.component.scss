@@ -93,12 +93,14 @@
 .sidebar-actions__buttons .mat-mdc-button-base {
   min-height: 36px;
   font-weight: 600;
+  white-space: nowrap;
 }
 .sidebar-login-button {
   min-height: 46px;
   border-radius: 10px;
   font-weight: 700;
   letter-spacing: 0.2px;
+  padding-inline: 10px;
   --mdc-protected-button-container-color: var(--mat-sys-primary-container);
   --mdc-protected-button-label-text-color: var(--mat-sys-on-primary-container);
   --mat-protected-button-state-layer-color: var(--mat-sys-on-primary-container);
@@ -375,6 +377,7 @@
 }
 .sidebar-actions__buttons .mat-mdc-button-base {
   flex: 1 1 calc(50% - 4px);
+  min-width: 0;
 }
 .search-field {
   width: 100%;
