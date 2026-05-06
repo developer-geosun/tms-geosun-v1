@@ -160,14 +160,20 @@
       </div>
     </div>
 
-    <div class="points-list">
+    <div #pointsListContainer class="points-list">
       @if (waypoints().length === 0) {
         <div class="points-list-empty">
           {{ 'pages.freightCalculation.pointsListEmpty' | translate }}
         </div>
       }
       @for (point of waypoints(); track $index; let pointIndex = $index; let segmentIndex = $index) {
-        <div class="point-row" [class.border]="point.isBorder" [class.selected]="pointIndex === selectedWaypointIndex()" (click)="selectWaypoint(pointIndex)">
+        <div
+          #pointRowRef
+          class="point-row"
+          [class.border]="point.isBorder"
+          [class.selected]="pointIndex === selectedWaypointIndex()"
+          (click)="selectWaypoint(pointIndex)"
+        >
           <div
             class="point-order"
             [class.point-order--regular]="!point.isBorder"

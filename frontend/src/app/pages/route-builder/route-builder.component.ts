@@ -5,7 +5,9 @@ import {
   ElementRef,
   HostListener,
   OnDestroy,
+  QueryList,
   ViewChild,
+  ViewChildren,
   computed,
   effect,
   inject,
@@ -76,6 +78,8 @@ import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
 })
 export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapContainer', { static: true }) private readonly mapContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('pointsListContainer') private readonly pointsListContainer?: ElementRef<HTMLDivElement>;
+  @ViewChildren('pointRowRef') private readonly pointRows?: QueryList<ElementRef<HTMLDivElement>>;
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly http = inject(HttpClient);
@@ -195,7 +199,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     await this.addWaypoint(event.latlng.lat, event.latlng.lng);
   }
 
-  selectWaypoint(index: number): void {
+  selectWaypoint(index: number, source: 'map' | 'sidebar' = 'sidebar'): void {
     const point = this.waypoints()[index];
     if (!point || !this.map) {
       return;
@@ -205,6 +209,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       animate: true,
       duration: 0.35
     });
+    if (source === 'map') {
+      this.scrollPointCardIntoView(index);
+    }
   }
 
   async onSearchChange(value: string): Promise<void> {
@@ -757,6 +764,24 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     );
   }
 
+  private scrollPointCardIntoView(index: number): void {
+    requestAnimationFrame(() => {
+      const container = this.pointsListContainer?.nativeElement;
+      const row = this.pointRows?.get(index)?.nativeElement;
+      if (!container || !row) {
+        return;
+      }
+      const containerRect = container.getBoundingClientRect();
+      const rowRect = row.getBoundingClientRect();
+      const padding = 12;
+      if (rowRect.top < containerRect.top) {
+        container.scrollTop += rowRect.top - containerRect.top - padding;
+      } else if (rowRect.bottom > containerRect.bottom) {
+        container.scrollTop += rowRect.bottom - containerRect.bottom + padding;
+      }
+    });
+  }
+
   private async addWaypoint(lat: number, lng: number, address?: string, country?: string | null): Promise<void> {
     const fallbackAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     const waypointIndex = this.waypoints().length;
@@ -830,7 +855,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         zIndexOffset: 1000
       }).addTo(this.map!);
       marker.on('click', () => {
-        this.selectWaypoint(index);
+        this.selectWaypoint(index, 'map');
       });
       marker.on('dragend', async () => {
         if (!this.canEditRoute()) {
@@ -838,7 +863,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         }
         const position = marker.getLatLng();
         const geocoded = await this.reverseGeocode(position.lat, position.lng);
-        this.selectWaypoint(index);
+        this.selectWaypoint(index, 'map');
         this.waypoints.update((items) =>
           items.map((item, itemIndex) =>
             itemIndex === index
@@ -1247,7 +1272,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
     if (selectedExportIndex >= 0) {
       const isInCustomsTransit =
-        index >= selectedExportIndex && (selectedImportIndex < 0 || index < selectedImportIndex);
+        index > selectedExportIndex && (selectedImportIndex < 0 || index < selectedImportIndex);
       if (isInCustomsTransit) {
         allowed = allowed.filter((op) => op !== 'LOADING' && op !== 'UNLOADING');
       }

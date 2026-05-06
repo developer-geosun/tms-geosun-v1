@@ -5,7 +5,7 @@ import { RoutePointOperation, Waypoint } from './route-builder.models';
  * (com.geosun.tms.routes.domain.RoutePointOperationsRules).
  *
  * Правила:
- *  - не більше 2 операцій на точці;
+ *  - не більше 3 операцій на точці;
  *  - whitelist залежить від типу точки (BORDER vs не-BORDER);
  *  - на маршрут допустимо максимум 1 BORDER-точка;
  *  - якщо BORDER відсутній — заборонені будь-які митні операції;
@@ -13,7 +13,7 @@ import { RoutePointOperation, Waypoint } from './route-builder.models';
  *  - фазова FSM LOAD_PHASE -> CUSTOMS_TRANSIT.
  */
 
-export const MAX_OPS_PER_POINT = 2;
+export const MAX_OPS_PER_POINT = 3;
 export const MAX_BORDER_POINTS_PER_ROUTE = 1;
 
 export type RoutePointOperationsErrorCode =
@@ -48,8 +48,11 @@ const ALLOWED_NON_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
   ['EXPORT_CUSTOMS'],
   ['IMPORT_CUSTOMS'],
   ['UNLOADING'],
+  ['LOADING', 'EXPORT_CUSTOMS'],
+  ['UNLOADING', 'EXPORT_CUSTOMS'],
   ['LOADING', 'UNLOADING'],
-  ['IMPORT_CUSTOMS', 'UNLOADING']
+  ['IMPORT_CUSTOMS', 'UNLOADING'],
+  ['LOADING', 'EXPORT_CUSTOMS', 'UNLOADING']
 ];
 
 const ALLOWED_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
@@ -242,7 +245,7 @@ export function validateWaypointOperations(waypoints: readonly Waypoint[]): Rout
 
 /**
  * Чи варто додавати операцію до поточного набору. Перевіряє:
- *  - ліміт 2 операцій;
+ *  - ліміт 3 операцій;
  *  - whitelist для цього типу точки.
  * Повертає null якщо додавання валідне, інакше — код проблеми.
  */

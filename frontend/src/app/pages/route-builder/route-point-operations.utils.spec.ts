@@ -13,8 +13,13 @@ describe('route-point-operations.utils', () => {
 
     it('rejects forbidden pairs on non-border', () => {
       expect(isOperationSetAllowed(false, ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS'])).toBe(false);
-      expect(isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS'])).toBe(false);
       expect(isOperationSetAllowed(false, ['LOADING', 'IMPORT_CUSTOMS'])).toBe(false);
+    });
+
+    it('allows export with cargo operations on non-border', () => {
+      expect(isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS'])).toBe(true);
+      expect(isOperationSetAllowed(false, ['UNLOADING', 'EXPORT_CUSTOMS'])).toBe(true);
+      expect(isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS', 'UNLOADING'])).toBe(true);
     });
 
     it('allows customs combos on border, rejects cargo on border', () => {
@@ -25,9 +30,9 @@ describe('route-point-operations.utils', () => {
       expect(isOperationSetAllowed(true, ['UNLOADING'])).toBe(false);
     });
 
-    it('rejects sets larger than 2', () => {
+    it('rejects sets larger than 3', () => {
       expect(
-        isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS', 'IMPORT_CUSTOMS'])
+        isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS', 'IMPORT_CUSTOMS', 'UNLOADING'])
       ).toBe(false);
     });
   });
