@@ -553,6 +553,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   getSidebarTopErrorKey(): string | null {
+    if (this.waypoints().length === 1) {
+      return 'pages.freightCalculation.errors.addAtLeastOneMorePoint';
+    }
     if (this.hasPendingBorder()) {
       return 'pages.freightCalculation.errors.selectBorderRequired';
     }
