@@ -133,6 +133,9 @@
       "newRoute": "New route",
       "cancelEdit": "Back to view",
       "routeDeleted": "Route deleted",
+      "copyCoordinates": "Copy coordinates",
+      "coordinatesCopied": "Coordinates copied",
+      "coordinatesCopyFailed": "Failed to copy coordinates",
       "operations": {
         "title": "Operations at point",
         "LOADING": "Loading",

@@ -133,6 +133,9 @@
       "newRoute": "Новый маршрут",
       "cancelEdit": "К просмотру",
       "routeDeleted": "Маршрут удален",
+      "copyCoordinates": "Скопировать координаты",
+      "coordinatesCopied": "Координаты скопированы",
+      "coordinatesCopyFailed": "Не удалось скопировать координаты",
       "operations": {
         "title": "Операции на точке",
         "LOADING": "Загрузка",

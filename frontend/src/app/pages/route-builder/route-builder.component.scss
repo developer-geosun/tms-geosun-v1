@@ -238,6 +238,22 @@
   white-space: nowrap;
 }
 .point-main small { color: var(--mat-sys-on-surface-variant); }
+.point-location-chip-set {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+}
+.point-location-chip {
+  cursor: pointer;
+  user-select: none;
+  --mdc-chip-label-text-size: 0.75rem;
+  --mdc-chip-label-text-line-height: 1.2;
+}
+.point-location-chip mat-icon {
+  font-size: 14px;
+  width: 14px;
+  height: 14px;
+}
 .point-operations-block {
   width: 100%;
   margin-top: 2px;

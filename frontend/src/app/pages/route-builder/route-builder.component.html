@@ -178,7 +178,22 @@
           <div class="point-main">
             <strong>{{ getPointLabel(pointIndex) | translate }}</strong>
             <span>{{ point.address }}</span>
-            <small>{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</small>
+            <mat-chip-set
+              class="point-location-chip-set"
+              (click)="$event.stopPropagation()"
+              aria-label="Point coordinates"
+            >
+              <mat-chip
+                class="point-location-chip"
+                [highlighted]="false"
+                (click)="copyPointCoordinates(point)"
+                [attr.aria-label]="'pages.routeBuilder.copyCoordinates' | translate"
+                [title]="'pages.routeBuilder.copyCoordinates' | translate"
+              >
+                <mat-icon>content_copy</mat-icon>
+                {{ formatPointCoordinates(point) }}
+              </mat-chip>
+            </mat-chip-set>
             <div class="point-operations-block" (click)="$event.stopPropagation()">
               @if (isViewMode()) {
                 <mat-chip-set class="point-operations-chips" aria-label="Point operations">
