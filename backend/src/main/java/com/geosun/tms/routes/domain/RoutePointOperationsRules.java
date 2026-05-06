@@ -41,13 +41,10 @@ public final class RoutePointOperationsRules {
               RoutePointOperation.EXPORT_CUSTOMS,
               RoutePointOperation.UNLOADING));
 
-  /** Whitelist допустимих наборів операцій на BORDER-точці. */
+  /** Whitelist допустимих наборів операцій на BORDER-точці (вантажні операції заборонені). */
   private static final Set<Set<RoutePointOperation>> ALLOWED_BORDER =
       Set.of(
           EnumSet.noneOf(RoutePointOperation.class),
-          EnumSet.of(RoutePointOperation.LOADING),
-          EnumSet.of(RoutePointOperation.UNLOADING),
-          EnumSet.of(RoutePointOperation.LOADING, RoutePointOperation.UNLOADING),
           EnumSet.of(RoutePointOperation.EXPORT_CUSTOMS),
           EnumSet.of(RoutePointOperation.IMPORT_CUSTOMS),
           EnumSet.of(RoutePointOperation.EXPORT_CUSTOMS, RoutePointOperation.IMPORT_CUSTOMS));
@@ -159,7 +156,7 @@ public final class RoutePointOperationsRules {
       int importIndex = -1;
 
       boolean exportBeforeOrAtBorder = false;
-      boolean importAtOrAfterBorder = false;
+      boolean importAfterBorder = false;
       for (int i = 0; i < points.size(); i++) {
         Set<RoutePointOperation> ops = points.get(i).operations();
         if (ops.contains(RoutePointOperation.EXPORT_CUSTOMS)) {
@@ -183,8 +180,8 @@ public final class RoutePointOperationsRules {
         if (i <= borderIndex && ops.contains(RoutePointOperation.EXPORT_CUSTOMS)) {
           exportBeforeOrAtBorder = true;
         }
-        if (i >= borderIndex && ops.contains(RoutePointOperation.IMPORT_CUSTOMS)) {
-          importAtOrAfterBorder = true;
+        if (i > borderIndex && ops.contains(RoutePointOperation.IMPORT_CUSTOMS)) {
+          importAfterBorder = true;
         }
       }
       if (secondExportIndex >= 0) {
@@ -196,13 +193,13 @@ public final class RoutePointOperationsRules {
       if (exportIndex >= 0 && (exportIndex < firstLoadingIndex || exportIndex > borderIndex)) {
         return new ValidationError(ValidationErrorCode.OPERATION_SET_INVALID, exportIndex);
       }
-      if (importIndex >= 0 && importIndex < borderIndex) {
+      if (importIndex >= 0 && importIndex <= borderIndex) {
         return new ValidationError(ValidationErrorCode.OPERATION_SET_INVALID, importIndex);
       }
       if (!exportBeforeOrAtBorder) {
         return new ValidationError(ValidationErrorCode.MISSING_EXPORT_BEFORE_BORDER, borderIndex);
       }
-      if (!importAtOrAfterBorder) {
+      if (!importAfterBorder) {
         return new ValidationError(ValidationErrorCode.MISSING_IMPORT_AFTER_BORDER, borderIndex);
       }
     }

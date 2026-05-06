@@ -1383,6 +1383,11 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     if (!hasExportBeforeCurrentPoint) {
       allowed = allowed.filter((op) => op !== 'IMPORT_CUSTOMS');
     }
+    const hasSelectedExport = points.some((item) => item.operations.includes('EXPORT_CUSTOMS'));
+    const canUseImportAfterBorder = borderIndex >= 0 && index > borderIndex;
+    if (hasSelectedExport && !canUseImportAfterBorder) {
+      allowed = allowed.filter((op) => op !== 'IMPORT_CUSTOMS');
+    }
     const selectedExportIndex = points.findIndex((item) => item.operations.includes('EXPORT_CUSTOMS'));
     if (selectedExportIndex >= 0 && index !== selectedExportIndex) {
       allowed = allowed.filter((op) => op !== 'EXPORT_CUSTOMS');

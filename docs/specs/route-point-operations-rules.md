@@ -31,9 +31,6 @@
 
 ### 3.3 Разрешенные наборы для border точки
 - `[]`
-- `[LOADING]`
-- `[UNLOADING]`
-- `[LOADING, UNLOADING]`
 - `[EXPORT_CUSTOMS]`
 - `[IMPORT_CUSTOMS]`
 - `[EXPORT_CUSTOMS, IMPORT_CUSTOMS]`

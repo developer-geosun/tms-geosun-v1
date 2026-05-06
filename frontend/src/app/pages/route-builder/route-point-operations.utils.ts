@@ -57,9 +57,6 @@ const ALLOWED_NON_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
 
 const ALLOWED_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
   [],
-  ['LOADING'],
-  ['UNLOADING'],
-  ['LOADING', 'UNLOADING'],
   ['EXPORT_CUSTOMS'],
   ['IMPORT_CUSTOMS'],
   ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS']
@@ -82,8 +79,10 @@ export function isOperationSetAllowed(isBorder: boolean, ops: readonly RoutePoin
 }
 
 /** Допустимі набори опцій для побудови UI-чекбоксів. */
-export function getAllowedOperationsForPoint(_isBorder: boolean): RoutePointOperation[] {
-  return ['LOADING', 'EXPORT_CUSTOMS', 'IMPORT_CUSTOMS', 'UNLOADING'];
+export function getAllowedOperationsForPoint(isBorder: boolean): RoutePointOperation[] {
+  return isBorder
+    ? ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS']
+    : ['LOADING', 'EXPORT_CUSTOMS', 'IMPORT_CUSTOMS', 'UNLOADING'];
 }
 
 export function validateRouteOperations(points: readonly ValidationPoint[]): RoutePointOperationsError | null {
@@ -181,25 +180,25 @@ export function validateRouteOperations(points: readonly ValidationPoint[]): Rou
     }
     if (importIndices.length === 1) {
       const importIndex = importIndices[0];
-      if (importIndex < borderIndex) {
+      if (importIndex <= borderIndex) {
         return { code: 'OPERATION_SET_INVALID', pointIndex: importIndex };
       }
     }
     let exportBeforeOrAtBorder = false;
-    let importAtOrAfterBorder = false;
+    let importAfterBorder = false;
     for (let i = 0; i < points.length; i++) {
       const ops = points[i].operations;
       if (i <= borderIndex && ops.includes('EXPORT_CUSTOMS')) {
         exportBeforeOrAtBorder = true;
       }
-      if (i >= borderIndex && ops.includes('IMPORT_CUSTOMS')) {
-        importAtOrAfterBorder = true;
+      if (i > borderIndex && ops.includes('IMPORT_CUSTOMS')) {
+        importAfterBorder = true;
       }
     }
     if (!exportBeforeOrAtBorder) {
       return { code: 'MISSING_EXPORT_BEFORE_BORDER', pointIndex: borderIndex };
     }
-    if (!importAtOrAfterBorder) {
+    if (!importAfterBorder) {
       return { code: 'MISSING_IMPORT_AFTER_BORDER', pointIndex: borderIndex };
     }
   }
