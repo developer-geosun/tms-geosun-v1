@@ -15,7 +15,7 @@ public interface RouteContractsFacade {
 
   List<RouteSummaryDto> getMyRoutes(String userId);
 
-  RouteSnapshotDto getMyRouteById(String userId, String routeId);
+  RouteSnapshotDto getMyRouteById(String userId, Long routeId);
 
   RouteRequestDto createRouteRequest(String userId, CreateRouteRequestRequest request);
 

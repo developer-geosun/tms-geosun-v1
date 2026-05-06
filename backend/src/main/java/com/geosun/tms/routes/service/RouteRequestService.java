@@ -49,9 +49,10 @@ public class RouteRequestService {
 
   @Transactional
   public RouteRequestDto createRouteRequest(String userId, CreateRouteRequestRequest request) {
+    Long routeId = parseRouteId(request.routeId());
     Route route =
         routeRepository
-            .findByIdAndUserIdAndDeletedFalse(request.routeId(), userId)
+            .findByIdAndUserIdAndDeletedFalse(routeId, userId)
             .orElseThrow(() -> ApiException.notFound("Route not found"));
 
     RouteRequest routeRequest = new RouteRequest();
@@ -118,7 +119,7 @@ public class RouteRequestService {
     QuoteDto currentQuote = freightQuoteService.getCurrentQuoteForRequest(requestId);
     return new RouteRequestDto(
         request.getId(),
-        request.getRoute().getId(),
+        String.valueOf(request.getRoute().getId()),
         request.getStatus(),
         request.getPreferredStartDate() == null ? null : request.getPreferredStartDate().toString(),
         request.getComment(),
@@ -131,7 +132,7 @@ public class RouteRequestService {
 
   private RouteSnapshotDto toRouteSummaryAsSnapshot(Route route) {
     return new RouteSnapshotDto(
-        route.getId(),
+        String.valueOf(route.getId()),
         route.getTitle(),
         route.getRoutingProfile(),
         route.getRoutingMode(),
@@ -165,7 +166,7 @@ public class RouteRequestService {
                 .toList();
 
     return new RouteSnapshotDto(
-        route.getId(),
+        String.valueOf(route.getId()),
         route.getTitle(),
         route.getRoutingProfile(),
         route.getRoutingMode(),
@@ -186,6 +187,14 @@ public class RouteRequestService {
       return LocalDate.parse(rawDate);
     } catch (DateTimeParseException ex) {
       throw ApiException.badRequest("VALIDATION_ERROR", "Invalid preferredStartDate format");
+    }
+  }
+
+  private Long parseRouteId(String routeId) {
+    try {
+      return Long.parseLong(Objects.requireNonNull(routeId, "routeId must not be null"));
+    } catch (NumberFormatException ex) {
+      throw ApiException.badRequest("VALIDATION_ERROR", "Route id must be numeric");
     }
   }
 

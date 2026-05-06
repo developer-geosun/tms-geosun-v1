@@ -337,6 +337,7 @@ class RouteRequestApiIntegrationTest {
     startPoint.put("country", "UA");
     startPoint.put("isBorder", false);
     startPoint.put("segmentDistanceKmToNext", 120.5);
+    startPoint.put("operations", List.of("LOADING"));
 
     Map<String, Object> finishPoint = new HashMap<>();
     finishPoint.put("order", 2);
@@ -347,6 +348,7 @@ class RouteRequestApiIntegrationTest {
     finishPoint.put("country", "PL");
     finishPoint.put("isBorder", false);
     finishPoint.put("segmentDistanceKmToNext", null);
+    finishPoint.put("operations", List.of("UNLOADING"));
 
     return Map.of(
         "title",

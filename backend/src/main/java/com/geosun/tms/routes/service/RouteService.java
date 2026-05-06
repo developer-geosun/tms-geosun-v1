@@ -85,7 +85,7 @@ public class RouteService implements RouteContractsFacade {
 
   @Override
   @Transactional
-  public RouteSnapshotDto getMyRouteById(String userId, String routeId) {
+  public RouteSnapshotDto getMyRouteById(String userId, Long routeId) {
     Route route =
         routeRepository
             .findByIdAndUserIdWithPoints(routeId, userId)
@@ -95,7 +95,7 @@ public class RouteService implements RouteContractsFacade {
   }
 
   @Transactional
-  public void softDeleteMyRoute(String userId, String routeId) {
+  public void softDeleteMyRoute(String userId, Long routeId) {
     Route route =
         routeRepository
             .findByIdAndUserIdAndDeletedFalse(routeId, userId)
@@ -162,7 +162,7 @@ public class RouteService implements RouteContractsFacade {
             ? route.getCreatedAt().toString()
             : (route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString());
     return new RouteSummaryDto(
-        route.getId(),
+        String.valueOf(route.getId()),
         route.getTitle(),
         toDouble(route.getDistanceKm()),
         route.getDurationMin(),
@@ -182,7 +182,7 @@ public class RouteService implements RouteContractsFacade {
                 .toList();
 
     return new RouteSnapshotDto(
-        route.getId(),
+        String.valueOf(route.getId()),
         route.getTitle(),
         route.getRoutingProfile(),
         route.getRoutingMode(),

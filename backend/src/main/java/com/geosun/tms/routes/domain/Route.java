@@ -5,17 +5,17 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -23,8 +23,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 @Table(name = "routes")
 public class Route {
   @Id
-  @Column(name = "id", nullable = false, updatable = false, length = 36)
-  private String id;
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
+  @Column(name = "id", nullable = false, updatable = false)
+  private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "user_id", nullable = false)
@@ -71,18 +72,11 @@ public class Route {
   @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<RoutePoint> points = new ArrayList<>();
 
-  @PrePersist
-  void assignId() {
-    if (id == null) {
-      id = UUID.randomUUID().toString();
-    }
-  }
-
-  public String getId() {
+  public Long getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(Long id) {
     this.id = id;
   }
 

@@ -8,13 +8,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface RouteRepository extends JpaRepository<Route, String> {
+public interface RouteRepository extends JpaRepository<Route, Long> {
   List<Route> findByUserIdAndDeletedFalseOrderByUpdatedAtDesc(String userId);
 
-  Optional<Route> findByIdAndUserIdAndDeletedFalse(String id, String userId);
+  Optional<Route> findByIdAndUserIdAndDeletedFalse(Long id, String userId);
 
   @EntityGraph(attributePaths = "points")
   @Query("select r from Route r where r.id = :id and r.user.id = :userId and r.deleted = false")
   Optional<Route> findByIdAndUserIdWithPoints(
-      @Param("id") String id, @Param("userId") String userId);
+      @Param("id") Long id, @Param("userId") String userId);
 }

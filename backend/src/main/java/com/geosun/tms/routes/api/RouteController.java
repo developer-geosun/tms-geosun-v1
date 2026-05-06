@@ -53,7 +53,7 @@ public class RouteController {
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping("/my/{routeId}")
   public RouteSnapshotDto getMyRouteById(
-      @AuthenticationPrincipal UserPrincipal principal, @PathVariable String routeId) {
+      @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long routeId) {
     return routeService.getMyRouteById(principal.getUserId(), routeId);
   }
 
@@ -61,7 +61,7 @@ public class RouteController {
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @DeleteMapping("/my/{routeId}")
   public ResponseEntity<Void> deleteMyRoute(
-      @AuthenticationPrincipal UserPrincipal principal, @PathVariable String routeId) {
+      @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long routeId) {
     routeService.softDeleteMyRoute(principal.getUserId(), routeId);
     return ResponseEntity.noContent().build();
   }
