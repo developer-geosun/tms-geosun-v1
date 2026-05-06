@@ -10,7 +10,7 @@ import { RoutePointOperation, Waypoint } from './route-builder.models';
  *  - на маршрут допустимо максимум 1 BORDER-точка;
  *  - якщо BORDER відсутній — заборонені будь-які митні операції;
  *  - якщо BORDER присутній — EXPORT має бути на індексі ≤ b, IMPORT на індексі ≥ b;
- *  - фазова FSM LOAD_PHASE -> CUSTOMS_TRANSIT -> UNLOAD_PHASE.
+ *  - фазова FSM LOAD_PHASE -> CUSTOMS_TRANSIT.
  */
 
 export const MAX_OPS_PER_POINT = 2;
@@ -20,12 +20,17 @@ export type RoutePointOperationsErrorCode =
   | 'OPERATION_SET_INVALID'
   | 'BORDER_TOO_MANY'
   | 'CUSTOMS_WITHOUT_BORDER'
+  | 'LOADING_REQUIRED'
+  | 'UNLOADING_REQUIRED'
+  | 'UNLOADING_BEFORE_LOADING'
+  | 'UNLOADING_REQUIRED_AFTER_LAST_LOADING'
+  | 'EXPORT_TOO_MANY'
+  | 'IMPORT_TOO_MANY'
   | 'MISSING_EXPORT_BEFORE_BORDER'
   | 'MISSING_IMPORT_AFTER_BORDER'
   | 'IMPORT_BEFORE_EXPORT'
   | 'OPERATION_IN_TRANSIT'
-  | 'UNCLOSED_CUSTOMS'
-  | 'OPERATION_AFTER_UNLOAD';
+  | 'UNCLOSED_CUSTOMS';
 
 export interface RoutePointOperationsError {
   code: RoutePointOperationsErrorCode;
@@ -43,7 +48,7 @@ const ALLOWED_NON_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
   ['EXPORT_CUSTOMS'],
   ['IMPORT_CUSTOMS'],
   ['UNLOADING'],
-  ['LOADING', 'EXPORT_CUSTOMS'],
+  ['LOADING', 'UNLOADING'],
   ['IMPORT_CUSTOMS', 'UNLOADING']
 ];
 
@@ -103,6 +108,33 @@ export function validateRouteOperations(points: readonly ValidationPoint[]): Rou
     return { code: 'BORDER_TOO_MANY', pointIndex: -1 };
   }
 
+  // 3. Базові правила маршруту: щонайменше 1 LOADING і щонайменше 1 UNLOADING.
+  const loadingIndices: number[] = [];
+  const unloadingIndices: number[] = [];
+  for (let i = 0; i < points.length; i++) {
+    const ops = points[i].operations;
+    if (ops.includes('LOADING')) {
+      loadingIndices.push(i);
+    }
+    if (ops.includes('UNLOADING')) {
+      unloadingIndices.push(i);
+    }
+  }
+  if (loadingIndices.length === 0) {
+    return { code: 'LOADING_REQUIRED', pointIndex: 0 };
+  }
+  if (unloadingIndices.length === 0) {
+    return { code: 'UNLOADING_REQUIRED', pointIndex: points.length - 1 };
+  }
+  if (unloadingIndices[0] < loadingIndices[0]) {
+    return { code: 'UNLOADING_BEFORE_LOADING', pointIndex: unloadingIndices[0] };
+  }
+  const lastLoadingIndex = loadingIndices[loadingIndices.length - 1];
+  const lastUnloadingIndex = unloadingIndices[unloadingIndices.length - 1];
+  if (lastUnloadingIndex < lastLoadingIndex) {
+    return { code: 'UNLOADING_REQUIRED_AFTER_LAST_LOADING', pointIndex: lastLoadingIndex };
+  }
+
   const hasAnyCustoms = points.some(
     (p) => p.operations.includes('EXPORT_CUSTOMS') || p.operations.includes('IMPORT_CUSTOMS')
   );
@@ -115,6 +147,36 @@ export function validateRouteOperations(points: readonly ValidationPoint[]): Rou
       return { code: 'CUSTOMS_WITHOUT_BORDER', pointIndex: idx };
     }
   } else {
+    const exportIndices: number[] = [];
+    const importIndices: number[] = [];
+    for (let i = 0; i < points.length; i++) {
+      const ops = points[i].operations;
+      if (ops.includes('EXPORT_CUSTOMS')) {
+        exportIndices.push(i);
+      }
+      if (ops.includes('IMPORT_CUSTOMS')) {
+        importIndices.push(i);
+      }
+    }
+    if (exportIndices.length > 1) {
+      return { code: 'EXPORT_TOO_MANY', pointIndex: exportIndices[1] };
+    }
+    if (importIndices.length > 1) {
+      return { code: 'IMPORT_TOO_MANY', pointIndex: importIndices[1] };
+    }
+    const firstLoadingIndex = loadingIndices[0];
+    if (exportIndices.length === 1) {
+      const exportIndex = exportIndices[0];
+      if (exportIndex < firstLoadingIndex || exportIndex > borderIndex) {
+        return { code: 'OPERATION_SET_INVALID', pointIndex: exportIndex };
+      }
+    }
+    if (importIndices.length === 1) {
+      const importIndex = importIndices[0];
+      if (importIndex < borderIndex) {
+        return { code: 'OPERATION_SET_INVALID', pointIndex: importIndex };
+      }
+    }
     let exportBeforeOrAtBorder = false;
     let importAtOrAfterBorder = false;
     for (let i = 0; i < points.length; i++) {
@@ -134,8 +196,8 @@ export function validateRouteOperations(points: readonly ValidationPoint[]): Rou
     }
   }
 
-  // 3. Фазова FSM
-  type Phase = 'LOAD_PHASE' | 'CUSTOMS_TRANSIT' | 'UNLOAD_PHASE';
+  // 4. Фазова FSM
+  type Phase = 'LOAD_PHASE' | 'CUSTOMS_TRANSIT';
   let phase: Phase = 'LOAD_PHASE';
 
   for (let i = 0; i < points.length; i++) {
@@ -150,12 +212,8 @@ export function validateRouteOperations(points: readonly ValidationPoint[]): Rou
         if (hasImport && !hasExport) {
           return { code: 'IMPORT_BEFORE_EXPORT', pointIndex: i };
         }
-        if (hasExport && hasImport) {
-          phase = 'UNLOAD_PHASE';
-        } else if (hasExport) {
+        if (hasExport && !hasImport) {
           phase = 'CUSTOMS_TRANSIT';
-        } else if (hasUnloading) {
-          phase = 'UNLOAD_PHASE';
         }
         break;
       case 'CUSTOMS_TRANSIT':
@@ -163,12 +221,7 @@ export function validateRouteOperations(points: readonly ValidationPoint[]): Rou
           return { code: 'OPERATION_IN_TRANSIT', pointIndex: i };
         }
         if (hasImport) {
-          phase = 'UNLOAD_PHASE';
-        }
-        break;
-      case 'UNLOAD_PHASE':
-        if (hasLoading || hasExport || hasImport) {
-          return { code: 'OPERATION_AFTER_UNLOAD', pointIndex: i };
+          phase = 'LOAD_PHASE';
         }
         break;
     }

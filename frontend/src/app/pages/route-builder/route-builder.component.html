@@ -56,6 +56,16 @@
             mat-raised-button
             color="primary"
             type="button"
+            (click)="clearAllOperations()"
+            [disabled]="!canEditRoute() || waypoints().length === 0"
+          >
+            {{ 'pages.routeBuilder.clearOperations' | translate }}
+          </button>
+          <button
+            class="sidebar-login-button"
+            mat-raised-button
+            color="primary"
+            type="button"
             (click)="saveCurrentRoute()"
             [disabled]="!hasRoute() || hasPendingBorder() || hasOperationsError() || isSavingRoute() || isLoadingSavedRoute()"
           >
@@ -89,6 +99,9 @@
           </button>
         }
       </div>
+      @if (getSidebarTopErrorKey(); as sidebarErrorKey) {
+        <small class="sidebar-operations-error">{{ sidebarErrorKey | translate }}</small>
+      }
 
       <div class="search-box">
         <mat-form-field class="search-field" appearance="outline" subscriptSizing="dynamic">
@@ -128,39 +141,34 @@
           {{ 'pages.freightCalculation.pointsListEmpty' | translate }}
         </div>
       }
-      @for (point of waypoints(); track $index; let segmentIndex = $index) {
-        <div class="point-row" [class.border]="point.isBorder" [class.selected]="$index === selectedWaypointIndex()" (click)="selectWaypoint($index)">
+      @for (point of waypoints(); track $index; let pointIndex = $index; let segmentIndex = $index) {
+        <div class="point-row" [class.border]="point.isBorder" [class.selected]="pointIndex === selectedWaypointIndex()" (click)="selectWaypoint(pointIndex)">
           <div
             class="point-order"
             [class.point-order--regular]="!point.isBorder"
             [class.point-order--border]="point.isBorder"
           >
-            {{ $index + 1 }}
+            {{ pointIndex + 1 }}
           </div>
           <div class="point-main">
-            <strong>{{ getPointLabel($index) | translate }}</strong>
+            <strong>{{ getPointLabel(pointIndex) | translate }}</strong>
             <span>{{ point.address }}</span>
             <small>{{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }}</small>
-            <mat-form-field
-              class="point-operations-field"
-              appearance="outline"
-              subscriptSizing="dynamic"
-              (click)="$event.stopPropagation()"
-            >
-              <mat-label>{{ 'pages.routeBuilder.operations.title' | translate }}</mat-label>
-              <mat-select
-                multiple
-                [value]="getPointOperations($index)"
-                (selectionChange)="onPointOperationsChange($index, $event.value)"
-                [disabled]="!canEditRoute()"
-                panelClass="freight-operations-select-panel"
-              >
-                @for (op of getAllowedOperations($index); track op) {
-                  <mat-option [value]="op">{{ ('pages.routeBuilder.operations.' + op) | translate }}</mat-option>
+            <div class="point-operations-block" (click)="$event.stopPropagation()">
+              <div class="point-operations-list">
+                @for (op of getAllowedOperations(pointIndex); track op) {
+                  <mat-checkbox
+                    class="point-operation-checkbox"
+                    [checked]="isPointOperationChecked(pointIndex, op)"
+                    (change)="onPointOperationToggle(pointIndex, op, $event.checked)"
+                    [disabled]="!canEditRoute()"
+                  >
+                    {{ ('pages.routeBuilder.operations.' + op) | translate }}
+                  </mat-checkbox>
                 }
-              </mat-select>
-            </mat-form-field>
-            @if (isOperationsErrorOnPoint($index); as hasError) {
+              </div>
+            </div>
+            @if (isOperationsErrorOnPoint(pointIndex); as hasError) {
               @if (getOperationsErrorKey(); as errorKey) {
                 <small class="point-operations-error">{{ errorKey | translate }}</small>
               }

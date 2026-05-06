@@ -214,12 +214,61 @@
   white-space: nowrap;
 }
 .point-main small { color: var(--mat-sys-on-surface-variant); }
-.point-operations-field { width: 100%; margin-top: 6px; }
+.point-operations-block {
+  width: 100%;
+  margin-top: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.point-operations-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+.point-operation-checkbox {
+  font-size: 0.71875rem;
+  line-height: 1.05;
+}
+.point-operation-checkbox ::ng-deep .mat-mdc-checkbox-touch-target {
+  width: 28px;
+  height: 28px;
+}
+.point-operation-checkbox ::ng-deep .mdc-form-field {
+  gap: 4px;
+  min-height: 20px;
+  display: inline-flex;
+  align-items: baseline;
+}
+.point-operation-checkbox ::ng-deep .mdc-checkbox {
+  padding: 2px;
+  margin: 0;
+  align-self: baseline;
+  transform: translateY(-1px);
+}
+.point-operation-checkbox ::ng-deep .mdc-checkbox__background {
+  width: 14px;
+  height: 14px;
+}
+.point-operation-checkbox ::ng-deep .mdc-label {
+  display: inline-flex;
+  align-items: baseline;
+  margin: 0;
+  padding-top: 0;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: 0;
+}
 .point-operations-error {
   color: var(--mat-sys-error);
   font-size: 0.75rem;
   line-height: 1.2;
   margin-top: 4px;
+}
+.sidebar-operations-error {
+  color: var(--mat-sys-error);
+  font-size: 0.75rem;
+  line-height: 1.2;
 }
 .point-actions { display: flex; flex-direction: column; gap: 4px; }
 .point-actions .mat-mdc-icon-button {
@@ -272,6 +321,11 @@
 .border-expansion-panel ::ng-deep .mat-expansion-panel-header.mat-expanded {
   background: color-mix(in srgb, #22c55e 14%, var(--mat-sys-surface-container));
 }
+.border-expansion-panel ::ng-deep .mat-expansion-panel-header,
+.border-expansion-panel ::ng-deep .mat-expansion-panel-header .mat-expansion-panel-header-title,
+.border-expansion-panel ::ng-deep .mat-expansion-indicator::after {
+  color: #14532d;
+}
 .border-expansion-panel ::ng-deep .mat-expansion-panel-body {
   padding: 0 12px 12px;
   background: color-mix(in srgb, #22c55e 14%, var(--mat-sys-surface-container));
@@ -301,9 +355,20 @@
 .border-field ::ng-deep .mat-mdc-select,
 .border-field ::ng-deep .mat-mdc-select-value-text {
   font-size: inherit;
+  color: #14532d !important;
 }
 .border-field ::ng-deep .mat-mdc-notched-outline .mdc-floating-label--float-above {
   font-size: inherit;
+  color: #14532d !important;
+}
+.border-field ::ng-deep .mat-mdc-form-field-icon-suffix,
+.border-field ::ng-deep .mat-mdc-select-arrow {
+  color: #14532d !important;
+}
+.border-field ::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+.border-field ::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+.border-field ::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+  border-color: #166534 !important;
 }
 .sidebar-actions__buttons {
   flex-wrap: wrap;
@@ -436,5 +501,23 @@
   .sidebar-actions {
     background: color-mix(in srgb, var(--mat-sys-surface-container-high) 92%, #101218);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  }
+  .border-expansion-panel ::ng-deep .mat-expansion-panel-header,
+  .border-expansion-panel ::ng-deep .mat-expansion-panel-header .mat-expansion-panel-header-title,
+  .border-expansion-panel ::ng-deep .mat-expansion-indicator::after {
+    color: #86efac;
+  }
+  .border-field ::ng-deep .mat-mdc-floating-label,
+  .border-field ::ng-deep .mat-mdc-select,
+  .border-field ::ng-deep .mat-mdc-select-value-text,
+  .border-field ::ng-deep .mat-mdc-notched-outline .mdc-floating-label--float-above,
+  .border-field ::ng-deep .mat-mdc-form-field-icon-suffix,
+  .border-field ::ng-deep .mat-mdc-select-arrow {
+    color: #86efac !important;
+  }
+  .border-field ::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__leading,
+  .border-field ::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__notch,
+  .border-field ::ng-deep .mdc-text-field--outlined:not(.mdc-text-field--disabled) .mdc-notched-outline__trailing {
+    border-color: #4ade80 !important;
   }
 }

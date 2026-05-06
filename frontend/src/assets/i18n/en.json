@@ -105,7 +105,7 @@
       },
       "errors": {
         "routeRequired": "Add at least two route points",
-        "selectBorderRequired": "Choose border checkpoint before sending",
+        "selectBorderRequired": "Choose border checkpoint before saving",
         "routeMustBeSaved": "Save route first and open it from history before submit",
         "requestOnlyInViewMode": "Submitting a request is available only in view mode",
         "submitFailed": "Request sending failed",
@@ -128,6 +128,7 @@
       "editRoute": "Edit route",
       "saveChanges": "Save changes",
       "createRoute": "Save",
+      "clearOperations": "Clear operations",
       "newRoute": "New route",
       "cancelEdit": "Back to view",
       "routeDeleted": "Route deleted",
@@ -148,7 +149,15 @@
         "operationInTransit": "Only empty points are allowed between export-customs and import-customs",
         "unclosedCustoms": "Route cannot end without an import-customs point",
         "operationAfterUnload": "No further cargo operations are allowed after unloading",
-        "importBeforeExport": "Import customs cannot appear before export customs"
+        "importBeforeExport": "Import customs cannot appear before export customs",
+        "loadingRequired": "Route must contain at least one loading point",
+        "unloadingRequired": "Route must contain at least one unloading point",
+        "unloadingRequiredAfterLastLoading": "After the last loading point, unloading is required on that point or later",
+        "exportTooMany": "A border route can contain only one export-customs point",
+        "importTooMany": "A border route can contain only one import-customs point",
+        "loadingTooMany": "Only one loading point is allowed per route",
+        "unloadingTooMany": "Only one unloading point is allowed per route",
+        "unloadingBeforeLoading": "Unloading is only allowed after loading"
       }
     },
     "routesHistory": {

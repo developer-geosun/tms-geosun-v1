@@ -18,6 +18,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -63,6 +64,7 @@ import { firstValueFrom } from 'rxjs';
     MatButtonModule,
     MatExpansionModule,
     MatFormFieldModule,
+    MatCheckboxModule,
     MatIconModule,
     MatInputModule,
     MatSelectModule
@@ -134,6 +136,22 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       const points = this.waypoints();
       const selectedIndex = this.selectedWaypointIndex();
       this.rebuildMarkers(points, selectedIndex);
+    });
+    effect(() => {
+      const points = this.waypoints();
+      const normalized = this.normalizeWaypointOperations(points);
+      const hasChanges = normalized.some((point, index) => {
+        const currentOps = points[index]?.operations ?? [];
+        if (currentOps.length !== point.operations.length) {
+          return true;
+        }
+        return currentOps.some((op, opIndex) => op !== point.operations[opIndex]);
+      });
+      if (!hasChanges) {
+        return;
+      }
+      // Автоматично прибираємо операції, які стали прихованими або недопустимими.
+      this.waypoints.set(normalized);
     });
   }
 
@@ -242,6 +260,15 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       this.map.removeLayer(this.routeLayer);
       this.routeLayer = null;
     }
+  }
+
+  clearAllOperations(): void {
+    if (!this.canEditRoute()) {
+      return;
+    }
+    this.waypoints.update((items) =>
+      items.map((item) => ({ ...item, operations: [] }))
+    );
   }
 
   async saveCurrentRoute(): Promise<void> {
@@ -480,16 +507,24 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   getAllowedOperations(index: number): RoutePointOperation[] {
-    const point = this.waypoints()[index];
-    if (!point) {
-      return [];
-    }
-    return getAllowedOperationsForPoint(point.isBorder);
+    return this.getAllowedOperationsByContext(this.waypoints(), index);
   }
 
   isOperationsErrorOnPoint(index: number): boolean {
     const error = this.operationsValidationError();
-    return error !== null && error.pointIndex === index;
+    if (!error) {
+      return false;
+    }
+    if (
+      error.code === 'LOADING_REQUIRED' ||
+      error.code === 'UNLOADING_REQUIRED' ||
+      error.code === 'UNLOADING_REQUIRED_AFTER_LAST_LOADING' ||
+      error.code === 'MISSING_EXPORT_BEFORE_BORDER' ||
+      error.code === 'MISSING_IMPORT_AFTER_BORDER'
+    ) {
+      return false;
+    }
+    return error.pointIndex === index;
   }
 
   getOperationsErrorKey(): string | null {
@@ -498,6 +533,30 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return null;
     }
     return `pages.routeBuilder.errors.${this.errorCodeToKey(error.code)}`;
+  }
+
+  getSidebarOperationsErrorKey(): string | null {
+    const error = this.operationsValidationError();
+    if (!error) {
+      return null;
+    }
+    if (
+      error.code !== 'LOADING_REQUIRED' &&
+      error.code !== 'UNLOADING_REQUIRED' &&
+      error.code !== 'UNLOADING_REQUIRED_AFTER_LAST_LOADING' &&
+      error.code !== 'MISSING_EXPORT_BEFORE_BORDER' &&
+      error.code !== 'MISSING_IMPORT_AFTER_BORDER'
+    ) {
+      return null;
+    }
+    return `pages.routeBuilder.errors.${this.errorCodeToKey(error.code)}`;
+  }
+
+  getSidebarTopErrorKey(): string | null {
+    if (this.hasPendingBorder()) {
+      return 'pages.freightCalculation.errors.selectBorderRequired';
+    }
+    return this.getSidebarOperationsErrorKey();
   }
 
   onPointOperationsChange(index: number, value: unknown): void {
@@ -525,6 +584,18 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     );
   }
 
+  isPointOperationChecked(index: number, operation: RoutePointOperation): boolean {
+    return this.getPointOperations(index).includes(operation);
+  }
+
+  onPointOperationToggle(index: number, operation: RoutePointOperation, checked: boolean): void {
+    const current = this.getPointOperations(index);
+    const next = checked
+      ? Array.from(new Set([...current, operation]))
+      : current.filter((item) => item !== operation);
+    this.onPointOperationsChange(index, next);
+  }
+
   private errorCodeToKey(code: RoutePointOperationsError['code']): string {
     switch (code) {
       case 'OPERATION_SET_INVALID':
@@ -533,6 +604,18 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         return 'borderTooMany';
       case 'CUSTOMS_WITHOUT_BORDER':
         return 'customsWithoutBorder';
+      case 'LOADING_REQUIRED':
+        return 'loadingRequired';
+      case 'UNLOADING_REQUIRED':
+        return 'unloadingRequired';
+      case 'UNLOADING_BEFORE_LOADING':
+        return 'unloadingBeforeLoading';
+      case 'UNLOADING_REQUIRED_AFTER_LAST_LOADING':
+        return 'unloadingRequiredAfterLastLoading';
+      case 'EXPORT_TOO_MANY':
+        return 'exportTooMany';
+      case 'IMPORT_TOO_MANY':
+        return 'importTooMany';
       case 'MISSING_EXPORT_BEFORE_BORDER':
         return 'missingExportBeforeBorder';
       case 'MISSING_IMPORT_AFTER_BORDER':
@@ -543,8 +626,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         return 'operationInTransit';
       case 'UNCLOSED_CUSTOMS':
         return 'unclosedCustoms';
-      case 'OPERATION_AFTER_UNLOAD':
-        return 'operationAfterUnload';
     }
   }
 
@@ -967,6 +1048,64 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
 
   private parseMode(value: string | null): RouteBuilderMode | null {
     return value === 'view' || value === 'edit' || value === 'create' ? value : null;
+  }
+
+  private normalizeWaypointOperations(points: Waypoint[]): Waypoint[] {
+    return points.map((point, index) => {
+      const allowed = this.getAllowedOperationsByContext(points, index);
+      const nextOps = point.operations.filter((op) => allowed.includes(op));
+      return { ...point, operations: nextOps };
+    });
+  }
+
+  private getAllowedOperationsByContext(points: Waypoint[], index: number): RoutePointOperation[] {
+    const point = points[index];
+    if (!point) {
+      return [];
+    }
+    let allowed = getAllowedOperationsForPoint(point.isBorder);
+    const hasBorderPoint = points.some((item) => item.isBorder);
+    if (!hasBorderPoint) {
+      allowed = allowed.filter((op) => op !== 'EXPORT_CUSTOMS' && op !== 'IMPORT_CUSTOMS');
+    }
+    const firstLoadingIndex = points.findIndex((item) => item.operations.includes('LOADING'));
+    const borderIndex = points.findIndex((item) => item.isBorder);
+    const canUseExportCustoms =
+      firstLoadingIndex >= 0 &&
+      borderIndex >= 0 &&
+      index >= firstLoadingIndex &&
+      index <= borderIndex;
+    if (!canUseExportCustoms) {
+      allowed = allowed.filter((op) => op !== 'EXPORT_CUSTOMS');
+    }
+    const hasExportBeforeCurrentPoint = points
+      .slice(0, index + 1)
+      .some((item) => item.operations.includes('EXPORT_CUSTOMS'));
+    if (!hasExportBeforeCurrentPoint) {
+      allowed = allowed.filter((op) => op !== 'IMPORT_CUSTOMS');
+    }
+    const selectedExportIndex = points.findIndex((item) => item.operations.includes('EXPORT_CUSTOMS'));
+    if (selectedExportIndex >= 0 && index !== selectedExportIndex) {
+      allowed = allowed.filter((op) => op !== 'EXPORT_CUSTOMS');
+    }
+    const selectedImportIndex = points.findIndex((item) => item.operations.includes('IMPORT_CUSTOMS'));
+    if (selectedImportIndex >= 0 && index !== selectedImportIndex) {
+      allowed = allowed.filter((op) => op !== 'IMPORT_CUSTOMS');
+    }
+    if (selectedExportIndex >= 0) {
+      const isInCustomsTransit =
+        index >= selectedExportIndex && (selectedImportIndex < 0 || index < selectedImportIndex);
+      if (isInCustomsTransit) {
+        allowed = allowed.filter((op) => op !== 'LOADING' && op !== 'UNLOADING');
+      }
+    }
+    const hasLoadingBeforeCurrentPoint = points
+      .slice(0, index + 1)
+      .some((item) => item.operations.includes('LOADING'));
+    if (!hasLoadingBeforeCurrentPoint) {
+      allowed = allowed.filter((op) => op !== 'UNLOADING');
+    }
+    return allowed;
   }
 }
 

@@ -7,13 +7,13 @@ import {
 describe('route-point-operations.utils', () => {
   describe('whitelist', () => {
     it('allows valid pairs on non-border', () => {
-      expect(isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS'])).toBe(true);
       expect(isOperationSetAllowed(false, ['IMPORT_CUSTOMS', 'UNLOADING'])).toBe(true);
+      expect(isOperationSetAllowed(false, ['LOADING', 'UNLOADING'])).toBe(true);
     });
 
     it('rejects forbidden pairs on non-border', () => {
-      expect(isOperationSetAllowed(false, ['LOADING', 'UNLOADING'])).toBe(false);
       expect(isOperationSetAllowed(false, ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS'])).toBe(false);
+      expect(isOperationSetAllowed(false, ['LOADING', 'EXPORT_CUSTOMS'])).toBe(false);
       expect(isOperationSetAllowed(false, ['LOADING', 'IMPORT_CUSTOMS'])).toBe(false);
     });
 
@@ -42,10 +42,18 @@ describe('route-point-operations.utils', () => {
       expect(validateRouteOperations(route)).toBeNull();
     });
 
+    it('accepts loading and unloading on same point', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['LOADING', 'UNLOADING'] },
+        { isBorder: false, operations: [] }
+      ];
+      expect(validateRouteOperations(route)).toBeNull();
+    });
+
     it('accepts typical UA->EU route with border', () => {
       const route: ValidationPoint[] = [
         { isBorder: false, operations: ['LOADING'] },
-        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: false, operations: [] },
         { isBorder: false, operations: ['EXPORT_CUSTOMS'] },
         { isBorder: true, operations: [] },
         { isBorder: false, operations: ['IMPORT_CUSTOMS'] },
@@ -61,6 +69,29 @@ describe('route-point-operations.utils', () => {
         { isBorder: false, operations: ['UNLOADING'] }
       ];
       expect(validateRouteOperations(route)).toBeNull();
+    });
+
+    it('rejects more than one export-customs point on border route', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: false, operations: ['EXPORT_CUSTOMS'] },
+        { isBorder: true, operations: ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS'] },
+        { isBorder: false, operations: ['UNLOADING'] }
+      ];
+      const result = validateRouteOperations(route);
+      expect(result?.code).toBe('EXPORT_TOO_MANY');
+      expect(result?.pointIndex).toBe(2);
+    });
+
+    it('rejects more than one import-customs point on border route', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: true, operations: ['EXPORT_CUSTOMS', 'IMPORT_CUSTOMS'] },
+        { isBorder: false, operations: ['IMPORT_CUSTOMS', 'UNLOADING'] }
+      ];
+      const result = validateRouteOperations(route);
+      expect(result?.code).toBe('IMPORT_TOO_MANY');
+      expect(result?.pointIndex).toBe(2);
     });
 
     it('rejects customs without border', () => {
@@ -103,6 +134,31 @@ describe('route-point-operations.utils', () => {
       expect(validateRouteOperations(route)?.code).toBe('MISSING_EXPORT_BEFORE_BORDER');
     });
 
+    it('rejects export before first loading point', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['EXPORT_CUSTOMS'] },
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: true, operations: [] },
+        { isBorder: false, operations: ['IMPORT_CUSTOMS'] },
+        { isBorder: false, operations: ['UNLOADING'] }
+      ];
+      const result = validateRouteOperations(route);
+      expect(result?.code).toBe('OPERATION_SET_INVALID');
+      expect(result?.pointIndex).toBe(0);
+    });
+
+    it('rejects export after border point', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: true, operations: [] },
+        { isBorder: false, operations: ['EXPORT_CUSTOMS'] },
+        { isBorder: false, operations: ['IMPORT_CUSTOMS', 'UNLOADING'] }
+      ];
+      const result = validateRouteOperations(route);
+      expect(result?.code).toBe('OPERATION_SET_INVALID');
+      expect(result?.pointIndex).toBe(2);
+    });
+
     it('rejects loading inside customs transit', () => {
       const route: ValidationPoint[] = [
         { isBorder: false, operations: ['LOADING'] },
@@ -116,13 +172,15 @@ describe('route-point-operations.utils', () => {
       expect(result?.pointIndex).toBe(2);
     });
 
-    it('rejects loading after unload phase', () => {
+    it('rejects loading after last unloading without following unloading', () => {
       const route: ValidationPoint[] = [
         { isBorder: false, operations: ['LOADING'] },
         { isBorder: false, operations: ['UNLOADING'] },
         { isBorder: false, operations: ['LOADING'] }
       ];
-      expect(validateRouteOperations(route)?.code).toBe('OPERATION_AFTER_UNLOAD');
+      const result = validateRouteOperations(route);
+      expect(result?.code).toBe('UNLOADING_REQUIRED_AFTER_LAST_LOADING');
+      expect(result?.pointIndex).toBe(2);
     });
 
     it('rejects cargo ops on border', () => {
@@ -134,6 +192,48 @@ describe('route-point-operations.utils', () => {
       const result = validateRouteOperations(route);
       expect(result?.code).toBe('OPERATION_SET_INVALID');
       expect(result?.pointIndex).toBe(1);
+    });
+
+    it('rejects route without loading', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: [] },
+        { isBorder: false, operations: ['UNLOADING'] }
+      ];
+      expect(validateRouteOperations(route)?.code).toBe('LOADING_REQUIRED');
+    });
+
+    it('rejects route without unloading', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: false, operations: [] }
+      ];
+      expect(validateRouteOperations(route)?.code).toBe('UNLOADING_REQUIRED');
+    });
+
+    it('allows multiple loading points', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: false, operations: ['UNLOADING'] }
+      ];
+      expect(validateRouteOperations(route)).toBeNull();
+    });
+
+    it('allows multiple unloading points', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['LOADING'] },
+        { isBorder: false, operations: ['UNLOADING'] },
+        { isBorder: false, operations: ['UNLOADING'] }
+      ];
+      expect(validateRouteOperations(route)).toBeNull();
+    });
+
+    it('rejects unloading before loading', () => {
+      const route: ValidationPoint[] = [
+        { isBorder: false, operations: ['UNLOADING'] },
+        { isBorder: false, operations: ['LOADING'] }
+      ];
+      expect(validateRouteOperations(route)?.code).toBe('UNLOADING_BEFORE_LOADING');
     });
   });
 });
