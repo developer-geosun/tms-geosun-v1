@@ -106,7 +106,7 @@
       "errors": {
         "routeRequired": "Add at least two route points",
         "addAtLeastOneMorePoint": "To be able to save the route, add one more point",
-        "selectBorderRequired": "Choose border checkpoint before saving",
+        "selectBorderRequired": "To continue working with the route, choose a border checkpoint",
         "routeMustBeSaved": "Save route first and open it from history before submit",
         "requestOnlyInViewMode": "Submitting a request is available only in view mode",
         "submitFailed": "Request sending failed",

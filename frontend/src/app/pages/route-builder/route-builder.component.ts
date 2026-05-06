@@ -16,7 +16,6 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -25,7 +24,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
 import {
@@ -55,6 +54,7 @@ import {
 } from './route-point-operations.utils';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
 
 @Component({
@@ -68,7 +68,6 @@ import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
     TranslateModule,
     ReactiveFormsModule,
     MatButtonModule,
-    MatExpansionModule,
     MatFormFieldModule,
     MatCheckboxModule,
     MatChipsModule,
@@ -82,6 +81,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   @ViewChild('mapContainer', { static: true }) private readonly mapContainer!: ElementRef<HTMLDivElement>;
   @ViewChild('pointsListContainer') private readonly pointsListContainer?: ElementRef<HTMLDivElement>;
   @ViewChildren('pointRowRef') private readonly pointRows?: QueryList<ElementRef<HTMLDivElement>>;
+  @ViewChildren('borderPickerRef') private readonly borderPickers?: QueryList<ElementRef<HTMLDivElement>>;
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly http = inject(HttpClient);
@@ -108,7 +108,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly myRouteRequests = signal<RouteRequestContractDto[]>([]);
   readonly toastMessage = signal('');
   readonly toastMessageParams = signal<Record<string, unknown>>({});
-  readonly dropdownSegmentIndex = signal<number | null>(null);
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
   readonly mode = signal<RouteBuilderMode>('create');
   readonly lastSavedAt = signal<string | null>(null);
@@ -136,6 +135,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly isEditMode = computed(() => this.mode() === 'edit');
   readonly isCreateMode = computed(() => this.mode() === 'create');
   readonly canEditRoute = computed(() => this.isEditMode() || this.isCreateMode());
+  readonly isRouteInteractionLocked = computed(() => this.canEditRoute() && this.hasPendingBorder());
   readonly operationsValidationError = computed<RoutePointOperationsError | null>(() =>
     validateWaypointOperations(this.waypoints())
   );
@@ -151,6 +151,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private routeLayer: L.Polyline | null = null;
   private searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private resizeTimers: ReturnType<typeof setTimeout>[] = [];
+  private wasRouteInteractionLocked = false;
+  private queryParamsSubscription: Subscription | null = null;
 
   constructor() {
     effect(() => {
@@ -174,11 +176,20 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       // Автоматично прибираємо операції, які стали прихованими або недопустимими.
       this.waypoints.set(normalized);
     });
+    effect(() => {
+      const isLocked = this.isRouteInteractionLocked();
+      if (isLocked && !this.wasRouteInteractionLocked) {
+        this.scrollFirstBorderPickerIntoView();
+      }
+      this.wasRouteInteractionLocked = isLocked;
+    });
   }
 
   ngAfterViewInit(): void {
     this.initializeMapWhenContainerReady();
-    void this.loadRouteFromQuery();
+    this.queryParamsSubscription = this.activatedRoute.queryParamMap.subscribe((params) => {
+      void this.loadRouteFromQuery(params);
+    });
     void this.loadMyRouteRequests();
   }
 
@@ -186,6 +197,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     if (this.searchDebounceTimer) {
       clearTimeout(this.searchDebounceTimer);
     }
+    this.queryParamsSubscription?.unsubscribe();
     this.resizeTimers.forEach((timer) => clearTimeout(timer));
     this.map?.remove();
   }
@@ -196,13 +208,16 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async onMapClick(event: L.LeafletMouseEvent): Promise<void> {
-    if (!this.canEditRoute()) {
+    if (!this.canEditRoute() || this.isRouteInteractionLocked()) {
       return;
     }
     await this.addWaypoint(event.latlng.lat, event.latlng.lng);
   }
 
   selectWaypoint(index: number, source: 'map' | 'sidebar' = 'sidebar'): void {
+    if (source === 'sidebar' && this.isRouteInteractionLocked()) {
+      return;
+    }
     const point = this.waypoints()[index];
     if (!point || !this.map) {
       return;
@@ -279,7 +294,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.requestOpen.set(false);
     this.selectedCountryBySegment.set({});
     this.borderCheckpointSelectValue.set({});
-    this.dropdownSegmentIndex.set(null);
     if (this.routeLayer && this.map) {
       this.map.removeLayer(this.routeLayer);
       this.routeLayer = null;
@@ -355,16 +369,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     await this.router.navigate(['/routes']);
   }
 
-  onBorderExpansionChange(segmentIndex: number, expanded: boolean): void {
-    if (expanded) {
-      this.dropdownSegmentIndex.set(segmentIndex);
-      return;
-    }
-    if (this.dropdownSegmentIndex() === segmentIndex) {
-      this.dropdownSegmentIndex.set(null);
-    }
-  }
-
   onBorderCountryMatSelect(segmentIndex: number, value: unknown): void {
     const country = typeof value === 'string' && value.length > 0 ? value : null;
     this.selectedCountryBySegment.update((prev) => ({ ...prev, [segmentIndex]: country }));
@@ -414,7 +418,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     });
     this.waypoints.set(next);
     this.selectedWaypointIndex.set(segmentIndex + 1);
-    this.dropdownSegmentIndex.set(null);
     await this.recalculateRoute();
   }
 
@@ -705,6 +708,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     return this.getPointOperations(index).includes(operation);
   }
 
+  isPointCardInteractive(): boolean {
+    return !this.isRouteInteractionLocked();
+  }
+
   onPointOperationToggle(index: number, operation: RoutePointOperation, checked: boolean): void {
     const current = this.getPointOperations(index);
     const next = checked
@@ -810,6 +817,20 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     });
   }
 
+  private scrollFirstBorderPickerIntoView(): void {
+    const scrollToPicker = () => {
+      const picker = this.borderPickers?.first?.nativeElement;
+      if (!picker) {
+        return;
+      }
+      picker.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    };
+    requestAnimationFrame(() => {
+      scrollToPicker();
+      setTimeout(scrollToPicker, 50);
+    });
+  }
+
   private async addWaypoint(lat: number, lng: number, address?: string, country?: string | null): Promise<void> {
     const fallbackAddress = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     const waypointIndex = this.waypoints().length;
@@ -878,7 +899,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.markers.forEach((marker) => marker.remove());
     this.markers = points.map((point, index) => {
       const marker = L.marker([point.lat, point.lng], {
-        draggable: this.canEditRoute(),
+        draggable: this.canEditRoute() && !this.isRouteInteractionLocked(),
         icon: this.createWaypointIcon(point, index, index === selectedIndex),
         zIndexOffset: 1000
       }).addTo(this.map!);
@@ -886,7 +907,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         this.selectWaypoint(index, 'map');
       });
       marker.on('dragend', async () => {
-        if (!this.canEditRoute()) {
+        if (!this.canEditRoute() || this.isRouteInteractionLocked()) {
           return;
         }
         const position = marker.getLatLng();
@@ -1028,11 +1049,16 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     return JSON.stringify(coords.map((c) => [Number(c.lat.toFixed(6)), Number(c.lng.toFixed(6))]));
   }
 
-  private async loadRouteFromQuery(): Promise<void> {
-    const routeId = this.activatedRoute.snapshot.queryParamMap.get('routeId');
-    const modeFromQuery = this.parseMode(this.activatedRoute.snapshot.queryParamMap.get('mode'));
+  private async loadRouteFromQuery(params: ParamMap): Promise<void> {
+    const routeId = params.get('routeId');
+    const modeFromQuery = this.parseMode(params.get('mode'));
     this.mode.set(modeFromQuery ?? (routeId ? 'view' : 'create'));
     if (!routeId) {
+      this.lastSavedAt.set(null);
+      this.routeTimestamps.set({ createdAt: null, updatedAt: null, lastOpenedAt: null });
+      this.requestForm.patchValue({ routeComment: '' });
+      await this.clearAllPoints();
+      this.rebuildMarkers();
       return;
     }
     this.isLoadingSavedRoute.set(true);

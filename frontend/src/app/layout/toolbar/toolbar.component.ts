@@ -108,11 +108,24 @@ export class ToolbarComponent {
   }
 
   navigateTo(route: string): void {
+    if (route === '/route-builder') {
+      this.router.navigate([route], {
+        queryParams: {
+          mode: 'create',
+          routeId: null
+        }
+      });
+      return;
+    }
     this.router.navigate([route]);
   }
 
   isRouteActive(route: string): boolean {
-    return this.router.url === route || this.router.url.startsWith(`${route}/`);
+    return (
+      this.router.url === route ||
+      this.router.url.startsWith(`${route}/`) ||
+      this.router.url.startsWith(`${route}?`)
+    );
   }
 
   canAccess(allowedRoles: readonly UserRole[]): boolean {

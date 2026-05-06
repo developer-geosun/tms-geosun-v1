@@ -179,6 +179,7 @@
           class="point-row"
           [class.border]="point.isBorder"
           [class.selected]="pointIndex === selectedWaypointIndex()"
+          [class.point-row--disabled]="!isPointCardInteractive()"
           (click)="selectWaypoint(pointIndex)"
         >
           <div
@@ -223,7 +224,7 @@
                       class="point-operation-checkbox"
                       [checked]="isPointOperationChecked(pointIndex, op)"
                       (change)="onPointOperationToggle(pointIndex, op, $event.checked)"
-                      [disabled]="!canEditRoute()"
+                      [disabled]="!canEditRoute() || !isPointCardInteractive()"
                     >
                       {{ ('pages.routeBuilder.operations.' + op) | translate }}
                     </mat-checkbox>
@@ -243,6 +244,7 @@
                 mat-icon-button
                 type="button"
                 (click)="$event.stopPropagation(); removeWaypoint(segmentIndex)"
+                [disabled]="!isPointCardInteractive()"
                 [attr.aria-label]="'pages.freightCalculation.clear' | translate"
               >
                 <mat-icon>close</mat-icon>
@@ -259,52 +261,44 @@
           </div>
 
           @if (waypoints()[segmentIndex].country && waypoints()[segmentIndex + 1].country && waypoints()[segmentIndex].country !== waypoints()[segmentIndex + 1].country && !waypoints()[segmentIndex].isBorder && !waypoints()[segmentIndex + 1].isBorder && (waypoints()[segmentIndex].country === 'ua' || waypoints()[segmentIndex + 1].country === 'ua')) {
-            <div class="border-picker">
-              <mat-expansion-panel
-                class="border-expansion-panel"
-                [expanded]="dropdownSegmentIndex() === segmentIndex"
-                (expandedChange)="onBorderExpansionChange(segmentIndex, $event)"
-              >
-                <mat-expansion-panel-header>
-                  <mat-panel-title>{{ 'pages.freightCalculation.selectBorder' | translate }}</mat-panel-title>
-                </mat-expansion-panel-header>
-                <div class="border-panel border-panel--selects">
-                  <mat-form-field class="border-field" appearance="outline" subscriptSizing="dynamic">
-                    <mat-label>{{ 'pages.freightCalculation.selectCountry' | translate }}</mat-label>
-                    <mat-select
-                      panelClass="freight-border-select-panel"
-                      [value]="selectedCountryBySegment()[segmentIndex] ?? ''"
-                      (selectionChange)="onBorderCountryMatSelect(segmentIndex, $event.value)"
-                      [disabled]="!canEditRoute()"
-                      [attr.aria-label]="'pages.freightCalculation.selectCountry' | translate"
-                    >
-                      <mat-option value="">{{ 'pages.freightCalculation.notSelected' | translate }}</mat-option>
-                      @for (country of getSegmentCountryOptions(); track country) {
-                        <mat-option [value]="country">{{ ('pages.freightCalculation.countries.' + country) | translate }}</mat-option>
+            <div #borderPickerRef class="border-picker">
+              <div class="border-panel border-panel--selects">
+                <div class="border-panel__title">{{ 'pages.freightCalculation.selectBorder' | translate }}</div>
+                <mat-form-field class="border-field" appearance="outline" subscriptSizing="dynamic">
+                  <mat-label>{{ 'pages.freightCalculation.selectCountry' | translate }}</mat-label>
+                  <mat-select
+                    panelClass="freight-border-select-panel"
+                    [value]="selectedCountryBySegment()[segmentIndex] ?? ''"
+                    (selectionChange)="onBorderCountryMatSelect(segmentIndex, $event.value)"
+                    [disabled]="!canEditRoute()"
+                    [attr.aria-label]="'pages.freightCalculation.selectCountry' | translate"
+                  >
+                    <mat-option value="">{{ 'pages.freightCalculation.notSelected' | translate }}</mat-option>
+                    @for (country of getSegmentCountryOptions(); track country) {
+                      <mat-option [value]="country">{{ ('pages.freightCalculation.countries.' + country) | translate }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field class="border-field" appearance="outline" subscriptSizing="dynamic">
+                  <mat-label>{{ 'pages.freightCalculation.selectCheckpoint' | translate }}</mat-label>
+                  <mat-select
+                    panelClass="freight-border-select-panel"
+                    [disabled]="!canEditRoute() || !selectedCountryBySegment()[segmentIndex]"
+                    [value]="getBorderCheckpointSelectValue(segmentIndex)"
+                    (selectionChange)="onBorderCheckpointMatSelect(segmentIndex, $event.value)"
+                    [attr.aria-label]="'pages.freightCalculation.selectCheckpoint' | translate"
+                  >
+                    <mat-option value="">{{ 'pages.freightCalculation.notSelected' | translate }}</mat-option>
+                    @if (selectedCountryBySegment()[segmentIndex]; as selectedCountry) {
+                      @for (checkpoint of getCheckpoints(selectedCountry); track checkpoint.lat + '-' + checkpoint.lng; let checkpointIndex = $index) {
+                        <mat-option [value]="'' + checkpointIndex">
+                          {{ getCheckpointLocalizedName(checkpoint) }}
+                        </mat-option>
                       }
-                    </mat-select>
-                  </mat-form-field>
-                  <mat-form-field class="border-field" appearance="outline" subscriptSizing="dynamic">
-                    <mat-label>{{ 'pages.freightCalculation.selectCheckpoint' | translate }}</mat-label>
-                    <mat-select
-                      panelClass="freight-border-select-panel"
-                      [disabled]="!canEditRoute() || !selectedCountryBySegment()[segmentIndex]"
-                      [value]="getBorderCheckpointSelectValue(segmentIndex)"
-                      (selectionChange)="onBorderCheckpointMatSelect(segmentIndex, $event.value)"
-                      [attr.aria-label]="'pages.freightCalculation.selectCheckpoint' | translate"
-                    >
-                      <mat-option value="">{{ 'pages.freightCalculation.notSelected' | translate }}</mat-option>
-                      @if (selectedCountryBySegment()[segmentIndex]; as selectedCountry) {
-                        @for (checkpoint of getCheckpoints(selectedCountry); track checkpoint.lat + '-' + checkpoint.lng; let checkpointIndex = $index) {
-                          <mat-option [value]="'' + checkpointIndex">
-                            {{ getCheckpointLocalizedName(checkpoint) }}
-                          </mat-option>
-                        }
-                      }
-                    </mat-select>
-                  </mat-form-field>
-                </div>
-              </mat-expansion-panel>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
             </div>
           }
         }
