@@ -18,7 +18,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
 import { ConfigService } from '../../core/services/config.service';
-import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
+import { CHECKPOINTS_DATA } from '../../shared/constants/border-checkpoints.data';
 import { Checkpoint, FreightLang, FreightRequestPayload, Waypoint } from './freight-calculation-here.models';
 import { hasPendingBorderCheckpoint, isValidEmail, isValidPhone } from './freight-calculation-here.utils';
 import { FreightRequestApiService } from './freight-request-api.service';

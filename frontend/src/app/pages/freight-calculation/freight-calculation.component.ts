@@ -28,7 +28,7 @@ import {
   RouteSummaryContractDto
 } from '../../core/api';
 import { RouteRequestsApiService } from '../../core/api/route-requests-api.service';
-import { CHECKPOINTS_DATA } from './freight-checkpoints.data';
+import { CHECKPOINTS_DATA } from '../../shared/constants/border-checkpoints.data';
 import { Checkpoint, FreightLang, Waypoint } from './freight-calculation.models';
 import { hasPendingBorderCheckpoint } from './freight-calculation.utils';
 import { HttpClient } from '@angular/common/http';

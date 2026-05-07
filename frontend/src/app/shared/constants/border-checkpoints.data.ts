@@ -1,6 +1,10 @@
-import { Checkpoint } from './freight-calculation-here.models';
+export interface BorderCheckpoint {
+  name: Record<'uk' | 'ru' | 'en', string>;
+  lat: number;
+  lng: number;
+}
 
-export const CHECKPOINTS_DATA: Record<string, Checkpoint[]> = {
+export const CHECKPOINTS_DATA: Record<string, BorderCheckpoint[]> = {
   pl: [
     { name: { uk: 'Ягодин', ru: 'Ягодин', en: 'Yahodyn' }, lat: 51.18836, lng: 23.81061 },
     { name: { uk: 'Краківець', ru: 'Краковец', en: 'Krakovets' }, lat: 49.955, lng: 23.11695 },

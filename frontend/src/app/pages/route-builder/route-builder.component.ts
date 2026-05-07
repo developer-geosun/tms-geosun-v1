@@ -37,7 +37,7 @@ import {
   RoutesApiService
 } from '../../core/api';
 import { RouteRequestsApiService } from '../../core/api/route-requests-api.service';
-import { CHECKPOINTS_DATA } from './route-builder-checkpoints.data';
+import { CHECKPOINTS_DATA } from '../../shared/constants/border-checkpoints.data';
 import {
   Checkpoint,
   FreightLang,
