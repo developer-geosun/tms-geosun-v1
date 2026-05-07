@@ -1,4 +1,6 @@
+## Додаткові сервіси для локальної розробки (профіль dev)
 services:
+  # Angular dev-server з hot reload і монтуванням локального коду
   frontend-dev:
     profiles:
       - dev
@@ -18,6 +20,7 @@ services:
     ports:
       - "4200:4200"
 
+  # Dev gateway з окремим nginx-конфігом для маршрутизації у dev-режимі
   gateway-dev:
     profiles:
       - dev
@@ -31,6 +34,7 @@ services:
     ports:
       - "${GATEWAY_DEV_PORT:-8082}:80"
 
+  # Окремий ngrok-тунель для dev gateway
   ngrok-dev:
     profiles:
       - dev
@@ -45,4 +49,5 @@ services:
       - "${NGROK_DEV_INSPECT_PORT:-4041}:4040"
 
 volumes:
+  # Окремий том для node_modules, щоб не перевстановлювати залежності щоразу
   frontend_node_modules:

@@ -1,4 +1,6 @@
+## Базовий стек для стандартного запуску застосунку
 services:
+  # Локальний SMTP-сервер для тестування відправки листів
   mailhog:
     image: mailhog/mailhog:latest
     container_name: tms-mailhog
@@ -6,6 +8,7 @@ services:
       - "${SMTP_PORT:-1025}:1025"
       - "${MAILHOG_UI_PORT:-8025}:8025"
 
+  # База даних для backend-сервісу авторизації
   mysql:
     image: mysql:8.0
     container_name: tms-auth-mysql
@@ -24,6 +27,7 @@ services:
       timeout: 5s
       retries: 10
 
+  # Spring Boot API (auth/backend)
   backend:
     build:
       context: ./backend
@@ -63,6 +67,7 @@ services:
     ports:
       - "${SERVER_PORT:-8080}:8080"
 
+  # Production-збірка frontend, що віддається через nginx у контейнері
   frontend:
     build:
       context: ./frontend
@@ -77,6 +82,7 @@ services:
     ports:
       - "${FRONTEND_PORT:-4200}:80"
 
+  # Єдина точка входу (reverse proxy) для backend і frontend
   gateway:
     image: nginx:1.27-alpine
     container_name: tms-gateway
@@ -88,6 +94,7 @@ services:
     ports:
       - "${GATEWAY_PORT:-8081}:80"
 
+  # Публічний тунель для локального gateway (за наявності домену/токена)
   ngrok:
     image: ngrok/ngrok:latest
     container_name: tms-ngrok
@@ -100,4 +107,5 @@ services:
       - "${NGROK_INSPECT_PORT:-4040}:4040"
 
 volumes:
+  # Персистентне сховище даних MySQL
   mysql_data:
