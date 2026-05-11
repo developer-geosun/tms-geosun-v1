@@ -1,5 +1,4 @@
 import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
-import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../core/services/auth.service';
 
@@ -16,32 +15,9 @@ import { AuthService } from '../../core/services/auth.service';
 })
 export class MainComponent {
   private readonly authService = inject(AuthService);
-  private readonly router = inject(Router);
 
   readonly user = this.authService.user;
   readonly canSeeManagerSection = computed(() => this.authService.hasAnyRole(['admin', 'manager']));
   readonly canSeeAdminSection = computed(() => this.authService.hasAnyRole(['admin']));
-  readonly canSeeFreightCalculationLink = computed(() => this.authService.hasAnyRole(['user']));
-  readonly canSeeAdminRouteRequestsLink = computed(() => this.authService.hasAnyRole(['admin', 'manager']));
-
-  openFreightCalculation(): void {
-    this.router.navigate(['/freight-calculation']);
-  }
-
-  openRouteBuilder(): void {
-    this.router.navigate(['/route-builder']);
-  }
-
-  openFreightCalculationHere(): void {
-    this.router.navigate(['/freight-calculation-here']);
-  }
-
-  openRoutes(): void {
-    this.router.navigate(['/routes']);
-  }
-
-  openAdminRouteRequests(): void {
-    this.router.navigate(['/admin/route-requests']);
-  }
 }
 

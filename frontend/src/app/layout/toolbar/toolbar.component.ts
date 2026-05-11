@@ -58,12 +58,14 @@ export class ToolbarComponent {
     },
     {
       route: '/route-builder',
-      labelKey: 'navigation.routeBuilder',
+      labelKey: 'pages.routeBuilder.newRoute',
+      icon: 'add',
       roles: ['user'] as const
     },
     {
       route: '/routes',
       labelKey: 'navigation.routes',
+      icon: 'route',
       roles: ['user'] as const
     },
     {

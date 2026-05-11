@@ -35,13 +35,12 @@
           <button
             mat-mini-fab
             type="button"
-            class="sidebar-view-action sidebar-view-action--danger"
-            (click)="requestCurrentRouteDelete()"
-            [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
-            [attr.aria-label]="'pages.routeBuilder.deleteRoute' | translate"
-            [title]="'pages.routeBuilder.deleteRoute' | translate"
+            class="sidebar-view-action"
+            (click)="goToRoutesHistory()"
+            [attr.aria-label]="'pages.freightCalculation.myRoutes' | translate"
+            [title]="'pages.freightCalculation.myRoutes' | translate"
           >
-            <mat-icon>delete</mat-icon>
+            <mat-icon>route</mat-icon>
           </button>
           <button
             mat-mini-fab
@@ -63,6 +62,17 @@
             [title]="'pages.routeBuilder.newRoute' | translate"
           >
             <mat-icon>add</mat-icon>
+          </button>
+          <button
+            mat-mini-fab
+            type="button"
+            class="sidebar-view-action sidebar-view-action--danger"
+            (click)="requestCurrentRouteDelete()"
+            [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute()"
+            [attr.aria-label]="'pages.routeBuilder.deleteRoute' | translate"
+            [title]="'pages.routeBuilder.deleteRoute' | translate"
+          >
+            <mat-icon>delete</mat-icon>
           </button>
           <button
             class="sidebar-login-button sidebar-request-button"
@@ -130,11 +140,6 @@
               {{ 'pages.routeBuilder.cancelEdit' | translate }}
             </button>
           }
-        }
-        @if (!isEditMode()) {
-          <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="goToRoutesHistory()">
-            {{ 'pages.freightCalculation.myRoutes' | translate }}
-          </button>
         }
       </div>
       @if (getSidebarTopErrorKey(); as sidebarErrorKey) {

@@ -32,6 +32,9 @@
               class="nav-button"
               [class.nav-button--active]="isRouteActive(item.route)"
               (click)="navigateTo(item.route)">
+              @if (item.icon; as icon) {
+                <mat-icon aria-hidden="true">{{ icon }}</mat-icon>
+              }
               {{ item.labelKey | translate }}
             </button>
           }
@@ -91,6 +94,9 @@
   @for (item of navigationItems; track item.route) {
     @if (canAccess(item.roles)) {
       <button mat-menu-item type="button" (click)="navigateTo(item.route)">
+        @if (item.icon; as icon) {
+          <mat-icon aria-hidden="true">{{ icon }}</mat-icon>
+        }
         <span>{{ item.labelKey | translate }}</span>
       </button>
     }

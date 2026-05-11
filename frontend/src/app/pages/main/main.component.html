@@ -13,29 +13,5 @@
     <p>{{ 'pages.main.adminSection' | translate }}</p>
   }
 
-  @if (canSeeFreightCalculationLink()) {
-    <p>
-      <a href="" (click)="$event.preventDefault(); openFreightCalculation()">
-        {{ 'pages.main.freightCalculationLink' | translate }}
-      </a>
-    </p>
-    <p>
-      <a href="" (click)="$event.preventDefault(); openRouteBuilder()">Route Builder</a>
-    </p>
-    <p>
-      <a href="" (click)="$event.preventDefault(); openRoutes()">Routes</a>
-    </p>
-    <p>
-      <span>{{ 'pages.main.freightCalculationHereLink' | translate }}</span>
-    </p>
-  }
-
-  @if (canSeeAdminRouteRequestsLink()) {
-    <p>
-      <a href="" (click)="$event.preventDefault(); openAdminRouteRequests()">
-        {{ 'pages.main.adminRouteRequestsLink' | translate }}
-      </a>
-    </p>
-  }
 </div>
 
