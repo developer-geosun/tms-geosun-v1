@@ -200,7 +200,8 @@
       "totalDistance": "Total distance",
       "pointsUnavailable": "Points are unavailable for this route",
       "points": "Route points",
-      "editRoute": "Edit"
+      "editRoute": "Edit",
+      "addNewRoute": "Add new route"
     },
     "adminRouteRequests": {
       "title": "Route requests queue",

@@ -1,5 +1,17 @@
 <section class="routes-page">
-  <h1>{{ 'pages.routes.title' | translate }}</h1>
+  <header class="routes-page__header">
+    <h1 class="routes-page__title">{{ 'pages.routes.title' | translate }}</h1>
+    <button
+      mat-mini-fab
+      type="button"
+      class="routes-page__add-route"
+      (click)="createNewRoute()"
+      [attr.aria-label]="'pages.routes.addNewRoute' | translate"
+      [title]="'pages.routes.addNewRoute' | translate"
+    >
+      <mat-icon>add</mat-icon>
+    </button>
+  </header>
 
   @if (deleteFailed()) {
     <p>{{ 'pages.routes.deleteFailed' | translate }}</p>

@@ -3,6 +3,24 @@
   padding: 1.25rem;
 }
 
+.routes-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.routes-page__title {
+  margin: 0;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+
+.routes-page__add-route {
+  flex-shrink: 0;
+}
+
 .routes-page__cards {
   display: flex;
   flex-direction: column;

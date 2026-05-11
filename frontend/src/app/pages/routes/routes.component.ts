@@ -65,6 +65,11 @@ export class RoutesComponent {
     await this.router.navigate(['/route-builder'], { queryParams: { routeId, mode: 'edit' } });
   }
 
+  /** Перехід у конструктор для створення нового маршруту. */
+  async createNewRoute(): Promise<void> {
+    await this.router.navigate(['/route-builder'], { queryParams: { mode: 'create' } });
+  }
+
   async requestRouteDelete(
     routeId: string,
     routeTitle: string,

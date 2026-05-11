@@ -60,7 +60,9 @@ export class LoginComponent {
       next: () => {
         this.isLoading.set(false);
         this.hasSuccess.set(true);
-        this.router.navigate(['/main']);
+        // Після входу: клієнти з роллю user — на список маршрутів; інші — на головну.
+        const target = this.authService.hasAnyRole(['user']) ? '/routes' : '/main';
+        void this.router.navigate([target]);
       },
       error: (error: { status?: number; error?: { code?: string } }) => {
         this.isLoading.set(false);

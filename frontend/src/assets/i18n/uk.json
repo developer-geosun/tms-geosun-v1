@@ -200,7 +200,8 @@
       "totalDistance": "Загальна довжина",
       "pointsUnavailable": "Точки недоступні для цього маршруту",
       "points": "Точки маршруту",
-      "editRoute": "Редагувати"
+      "editRoute": "Редагувати",
+      "addNewRoute": "Новий маршрут"
     },
     "adminRouteRequests": {
       "title": "Черга заявок",
