@@ -69,10 +69,17 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(DataIntegrityViolationException.class)
   public ResponseEntity<ApiErrorResponse> handleDataIntegrity(
       DataIntegrityViolationException ex, HttpServletRequest request) {
-    log.debug("Data integrity violation: {}", ex.getMostSpecificCause().getMessage());
+    log.warn(
+        "Data integrity violation for {}: {}",
+        request.getRequestURI(),
+        ex.getMostSpecificCause().getMessage());
     ApiErrorResponse body =
         ApiErrorResponse.of(
-            request.getRequestURI(), 409, "Conflict", "CONFLICT", "Email is already registered");
+            request.getRequestURI(),
+            409,
+            "Conflict",
+            "DATA_INTEGRITY_VIOLATION",
+            "Data integrity violation");
     return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
   }
 

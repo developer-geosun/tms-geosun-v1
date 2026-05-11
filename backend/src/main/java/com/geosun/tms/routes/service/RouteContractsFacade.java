@@ -13,6 +13,8 @@ import java.util.List;
 public interface RouteContractsFacade {
   RouteSnapshotDto saveRoute(String userId, SaveRouteRequest request);
 
+  RouteSnapshotDto updateMyRoute(String userId, Long routeId, SaveRouteRequest request);
+
   List<RouteSummaryDto> getMyRoutes(String userId);
 
   RouteSnapshotDto getMyRouteById(String userId, Long routeId);

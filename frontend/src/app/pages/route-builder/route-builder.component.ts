@@ -332,12 +332,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       const selectedRouteId = this.getSelectedRouteId();
       snapshotPayload = this.createRouteSnapshotRequest();
       const snapshot = selectedRouteId && this.isEditMode()
-        ? await firstValueFrom(
-            this.http.put<RouteSnapshotContractDto>(
-              `${this.backendApi.myRoutes}/${encodeURIComponent(selectedRouteId)}`,
-              snapshotPayload
-            )
-          )
+        ? await this.routesApi.updateMyRoute(selectedRouteId, snapshotPayload)
         : await firstValueFrom(this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, snapshotPayload));
       this.showToast('pages.freightCalculation.routeSaved');
       await this.loadMyRoutes();

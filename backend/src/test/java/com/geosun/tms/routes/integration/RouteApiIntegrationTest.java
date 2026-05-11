@@ -3,6 +3,7 @@ package com.geosun.tms.routes.integration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -123,6 +124,73 @@ class RouteApiIntegrationTest {
         .perform(get("/api/v1/routes/my").header("Authorization", bearer(access)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.length()").value(0));
+  }
+
+  @Test
+  void updateMyRoute_replacesTitleAndPoints() throws Exception {
+    User user = createUser("routes-update@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(jsonMediaType())
+                    .content(toJson(routePayload("Initial title"))))
+            .andExpect(status().isCreated())
+            .andReturn();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+
+    Map<String, Object> updated = new HashMap<>(routePayload("Updated title"));
+    updated.put("routeComment", "edited");
+    mockMvc
+        .perform(
+            put("/api/v1/routes/my/" + routeId)
+                .header("Authorization", bearer(access))
+                .contentType(jsonMediaType())
+                .content(toJson(updated)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(routeId))
+        .andExpect(jsonPath("$.title").value("Updated title"))
+        .andExpect(jsonPath("$.routeComment").value("edited"))
+        .andExpect(jsonPath("$.points.length()").value(2));
+
+    mockMvc
+        .perform(get("/api/v1/routes/my/" + routeId).header("Authorization", bearer(access)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.title").value("Updated title"))
+        .andExpect(jsonPath("$.points.length()").value(2));
+  }
+
+  @Test
+  void updateMyRoute_forbidsAccessToAnotherUserRoute() throws Exception {
+    User owner = createUser("routes-update-owner@example.com", "Secret123");
+    User intruder = createUser("routes-update-intruder@example.com", "Secret123");
+    String ownerAccess = login(owner.getEmail(), "Secret123");
+    String intruderAccess = login(intruder.getEmail(), "Secret123");
+
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(ownerAccess))
+                    .contentType(jsonMediaType())
+                    .content(toJson(routePayload("Owner route"))))
+            .andExpect(status().isCreated())
+            .andReturn();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+
+    mockMvc
+        .perform(
+            put("/api/v1/routes/my/" + routeId)
+                .header("Authorization", bearer(intruderAccess))
+                .contentType(jsonMediaType())
+                .content(toJson(routePayload("Hacked title"))))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.code").value("NOT_FOUND"));
   }
 
   @Test

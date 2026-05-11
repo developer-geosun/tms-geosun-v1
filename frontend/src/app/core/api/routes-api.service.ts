@@ -17,6 +17,15 @@ export class RoutesApiService {
     return firstValueFrom(this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, payload));
   }
 
+  async updateMyRoute(routeId: string, payload: SaveRouteContractRequest): Promise<RouteSnapshotContractDto> {
+    return firstValueFrom(
+      this.http.put<RouteSnapshotContractDto>(
+        `${this.backendApi.myRoutes}/${encodeURIComponent(routeId)}`,
+        payload
+      )
+    );
+  }
+
   async getMyRoutes(): Promise<RouteSummaryContractDto[]> {
     return firstValueFrom(this.http.get<RouteSummaryContractDto[]>(this.backendApi.myRoutes));
   }

@@ -66,13 +66,48 @@ public class RouteService implements RouteContractsFacade {
     route.setDurationMin(request.durationMin());
     route.setRouteComment(request.routeComment());
     route.setPoints(
-        request.points().stream()
-            .sorted(Comparator.comparing(RoutePointRequest::order))
-            .map((point) -> toEntityPoint(route, point))
-            .toList());
+        new ArrayList<>(
+            request.points().stream()
+                .sorted(Comparator.comparing(RoutePointRequest::order))
+                .map((point) -> toEntityPoint(route, point))
+                .toList()));
 
     Route saved = routeRepository.save(route);
     return toSnapshot(saved);
+  }
+
+  @Override
+  @Transactional
+  public RouteSnapshotDto updateMyRoute(String userId, Long routeId, SaveRouteRequest request) {
+    validatePoints(request.points());
+    String safeUserId = Objects.requireNonNull(userId, "userId must not be null");
+    Route route =
+        routeRepository
+            .findByIdAndUserIdWithPoints(routeId, safeUserId)
+            .orElseThrow(() -> ApiException.notFound("Route not found"));
+
+    route.setTitle(request.title());
+    route.setRoutingProfile(request.routingProfile());
+    route.setRoutingMode(request.routingMode());
+    route.setRoutePolyline(request.routePolyline());
+    route.setDistanceKm(toBigDecimal(request.distanceKm()));
+    route.setDurationMin(request.durationMin());
+    route.setRouteComment(request.routeComment());
+
+    // Замінюємо колекцію точок маршруту повністю; завдяки orphanRemoval=true
+    // старі записи видаляються автоматично.
+    List<RoutePoint> newPoints =
+        request.points().stream()
+            .sorted(Comparator.comparing(RoutePointRequest::order))
+            .map((point) -> toEntityPoint(route, point))
+            .toList();
+    route.getPoints().clear();
+    // Примусово виконуємо DELETE старих точок до INSERT нових, аби не зачепити
+    // унікальний індекс (route_id, point_order).
+    routeRepository.flush();
+    route.getPoints().addAll(new ArrayList<>(newPoints));
+
+    return toSnapshot(route);
   }
 
   @Override

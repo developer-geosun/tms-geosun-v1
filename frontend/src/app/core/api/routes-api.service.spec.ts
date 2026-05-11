@@ -62,4 +62,26 @@ describe('RoutesApiService', () => {
 
     await expectAsync(pending).toBeResolvedTo(jasmine.objectContaining({ id: 'route/with spaces' }));
   });
+
+  it('updates route via PUT /routes/my/{id}', async () => {
+    const payload = {
+      title: 'Updated title',
+      routingProfile: 'truck',
+      routingMode: 'fast',
+      routePolyline: 'polyline',
+      distanceKm: 812.3,
+      durationMin: 742,
+      routeComment: null,
+      points: [],
+      hereRouteMeta: null
+    };
+
+    const pending = service.updateMyRoute('42', payload);
+    const request = httpMock.expectOne(`${backendApi.myRoutes}/42`);
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual(payload);
+    request.flush({ id: '42', title: 'Updated title' });
+
+    await expectAsync(pending).toBeResolvedTo(jasmine.objectContaining({ id: '42' }));
+  });
 });

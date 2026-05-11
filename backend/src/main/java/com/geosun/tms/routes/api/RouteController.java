@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -47,6 +48,16 @@ public class RouteController {
   @GetMapping("/my")
   public List<RouteSummaryDto> getMyRoutes(@AuthenticationPrincipal UserPrincipal principal) {
     return routeService.getMyRoutes(principal.getUserId());
+  }
+
+  @Operation(summary = "Update my route snapshot")
+  @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+  @PutMapping("/my/{routeId}")
+  public RouteSnapshotDto updateMyRoute(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @PathVariable Long routeId,
+      @Valid @RequestBody SaveRouteRequest request) {
+    return routeService.updateMyRoute(principal.getUserId(), routeId, request);
   }
 
   @Operation(summary = "Get my route by id")
