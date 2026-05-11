@@ -441,6 +441,42 @@
 .sidebar-actions__buttons--edit .sidebar-save-button-wrap .sidebar-login-button {
   width: 100%;
 }
+/* Режим створення: три колонки без накладання (minmax(0,1fr) + перенос підписів) */
+.sidebar-actions__buttons--create-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  flex-wrap: unset;
+}
+.sidebar-actions__buttons--create-row > .mat-mdc-button-base,
+.sidebar-actions__buttons--create-row > .sidebar-save-button-wrap {
+  flex: unset;
+  min-width: 0;
+  width: 100%;
+}
+.sidebar-actions__buttons--create-row > .mat-mdc-button-base.sidebar-login-button {
+  white-space: normal;
+  min-width: 0;
+}
+.sidebar-actions__buttons--create-row > .mat-mdc-button-base.sidebar-login-button ::ng-deep .mdc-button__label {
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
+}
+.sidebar-actions__buttons--create-row .sidebar-save-button-wrap {
+  display: block;
+  min-width: 0;
+}
+.sidebar-actions__buttons--create-row .sidebar-save-button-wrap .sidebar-login-button {
+  width: 100%;
+  min-width: 0;
+  white-space: normal;
+}
+.sidebar-actions__buttons--create-row .sidebar-save-button-wrap .sidebar-login-button ::ng-deep .mdc-button__label {
+  white-space: normal;
+  line-height: 1.2;
+  text-align: center;
+}
 .search-field {
   width: 100%;
 }

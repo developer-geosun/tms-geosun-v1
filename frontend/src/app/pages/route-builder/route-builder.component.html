@@ -30,7 +30,11 @@
           </small>
         </div>
       }
-      <div class="sidebar-actions__buttons" [class.sidebar-actions__buttons--edit]="!isViewMode()">
+      <div
+        class="sidebar-actions__buttons"
+        [class.sidebar-actions__buttons--edit]="isEditMode()"
+        [class.sidebar-actions__buttons--create-row]="isCreateMode()"
+      >
         @if (isViewMode()) {
           <button
             mat-mini-fab
