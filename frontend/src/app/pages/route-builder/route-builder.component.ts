@@ -2,6 +2,7 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   ElementRef,
   HostListener,
   OnDestroy,
@@ -13,6 +14,7 @@ import {
   inject,
   signal
 } from '@angular/core';
+import { MediaMatcher } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -94,6 +96,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private readonly translate = inject(TranslateService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly mediaMatcher = inject(MediaMatcher);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly waypoints = signal<Waypoint[]>([]);
   readonly segmentDistances = signal<number[]>([]);
@@ -111,6 +115,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly toastMessage = signal('');
   readonly toastMessageParams = signal<Record<string, unknown>>({});
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
+  /** Вузький екран: перемикання панелі маршруту та карти (брейкпоинт як у SCSS). */
+  readonly compactRouteLayout = signal(false);
+  /** У режимі compact: true — на весь екран карта, false — тільки сайдбар. */
+  readonly mobileMapPanelOpen = signal(false);
   readonly mode = signal<RouteBuilderMode>('create');
   readonly editBaselineSignature = signal<string | null>(null);
   readonly lastSavedAt = signal<string | null>(null);
@@ -168,6 +176,18 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private queryParamsSubscription: Subscription | null = null;
 
   constructor() {
+    const compactMql = this.mediaMatcher.matchMedia('(max-width: 1100px)');
+    const onCompactChange = (): void => {
+      const compact = compactMql.matches;
+      this.compactRouteLayout.set(compact);
+      if (!compact) {
+        this.mobileMapPanelOpen.set(false);
+      }
+    };
+    onCompactChange();
+    compactMql.addEventListener('change', onCompactChange);
+    this.destroyRef.onDestroy(() => compactMql.removeEventListener('change', onCompactChange));
+
     effect(() => {
       const points = this.waypoints();
       const selectedIndex = this.selectedWaypointIndex();
@@ -220,6 +240,20 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.scheduleMapResizeFix();
   }
 
+  openMobileMapPanel(): void {
+    if (!this.compactRouteLayout()) {
+      return;
+    }
+    this.mobileMapPanelOpen.set(true);
+    requestAnimationFrame(() => {
+      this.scheduleMapResizeFix();
+    });
+  }
+
+  openMobileSidebarPanel(): void {
+    this.mobileMapPanelOpen.set(false);
+  }
+
   async onMapClick(event: L.LeafletMouseEvent): Promise<void> {
     if (!this.canEditRoute() || this.isRouteInteractionLocked()) {
       return;
@@ -234,6 +268,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     const point = this.waypoints()[index];
     if (!point || !this.map) {
       return;
+    }
+    if (source === 'map' && this.compactRouteLayout()) {
+      this.mobileMapPanelOpen.set(false);
     }
     this.selectedWaypointIndex.set(index);
     this.map.flyTo([point.lat, point.lng], Math.max(this.map.getZoom(), 8), {

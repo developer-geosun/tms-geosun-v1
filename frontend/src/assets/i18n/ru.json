@@ -135,6 +135,8 @@
       "newRoute": "Новый маршрут",
       "cancelEdit": "К просмотру",
       "routeDeleted": "Маршрут удален",
+      "showMap": "Карта",
+      "showSidebar": "Маршрут",
       "copyCoordinates": "Скопировать координаты",
       "coordinatesCopied": "Координаты скопированы",
       "coordinatesCopyFailed": "Не удалось скопировать координаты",

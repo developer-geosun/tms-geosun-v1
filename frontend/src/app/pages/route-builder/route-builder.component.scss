@@ -526,11 +526,72 @@
   z-index: 0;
   box-sizing: border-box;
 }
+
+/* Компактний режим (≤1100px, дзеркалить MediaMatcher у компоненті): сайдбар або карта на весь блок */
+.freight-layout--compact-sidebar {
+  position: relative;
+}
+.freight-layout--compact-sidebar .sidebar {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+}
+.freight-layout--compact-sidebar .map {
+  position: absolute;
+  inset: 0;
+  flex: none !important;
+  width: 100%;
+  height: 100%;
+  min-height: 0 !important;
+  align-self: stretch;
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+.freight-layout--compact-map .sidebar {
+  display: none !important;
+}
+.freight-layout--compact-map .map {
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-height: 0;
+  width: 100%;
+  position: relative;
+  z-index: 1;
+  visibility: visible;
+  opacity: 1;
+  pointer-events: auto;
+}
+.route-builder-panel-toggle {
+  position: fixed;
+  z-index: 1100;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+}
+/* Обидві кнопки в одному місці — внизу справа (над системним футером / safe area) */
+.route-builder-panel-toggle--open-map,
+.route-builder-panel-toggle--open-sidebar {
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
 .overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(15, 23, 42, .45); z-index: 5000; }
 .dialog { width: min(540px, 94vw); background: #fff; border-radius: 12px; padding: 16px; position: relative; z-index: 5001; }
 .dialog form { display: flex; flex-direction: column; gap: 10px; }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
-.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #0f172a; color: #fff; border-radius: 8px; padding: 10px 14px; z-index: 6000; }
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  background: #0f172a;
+  color: #fff;
+  border-radius: 8px;
+  padding: 10px 14px;
+  z-index: 6000;
+  max-width: min(520px, calc(100vw - 24px));
+  box-sizing: border-box;
+  text-align: center;
+}
 .small-note { font-size: 0.6875rem; color: var(--mat-sys-on-surface-variant); }
 
 .my-requests-panel {
@@ -578,12 +639,18 @@
     flex: 1 1 auto;
     min-height: 0;
   }
-  .sidebar {
+  .freight-layout .sidebar {
     width: auto;
+    border-right: 0;
+  }
+  /* Класичний стовпчик: сайдбар + карта одночасно (запасний варіант без JS-модифікаторів) */
+  .freight-layout:not(.freight-layout--compact-sidebar):not(.freight-layout--compact-map) .sidebar {
     flex: 0 1 auto;
     max-height: min(52vh, 520px);
-    border-right: 0;
     border-bottom: 1px solid var(--mat-sys-outline-variant);
+  }
+  .freight-layout--compact-sidebar .sidebar {
+    border-bottom: none;
   }
   .sidebar-actions__head {
     flex-wrap: wrap;
@@ -591,9 +658,95 @@
   .sidebar-actions__title {
     flex: 1 1 auto;
   }
-  .map {
+  .freight-layout:not(.freight-layout--compact-sidebar):not(.freight-layout--compact-map) .map {
     flex: 1 1 auto;
     min-height: 240px;
+  }
+  /* У стовпчиковому макеті адреси часто довгі — перенос замість одного рядка з ellipsis */
+  .point-main span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
+/* Вузькі екрани: читабельність тексту, кнопки в колонку, менше «жорстких» обрізань */
+@media (max-width: 768px) {
+  .freight-layout:not(.freight-layout--compact-sidebar) .sidebar {
+    max-height: min(50vh, 480px);
+  }
+  .sidebar {
+    padding: 10px;
+  }
+  .sidebar-actions {
+    padding: 10px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+  .sidebar-actions__head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .sidebar-actions__distance-chip {
+    align-self: flex-start;
+  }
+  .sidebar-actions__title {
+    white-space: normal;
+    font-size: 1rem;
+  }
+  /* Режим редагування: одна колонка зручніша для довгих перекладів */
+  .sidebar-actions__buttons--edit {
+    grid-template-columns: 1fr;
+  }
+  /* Режим створення: три кнопки в стовпчик на вузькому екрані */
+  .sidebar-actions__buttons--create-row {
+    grid-template-columns: 1fr;
+  }
+  /* Перегляд: чотири mini-FAB в один ряд, кнопка запиту — на всю ширину нижче */
+  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    justify-items: center;
+  }
+  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) .sidebar-view-action {
+    flex: unset;
+  }
+  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) .sidebar-request-button {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    width: 100%;
+    max-width: 100%;
+  }
+  .map {
+    min-height: min(42vh, 320px);
+  }
+  .freight-layout--compact-map .map {
+    min-height: min(56vh, 520px);
+  }
+}
+
+@media (max-width: 400px) {
+  .freight-layout:not(.freight-layout--compact-sidebar) .sidebar {
+    max-height: min(48vh, 440px);
+  }
+  .sidebar {
+    padding: 8px;
+  }
+  .sidebar-actions {
+    padding: 8px;
+    border-radius: 10px;
+  }
+  .points-list {
+    margin-top: 10px;
+  }
+  .point-row {
+    padding: 8px;
+    gap: 8px;
+  }
+  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) {
+    gap: 4px;
   }
 }
 

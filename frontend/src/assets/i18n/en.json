@@ -135,6 +135,8 @@
       "newRoute": "New route",
       "cancelEdit": "Back to view",
       "routeDeleted": "Route deleted",
+      "showMap": "Map",
+      "showSidebar": "Route panel",
       "copyCoordinates": "Copy coordinates",
       "coordinatesCopied": "Coordinates copied",
       "coordinatesCopyFailed": "Failed to copy coordinates",

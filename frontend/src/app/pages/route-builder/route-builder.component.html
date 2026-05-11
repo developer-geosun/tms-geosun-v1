@@ -1,4 +1,8 @@
-<div class="freight-layout">
+<div
+  class="freight-layout"
+  [class.freight-layout--compact-sidebar]="compactRouteLayout() && !mobileMapPanelOpen()"
+  [class.freight-layout--compact-map]="compactRouteLayout() && mobileMapPanelOpen()"
+>
   <aside class="sidebar">
     <div class="sidebar-actions">
       <div class="sidebar-actions__head">
@@ -324,6 +328,34 @@
   </aside>
 
   <div #mapContainer class="map"></div>
+
+  @if (compactRouteLayout()) {
+    @if (!mobileMapPanelOpen()) {
+      <button
+        mat-fab
+        type="button"
+        class="route-builder-panel-toggle route-builder-panel-toggle--open-map"
+        color="primary"
+        (click)="openMobileMapPanel()"
+        [attr.aria-label]="'pages.routeBuilder.showMap' | translate"
+        [title]="'pages.routeBuilder.showMap' | translate"
+      >
+        <mat-icon>map</mat-icon>
+      </button>
+    } @else {
+      <button
+        mat-fab
+        type="button"
+        class="route-builder-panel-toggle route-builder-panel-toggle--open-sidebar"
+        color="primary"
+        (click)="openMobileSidebarPanel()"
+        [attr.aria-label]="'pages.routeBuilder.showSidebar' | translate"
+        [title]="'pages.routeBuilder.showSidebar' | translate"
+      >
+        <mat-icon>view_list</mat-icon>
+      </button>
+    }
+  }
 
   @if (requestOpen()) {
     <section class="overlay">
