@@ -547,6 +547,13 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     return this.formatRouteDateTime(this.routeTimestamps().lastOpenedAt);
   }
 
+  getRouteIdLabel(): string | null {
+    if (this.isCreateMode()) {
+      return null;
+    }
+    return this.getSelectedRouteId();
+  }
+
   private formatRouteDateTime(isoDateTime: string | null): string | null {
     if (!isoDateTime) {
       return null;

@@ -125,6 +125,7 @@
       "modeTitleView": "Route view",
       "modeTitleEdit": "Route editing",
       "modeTitleCreate": "New route",
+      "routeId": "Route ID",
       "deleteRoute": "Delete route",
       "editRoute": "Edit route",
       "saveChanges": "Save changes",

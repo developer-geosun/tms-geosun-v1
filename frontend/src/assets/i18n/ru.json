@@ -125,6 +125,7 @@
       "modeTitleView": "Просмотр маршрута",
       "modeTitleEdit": "Редактирование маршрута",
       "modeTitleCreate": "Новый маршрут",
+      "routeId": "ID маршрута",
       "deleteRoute": "Удалить маршрут",
       "editRoute": "Редактировать",
       "saveChanges": "Сохранить изменения",

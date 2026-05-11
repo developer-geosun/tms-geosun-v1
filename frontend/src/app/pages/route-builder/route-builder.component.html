@@ -11,6 +11,9 @@
       @if (isViewMode()) {
         <div class="sidebar-route-timestamps">
           <small class="sidebar-last-saved">
+            {{ 'pages.routeBuilder.routeId' | translate }}: {{ getRouteIdLabel() ?? '-' }}
+          </small>
+          <small class="sidebar-last-saved">
             {{ 'pages.routes.createdAt' | translate }}: {{ getRouteCreatedAtLabel() ?? '-' }}
           </small>
           <small class="sidebar-last-saved">
@@ -18,6 +21,12 @@
           </small>
           <small class="sidebar-last-saved">
             {{ 'pages.routes.lastOpenedAt' | translate }}: {{ getRouteLastOpenedAtLabel() ?? '-' }}
+          </small>
+        </div>
+      } @else if (isEditMode()) {
+        <div class="sidebar-route-timestamps">
+          <small class="sidebar-last-saved">
+            {{ 'pages.routeBuilder.routeId' | translate }}: {{ getRouteIdLabel() ?? '-' }}
           </small>
         </div>
       }

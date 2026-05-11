@@ -19,6 +19,9 @@
             <div class="route-card__header-row">
               <div class="route-card__timestamps">
                 <div class="route-card__timestamp-line">
+                  {{ 'pages.routeBuilder.routeId' | translate }}: {{ route.id }}
+                </div>
+                <div class="route-card__timestamp-line">
                   {{ 'pages.routes.createdAt' | translate }}: {{ formatRouteDateTime(route.createdAt) }}
                 </div>
                 <div class="route-card__timestamp-line">
