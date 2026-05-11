@@ -24,6 +24,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
@@ -74,7 +75,8 @@ import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
     MatIconModule,
     MatInputModule,
     MatSelectModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    MatTooltipModule
   ]
 })
 export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
@@ -110,6 +112,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly toastMessageParams = signal<Record<string, unknown>>({});
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
   readonly mode = signal<RouteBuilderMode>('create');
+  readonly editBaselineSignature = signal<string | null>(null);
   readonly lastSavedAt = signal<string | null>(null);
   readonly routeTimestamps = signal<{ createdAt: string | null; updatedAt: string | null; lastOpenedAt: string | null }>({
     createdAt: null,
@@ -134,6 +137,16 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly isViewMode = computed(() => this.mode() === 'view');
   readonly isEditMode = computed(() => this.mode() === 'edit');
   readonly isCreateMode = computed(() => this.mode() === 'create');
+  readonly hasEditRouteChanges = computed(() => {
+    if (!this.isEditMode()) {
+      return true;
+    }
+    const baseline = this.editBaselineSignature();
+    if (!baseline) {
+      return false;
+    }
+    return this.buildEditableRouteSignature() !== baseline;
+  });
   readonly canEditRoute = computed(() => this.isEditMode() || this.isCreateMode());
   readonly isRouteInteractionLocked = computed(() => this.canEditRoute() && this.hasPendingBorder());
   readonly operationsValidationError = computed<RoutePointOperationsError | null>(() =>
@@ -1056,6 +1069,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     const modeFromQuery = this.parseMode(params.get('mode'));
     this.mode.set(modeFromQuery ?? (routeId ? 'view' : 'create'));
     if (!routeId) {
+      this.editBaselineSignature.set(null);
       this.lastSavedAt.set(null);
       this.routeTimestamps.set({ createdAt: null, updatedAt: null, lastOpenedAt: null });
       this.requestForm.patchValue({ routeComment: '' });
@@ -1069,6 +1083,11 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         this.http.get<RouteSnapshotContractDto>(`${this.backendApi.myRoutes}/${encodeURIComponent(routeId)}`)
       );
       await this.applySavedRoute(snapshot);
+      if (this.isEditMode()) {
+        this.captureEditBaseline();
+      } else {
+        this.editBaselineSignature.set(null);
+      }
       await this.syncRouteTimestampsFromSummary(routeId);
       this.showToast('pages.freightCalculation.routeLoaded');
     } catch {
@@ -1297,6 +1316,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.mode.set('edit');
+    this.captureEditBaseline();
     await this.router.navigate([], {
       relativeTo: this.activatedRoute,
       queryParams: { mode: 'edit' },
@@ -1307,6 +1327,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
 
   async switchToCreateMode(): Promise<void> {
     this.mode.set('create');
+    this.editBaselineSignature.set(null);
     this.lastSavedAt.set(null);
     this.routeTimestamps.set({ createdAt: null, updatedAt: null, lastOpenedAt: null });
     await this.router.navigate([], {
@@ -1323,6 +1344,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.mode.set('view');
+    this.editBaselineSignature.set(null);
     await this.router.navigate([], {
       relativeTo: this.activatedRoute,
       queryParams: { mode: 'view' },
@@ -1385,6 +1407,23 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       const nextOps = Array.from(new Set(point.operations.filter((op) => allowed.includes(op))));
       return { ...point, operations: nextOps };
     });
+  }
+
+  private captureEditBaseline(): void {
+    this.editBaselineSignature.set(this.buildEditableRouteSignature());
+  }
+
+  private buildEditableRouteSignature(): string {
+    const points = this.waypoints().map((point) => ({
+      lat: Number(point.lat.toFixed(6)),
+      lng: Number(point.lng.toFixed(6)),
+      address: point.address,
+      country: point.country ?? null,
+      isBorder: point.isBorder,
+      operations: [...point.operations]
+    }));
+    const routeComment = this.requestForm.getRawValue().routeComment.trim();
+    return JSON.stringify({ points, routeComment });
   }
 
   private getAllowedOperationsByContext(points: Waypoint[], index: number): RoutePointOperation[] {

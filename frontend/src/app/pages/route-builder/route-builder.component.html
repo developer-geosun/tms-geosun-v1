@@ -95,23 +95,29 @@
           >
             {{ 'pages.routeBuilder.clearOperations' | translate }}
           </button>
-          <button
-            class="sidebar-login-button"
-            mat-raised-button
-            color="primary"
-            type="button"
-            (click)="saveCurrentRoute()"
-            [disabled]="!hasRoute() || hasPendingBorder() || hasOperationsError() || isSavingRoute() || isLoadingSavedRoute()"
+          <span
+            [matTooltip]="isEditMode() && !hasEditRouteChanges() ? ('pages.routeBuilder.noChangesToSave' | translate) : ''"
+            [matTooltipDisabled]="!(isEditMode() && !hasEditRouteChanges())"
+            matTooltipPosition="above"
           >
-            @if (isSavingRoute()) {
-              <span class="loading-content">
-                <mat-spinner diameter="18"></mat-spinner>
-                <span>{{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}</span>
-              </span>
-            } @else {
-              {{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}
-            }
-          </button>
+            <button
+              class="sidebar-login-button"
+              mat-raised-button
+              color="primary"
+              type="button"
+              (click)="saveCurrentRoute()"
+              [disabled]="!hasRoute() || hasPendingBorder() || hasOperationsError() || isSavingRoute() || isLoadingSavedRoute() || !hasEditRouteChanges()"
+            >
+              @if (isSavingRoute()) {
+                <span class="loading-content">
+                  <mat-spinner diameter="18"></mat-spinner>
+                  <span>{{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}</span>
+                </span>
+              } @else {
+                {{ isEditMode() ? ('pages.routeBuilder.saveChanges' | translate) : ('pages.routeBuilder.createRoute' | translate) }}
+              }
+            </button>
+          </span>
           @if (isEditMode()) {
             <button
               class="sidebar-login-button"
@@ -125,18 +131,9 @@
             </button>
           }
         }
-        <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="goToRoutesHistory()">
-          {{ 'pages.freightCalculation.myRoutes' | translate }}
-        </button>
-        @if (isEditMode()) {
-          <button
-            class="sidebar-login-button"
-            mat-raised-button
-            color="primary"
-            type="button"
-            (click)="switchToCreateMode()"
-          >
-            {{ 'pages.routeBuilder.newRoute' | translate }}
+        @if (!isEditMode()) {
+          <button class="sidebar-login-button" mat-raised-button color="primary" type="button" (click)="goToRoutesHistory()">
+            {{ 'pages.freightCalculation.myRoutes' | translate }}
           </button>
         }
       </div>

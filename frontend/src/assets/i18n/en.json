@@ -129,6 +129,7 @@
       "deleteRoute": "Delete route",
       "editRoute": "Edit route",
       "saveChanges": "Save changes",
+      "noChangesToSave": "No changes to save",
       "createRoute": "Save",
       "clearOperations": "Clear operations",
       "newRoute": "New route",

@@ -129,6 +129,7 @@
       "deleteRoute": "Видалити маршрут",
       "editRoute": "Редагувати",
       "saveChanges": "Зберегти зміни",
+      "noChangesToSave": "Немає змін для збереження",
       "createRoute": "Зберегти",
       "clearOperations": "Очистити операції",
       "newRoute": "Новий маршрут",
