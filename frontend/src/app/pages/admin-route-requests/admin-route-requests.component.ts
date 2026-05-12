@@ -15,6 +15,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { CreateQuoteContractRequest, QuoteContractDto, RouteRequestContractDto, RouteRequestsApiService } from '../../core/api';
+import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
 import * as L from 'leaflet';
 
 @Component({
@@ -178,21 +179,12 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     return {
       currency: values.currency.trim().toUpperCase() || 'EUR',
       totalAmount,
-      transitDaysMin: this.parseOptionalNumber(values.transitDaysMin),
-      transitDaysMax: this.parseOptionalNumber(values.transitDaysMax),
+      transitDaysMin: parseOptionalFormNumber(values.transitDaysMin),
+      transitDaysMax: parseOptionalFormNumber(values.transitDaysMax),
       validUntil: values.validUntil.trim() || null,
       publicNote: values.publicNote.trim() || null,
       internalNote: values.internalNote.trim() || null
     };
-  }
-
-  private parseOptionalNumber(value: string): number | null {
-    const normalized = value.trim();
-    if (!normalized) {
-      return null;
-    }
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private nextIdempotencyKey(prefix: 'create' | 'send'): string {

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, LOCALE_ID, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogConfig, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
@@ -9,10 +9,11 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { provideNativeDateAdapter } from '@angular/material/core';
+import { MAT_NATIVE_DATE_FORMATS, provideNativeDateAdapter } from '@angular/material/core';
 import { TranslateModule } from '@ngx-translate/core';
 import { CreateRouteRequestContractRequest } from '../../../core/api/route-requests-contracts.model';
 import { RouteRequestsApiService } from '../../../core/api/route-requests-api.service';
+import { parseOptionalFormNumber } from '../../../core/utils/parse-optional-form-number';
 
 /** Клас панелі діалогу для глобальних адаптивних стилів (у `styles.scss`). */
 export const ROUTE_FREIGHT_REQUEST_DIALOG_PANEL_CLASS = 'route-freight-request-dialog-shell';
@@ -46,7 +47,15 @@ export function getRouteFreightRequestDialogConfig(data: RouteFreightRequestDial
     MatProgressSpinnerModule,
     ReactiveFormsModule
   ],
-  providers: [provideNativeDateAdapter()],
+  providers: [
+    provideNativeDateAdapter({
+      parse: MAT_NATIVE_DATE_FORMATS.parse,
+      display: {
+        ...MAT_NATIVE_DATE_FORMATS.display,
+        dateInput: { year: 'numeric', month: '2-digit', day: '2-digit' }
+      }
+    })
+  ],
   templateUrl: './route-freight-request-dialog.component.html',
   styleUrl: './route-freight-request-dialog.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -58,7 +67,7 @@ export class RouteFreightRequestDialogComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly router = inject(Router);
-  private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  private readonly dateTimeFormatter = new Intl.DateTimeFormat(inject(LOCALE_ID), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -124,8 +133,8 @@ export class RouteFreightRequestDialogComponent {
   private buildPayload(): CreateRouteRequestContractRequest {
     const values = this.form.getRawValue();
     const cargoType = values.cargoType.trim();
-    const cargoWeightKg = this.parseOptionalNumber(values.cargoWeightKg);
-    const cargoVolumeM3 = this.parseOptionalNumber(values.cargoVolumeM3);
+    const cargoWeightKg = parseOptionalFormNumber(values.cargoWeightKg);
+    const cargoVolumeM3 = parseOptionalFormNumber(values.cargoVolumeM3);
     const hasCargo = Boolean(cargoType) || cargoWeightKg !== null || cargoVolumeM3 !== null;
 
     return {
@@ -153,14 +162,6 @@ export class RouteFreightRequestDialogComponent {
     return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
   }
 
-  private parseOptionalNumber(value: string): number | null {
-    const normalized = value.trim();
-    if (!normalized) {
-      return null;
-    }
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
 }
 
 export interface RouteFreightRequestDialogData {

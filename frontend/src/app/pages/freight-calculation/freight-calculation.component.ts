@@ -27,6 +27,7 @@ import {
   RouteSummaryContractDto
 } from '../../core/api';
 import { RouteRequestsApiService } from '../../core/api/route-requests-api.service';
+import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
 import { CHECKPOINTS_DATA } from '../../shared/constants/border-checkpoints.data';
 import { Checkpoint, FreightLang, Waypoint } from './freight-calculation.models';
 import { hasPendingBorderCheckpoint } from './freight-calculation.utils';
@@ -561,8 +562,8 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   private createRouteRequestPayload(routeId: string): CreateRouteRequestContractRequest {
     const values = this.requestForm.getRawValue();
     const cargoType = values.cargoType.trim();
-    const cargoWeightKg = this.parseOptionalNumber(values.cargoWeightKg);
-    const cargoVolumeM3 = this.parseOptionalNumber(values.cargoVolumeM3);
+    const cargoWeightKg = parseOptionalFormNumber(values.cargoWeightKg);
+    const cargoVolumeM3 = parseOptionalFormNumber(values.cargoVolumeM3);
     const hasCargo = Boolean(cargoType) || cargoWeightKg !== null || cargoVolumeM3 !== null;
 
     return {
@@ -577,15 +578,6 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
           }
         : null
     };
-  }
-
-  private parseOptionalNumber(value: string): number | null {
-    const normalized = value.trim();
-    if (!normalized) {
-      return null;
-    }
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private getSelectedRouteId(): string | null {

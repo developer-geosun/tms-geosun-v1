@@ -584,7 +584,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     if (Number.isNaN(parsedDate.getTime())) {
       return null;
     }
-    const locale = this.lang() === 'uk' ? 'uk-UA' : this.lang() === 'ru' ? 'ru-RU' : 'en-US';
+    const locale =
+      this.lang() === 'uk' ? 'uk-UA' : this.lang() === 'ru' ? 'ru-RU' : 'en-GB';
     return new Intl.DateTimeFormat(locale, {
       year: 'numeric',
       month: '2-digit',

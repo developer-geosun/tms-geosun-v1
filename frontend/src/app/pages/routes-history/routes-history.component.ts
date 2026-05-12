@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, LOCALE_ID, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,7 +19,7 @@ export class RoutesHistoryComponent {
   private readonly routesApi = inject(RoutesApiService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
-  private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  private readonly dateTimeFormatter = new Intl.DateTimeFormat(inject(LOCALE_ID), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',

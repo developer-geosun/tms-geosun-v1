@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, LOCALE_ID, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,6 +20,7 @@ export class StopServiceComponent {
   private readonly authAvailabilityService = inject(AuthAvailabilityService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly localeId = inject(LOCALE_ID);
   readonly lastCheckTime = signal<string>('--:--:--');
 
   constructor() {
@@ -39,7 +40,7 @@ export class StopServiceComponent {
   }
 
   private formatCurrentTime_(): string {
-    return new Intl.DateTimeFormat(undefined, {
+    return new Intl.DateTimeFormat(this.localeId, {
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit'

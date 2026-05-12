@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, LOCALE_ID, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -38,7 +38,7 @@ import { RoutePointContract } from '../../core/api/routes-contracts.model';
 export class MyFreightRequestsComponent {
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly router = inject(Router);
-  private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  private readonly dateTimeFormatter = new Intl.DateTimeFormat(inject(LOCALE_ID), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -46,7 +46,7 @@ export class MyFreightRequestsComponent {
     minute: '2-digit',
     second: '2-digit'
   });
-  private readonly dateFormatter = new Intl.DateTimeFormat(undefined, {
+  private readonly dateFormatter = new Intl.DateTimeFormat(inject(LOCALE_ID), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit'

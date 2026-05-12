@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, LOCALE_ID, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
@@ -24,7 +24,7 @@ export class RoutesComponent {
   private readonly routesApi = inject(RoutesApiService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
-  private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+  private readonly dateTimeFormatter = new Intl.DateTimeFormat(inject(LOCALE_ID), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
