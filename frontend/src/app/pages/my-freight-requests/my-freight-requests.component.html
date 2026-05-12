@@ -26,17 +26,13 @@
     <div class="my-freight-requests-page__cards">
       @for (req of requests(); track req.id) {
         <mat-card class="freight-request-card" appearance="outlined">
-          <!-- Окремий блок замість mat-card-header: MDC вирівнює title/subtitle в один ряд і зливає короткий routeId з наступним рядком. -->
+          <!-- Окремий блок замість mat-card-header: MDC вирівнює title/subtitle в один ряд. -->
           <div class="freight-request-card__header">
             <div class="freight-request-card__header-top">
               <div class="freight-request-card__header-ids">
                 <p class="freight-request-card__id-line">
                   <span class="freight-request-card__id-label">{{ 'pages.myFreightRequests.requestId' | translate }}</span>
                   <span class="freight-request-card__id-value">{{ req.id }}</span>
-                </p>
-                <p class="freight-request-card__id-line">
-                  <span class="freight-request-card__id-label">{{ 'pages.myFreightRequests.routeId' | translate }}</span>
-                  <span class="freight-request-card__id-value">{{ req.routeId }}</span>
                 </p>
               </div>
               <mat-chip-set class="freight-request-card__status-chips" [attr.aria-label]="'pages.adminRouteRequests.status' | translate">
@@ -66,23 +62,6 @@
                 <dd>{{ req.comment?.trim() ? req.comment : ('pages.myFreightRequests.noComment' | translate) }}</dd>
               </div>
             </dl>
-
-            @if (req.countryDistances.length) {
-              <mat-divider />
-              <h3 class="freight-request-card__section-title">{{ 'pages.myFreightRequests.countryDistances' | translate }}</h3>
-              <p class="freight-request-card__country-order-hint">
-                {{ 'pages.myFreightRequests.countryDistancesAlongRouteHint' | translate }}
-              </p>
-              <ul class="freight-request-card__country-list">
-                @for (c of req.countryDistances; track c.countryCode) {
-                  <li>
-                    <span class="freight-request-card__country-step">{{ countryStepNumber(c, $index) }}.</span>
-                    <strong>{{ c.countryCode }}</strong>
-                    — {{ countryDistanceKm(c) }} {{ 'pages.freightCalculation.km' | translate }}
-                  </li>
-                }
-              </ul>
-            }
 
             @if (req.currentQuote; as quote) {
               <mat-divider />
@@ -120,44 +99,65 @@
               <p class="freight-request-card__no-quote">{{ 'pages.myFreightRequests.noQuote' | translate }}</p>
             }
 
-            @if (req.route; as route) {
-              <mat-divider />
-              <div class="freight-request-card__route-summary">
-                <div>
-                  <h3 class="freight-request-card__section-title">{{ 'pages.myFreightRequests.routeSection' | translate }}</h3>
-                  <p class="freight-request-card__route-title">{{ route.title }}</p>
-                  <p class="freight-request-card__route-distance">
-                    {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
-                  </p>
-                </div>
-                <button mat-stroked-button color="primary" type="button" (click)="openRoute(route.id)">
-                  <mat-icon>open_in_new</mat-icon>
-                  {{ 'pages.myFreightRequests.openRoute' | translate }}
-                </button>
-              </div>
-
-              @if (route.points.length) {
-                <mat-expansion-panel class="freight-request-card__expansion">
-                  <mat-expansion-panel-header>
-                    <mat-panel-title>{{ 'pages.myFreightRequests.routePoints' | translate }}</mat-panel-title>
-                  </mat-expansion-panel-header>
-                  <mat-list role="list">
-                    @for (point of sortedPoints(route.points); track point.order) {
-                      <mat-list-item role="listitem">
-                        <span matListItemIcon class="freight-request-card__point-order">{{ point.order }}</span>
-                        <span matListItemTitle>{{ point.address }}</span>
-                        <span matListItemLine class="freight-request-card__point-meta">
-                          {{ point.country }}
-                          @if (point.isBorder) {
-                            · {{ 'pages.freightCalculation.labels.border' | translate }}
-                          }
-                        </span>
-                      </mat-list-item>
-                    }
-                  </mat-list>
-                </mat-expansion-panel>
+            <mat-divider />
+            <div class="freight-request-card__route-block">
+              <h3 class="freight-request-card__section-title">{{ 'pages.myFreightRequests.routeSection' | translate }}</h3>
+              <p class="freight-request-card__id-line">
+                <span class="freight-request-card__id-label">{{ 'pages.myFreightRequests.routeId' | translate }}</span>
+                <span class="freight-request-card__id-value">{{ req.routeId }}</span>
+              </p>
+              @if (req.countryDistances.length) {
+                <h4 class="freight-request-card__subsection-title">{{ 'pages.myFreightRequests.countryDistances' | translate }}</h4>
+                <p class="freight-request-card__country-order-hint">
+                  {{ 'pages.myFreightRequests.countryDistancesAlongRouteHint' | translate }}
+                </p>
+                <ul class="freight-request-card__country-list">
+                  @for (c of req.countryDistances; track c.countryCode) {
+                    <li>
+                      <span class="freight-request-card__country-step">{{ countryStepNumber(c, $index) }}.</span>
+                      <strong>{{ c.countryCode }}</strong>
+                      — {{ countryDistanceKm(c) }} {{ 'pages.freightCalculation.km' | translate }}
+                    </li>
+                  }
+                </ul>
               }
-            }
+              @if (req.route; as route) {
+                <div class="freight-request-card__route-summary">
+                  <div>
+                    <p class="freight-request-card__route-title">{{ route.title }}</p>
+                    <p class="freight-request-card__route-distance">
+                      {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
+                    </p>
+                  </div>
+                  <button mat-stroked-button color="primary" type="button" (click)="openRoute(route.id)">
+                    <mat-icon>open_in_new</mat-icon>
+                    {{ 'pages.myFreightRequests.openRoute' | translate }}
+                  </button>
+                </div>
+
+                @if (route.points.length) {
+                  <mat-expansion-panel class="freight-request-card__expansion">
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>{{ 'pages.myFreightRequests.routePoints' | translate }}</mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <mat-list role="list">
+                      @for (point of sortedPoints(route.points); track point.order) {
+                        <mat-list-item role="listitem">
+                          <span matListItemIcon class="freight-request-card__point-order">{{ point.order }}</span>
+                          <span matListItemTitle>{{ point.address }}</span>
+                          <span matListItemLine class="freight-request-card__point-meta">
+                            {{ point.country }}
+                            @if (point.isBorder) {
+                              · {{ 'pages.freightCalculation.labels.border' | translate }}
+                            }
+                          </span>
+                        </mat-list-item>
+                      }
+                    </mat-list>
+                  </mat-expansion-panel>
+                }
+              }
+            </div>
           </mat-card-content>
         </mat-card>
       }

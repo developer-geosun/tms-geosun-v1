@@ -52,7 +52,7 @@ public class FreightQuoteService {
 
   @Transactional
   public QuoteDto createDraftQuote(
-      @NonNull String requestId,
+      @NonNull Long requestId,
       @NonNull String adminUserId,
       @NonNull String idempotencyKey,
       @NonNull CreateQuoteRequest request) {
@@ -125,7 +125,7 @@ public class FreightQuoteService {
     }
 
     List<FreightQuote> sentQuotes =
-        freightQuoteRepository.findByRequestIdAndStatus(
+        freightQuoteRepository.findByRequest_IdAndStatus(
             quote.getRequest().getId(), QuoteStatus.SENT);
     for (FreightQuote sent : sentQuotes) {
       sent.setStatus(QuoteStatus.SUPERSEDED);
@@ -146,19 +146,19 @@ public class FreightQuoteService {
   }
 
   @Transactional(readOnly = true)
-  public List<QuoteDto> getQuotesForRequest(@NonNull String requestId) {
+  public List<QuoteDto> getQuotesForRequest(@NonNull Long requestId) {
     routeRequestRepository
         .findById(requestId)
         .orElseThrow(() -> ApiException.notFound("Route request not found"));
-    return freightQuoteRepository.findByRequestIdOrderByCreatedAtDesc(requestId).stream()
+    return freightQuoteRepository.findByRequest_IdOrderByCreatedAtDesc(requestId).stream()
         .map(this::toDto)
         .toList();
   }
 
   @Transactional(readOnly = true)
-  public QuoteDto getCurrentQuoteForRequest(@NonNull String requestId) {
+  public QuoteDto getCurrentQuoteForRequest(@NonNull Long requestId) {
     return freightQuoteRepository
-        .findFirstByRequestIdAndStatusInOrderByCreatedAtDesc(
+        .findFirstByRequest_IdAndStatusInOrderByCreatedAtDesc(
             requestId, List.of(QuoteStatus.SENT, QuoteStatus.DRAFT))
         .map(this::toDto)
         .orElse(null);

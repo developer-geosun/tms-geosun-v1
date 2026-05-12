@@ -66,8 +66,8 @@ class RouteRequestApiIntegrationTest {
             .andExpect(jsonPath("$.status").value("NEW"))
             .andReturn();
 
-    String requestId =
-        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
+    long requestId =
+        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asLong();
 
     mockMvc
         .perform(get("/api/v1/route-requests/my").header("Authorization", bearer(access)))
@@ -139,8 +139,8 @@ class RouteRequestApiIntegrationTest {
                     .content(toJson(requestPayload)))
             .andExpect(status().isCreated())
             .andReturn();
-    String requestId =
-        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
+    long requestId =
+        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asLong();
 
     mockMvc
         .perform(get("/api/v1/admin/route-requests").header("Authorization", bearer(adminAccess)))
@@ -190,8 +190,8 @@ class RouteRequestApiIntegrationTest {
                                 Map.of("type", "steel", "weightKg", 15000.0, "volumeM3", 52.0)))))
             .andExpect(status().isCreated())
             .andReturn();
-    String requestId =
-        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asText();
+    long requestId =
+        objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asLong();
 
     String createIdempotencyKey = "create-quote-key-1";
     MvcResult createDraft =

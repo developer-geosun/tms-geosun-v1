@@ -7,7 +7,7 @@ import java.util.List;
  * Read-модель запиту на фрахт для user/admin сценаріїв.
  */
 public record RouteRequestDto(
-    String id,
+    Long id,
     String routeId,
     RouteRequestStatus status,
     String preferredStartDate,

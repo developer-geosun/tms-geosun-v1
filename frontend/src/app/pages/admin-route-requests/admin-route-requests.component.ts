@@ -38,7 +38,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly isLoading = signal(false);
   readonly loadError = signal('');
   readonly requests = signal<RouteRequestContractDto[]>([]);
-  readonly selectedRequestId = signal<string | null>(null);
+  readonly selectedRequestId = signal<number | null>(null);
   readonly quoteHistory = signal<QuoteContractDto[]>([]);
   readonly quoteLoadError = signal('');
   readonly isCreatingQuote = signal(false);
@@ -104,7 +104,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  selectRequest(requestId: string): void {
+  selectRequest(requestId: number): void {
     this.selectedRequestId.set(requestId);
     this.quoteActionError.set('');
     this.quoteActionSuccess.set('');
@@ -158,7 +158,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     await this.router.navigate(['/main']);
   }
 
-  private async loadQuoteHistory(requestId: string): Promise<void> {
+  private async loadQuoteHistory(requestId: number): Promise<void> {
     this.quoteLoadError.set('');
     try {
       const history = await this.routeRequestsApi.getAdminQuotesHistory(requestId);

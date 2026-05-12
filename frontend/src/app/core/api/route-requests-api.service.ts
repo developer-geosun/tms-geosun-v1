@@ -18,9 +18,9 @@ export class RouteRequestsApiService {
     return firstValueFrom(this.http.get<RouteRequestContractDto[]>(this.backendApi.myRouteRequests));
   }
 
-  async getMyRouteRequestById(requestId: string): Promise<RouteRequestContractDto> {
+  async getMyRouteRequestById(requestId: number): Promise<RouteRequestContractDto> {
     return firstValueFrom(
-      this.http.get<RouteRequestContractDto>(`${this.backendApi.myRouteRequests}/${encodeURIComponent(requestId)}`)
+      this.http.get<RouteRequestContractDto>(`${this.backendApi.myRouteRequests}/${encodeURIComponent(String(requestId))}`)
     );
   }
 
@@ -29,20 +29,20 @@ export class RouteRequestsApiService {
     return firstValueFrom(this.http.get<RouteRequestContractDto[]>(this.backendApi.adminRouteRequests, { params }));
   }
 
-  async getAdminRouteRequestById(requestId: string): Promise<RouteRequestContractDto> {
+  async getAdminRouteRequestById(requestId: number): Promise<RouteRequestContractDto> {
     return firstValueFrom(
-      this.http.get<RouteRequestContractDto>(`${this.backendApi.adminRouteRequests}/${encodeURIComponent(requestId)}`)
+      this.http.get<RouteRequestContractDto>(`${this.backendApi.adminRouteRequests}/${encodeURIComponent(String(requestId))}`)
     );
   }
 
   async createAdminQuote(
-    requestId: string,
+    requestId: number,
     payload: CreateQuoteContractRequest,
     idempotencyKey: string
   ): Promise<QuoteContractDto> {
     return firstValueFrom(
       this.http.post<QuoteContractDto>(
-        `${this.backendApi.adminRouteRequests}/${encodeURIComponent(requestId)}/quotes`,
+        `${this.backendApi.adminRouteRequests}/${encodeURIComponent(String(requestId))}/quotes`,
         payload,
         { headers: this.idempotencyHeaders(idempotencyKey) }
       )
@@ -59,10 +59,10 @@ export class RouteRequestsApiService {
     );
   }
 
-  async getAdminQuotesHistory(requestId: string): Promise<QuoteContractDto[]> {
+  async getAdminQuotesHistory(requestId: number): Promise<QuoteContractDto[]> {
     return firstValueFrom(
       this.http.get<QuoteContractDto[]>(
-        `${this.backendApi.adminRouteRequests}/${encodeURIComponent(requestId)}/quotes`
+        `${this.backendApi.adminRouteRequests}/${encodeURIComponent(String(requestId))}/quotes`
       )
     );
   }

@@ -8,10 +8,10 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FreightQuoteRepository extends JpaRepository<FreightQuote, String> {
-  List<FreightQuote> findByRequestIdOrderByCreatedAtDesc(String requestId);
+  List<FreightQuote> findByRequest_IdOrderByCreatedAtDesc(Long requestId);
 
-  Optional<FreightQuote> findFirstByRequestIdAndStatusInOrderByCreatedAtDesc(
-      String requestId, Collection<QuoteStatus> statuses);
+  Optional<FreightQuote> findFirstByRequest_IdAndStatusInOrderByCreatedAtDesc(
+      Long requestId, Collection<QuoteStatus> statuses);
 
-  List<FreightQuote> findByRequestIdAndStatus(String requestId, QuoteStatus status);
+  List<FreightQuote> findByRequest_IdAndStatus(Long requestId, QuoteStatus status);
 }

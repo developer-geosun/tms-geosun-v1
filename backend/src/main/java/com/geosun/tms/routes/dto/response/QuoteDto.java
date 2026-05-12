@@ -7,7 +7,7 @@ import com.geosun.tms.routes.dto.QuoteStatus;
  */
 public record QuoteDto(
     String id,
-    String requestId,
+    Long requestId,
     String currency,
     Double totalAmount,
     Integer transitDaysMin,

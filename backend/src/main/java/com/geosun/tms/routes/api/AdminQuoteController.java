@@ -40,7 +40,7 @@ public class AdminQuoteController {
   @PostMapping(RoutesApiPaths.ADMIN_ROUTE_REQUESTS_BASE + "/{requestId}/quotes")
   public ResponseEntity<QuoteDto> createDraftQuote(
       @AuthenticationPrincipal @NonNull UserPrincipal principal,
-      @PathVariable @NonNull String requestId,
+      @PathVariable @NonNull Long requestId,
       @RequestHeader(name = "Idempotency-Key")
           @Parameter(description = "Idempotency key for create operation")
           @NonNull
@@ -70,7 +70,7 @@ public class AdminQuoteController {
   @Operation(summary = "List quote history for route request")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping(RoutesApiPaths.ADMIN_ROUTE_REQUESTS_BASE + "/{requestId}/quotes")
-  public List<QuoteDto> getQuotesHistory(@PathVariable @NonNull String requestId) {
+  public List<QuoteDto> getQuotesHistory(@PathVariable @NonNull Long requestId) {
     return freightQuoteService.getQuotesForRequest(requestId);
   }
 }

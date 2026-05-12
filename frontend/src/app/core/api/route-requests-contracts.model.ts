@@ -32,7 +32,7 @@ export interface CountryDistanceContractDto {
 }
 
 export interface RouteRequestContractDto {
-  id: string;
+  id: number;
   routeId: string;
   status: RouteRequestStatusContract;
   preferredStartDate: string | null;

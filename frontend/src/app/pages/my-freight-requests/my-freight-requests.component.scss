@@ -120,6 +120,17 @@
   font-weight: 600;
 }
 
+.freight-request-card__subsection-title {
+  margin: 0.65rem 0 0.35rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.freight-request-card__route-block .freight-request-card__route-summary {
+  margin-top: 0.65rem;
+}
+
 .freight-request-card__country-order-hint {
   margin: 0 0 0.4rem;
   font-size: 0.75rem;
@@ -138,7 +149,12 @@
 
 .freight-request-card__country-list {
   margin: 0;
-  padding-left: 1.15rem;
+  padding-left: 0;
+  list-style: none;
+}
+
+.freight-request-card__country-list > li {
+  list-style: none;
 }
 
 .freight-request-card__no-quote {

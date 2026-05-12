@@ -34,7 +34,7 @@ public class AdminRouteRequestController {
   @Operation(summary = "Get route request details for admin/manager")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping("/{requestId}")
-  public RouteRequestDto getRequestById(@PathVariable String requestId) {
+  public RouteRequestDto getRequestById(@PathVariable Long requestId) {
     return routeRequestService.getRequestByIdForAdmin(requestId);
   }
 }

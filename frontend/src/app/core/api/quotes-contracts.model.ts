@@ -8,7 +8,7 @@ export type QuoteStatusContract =
 
 export interface QuoteContractDto {
   id: string;
-  requestId: string;
+  requestId: number;
   currency: string;
   totalAmount: number;
   transitDaysMin: number | null;

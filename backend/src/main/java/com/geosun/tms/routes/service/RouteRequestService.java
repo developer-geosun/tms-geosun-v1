@@ -83,7 +83,7 @@ public class RouteRequestService {
   }
 
   @Transactional(readOnly = true)
-  public RouteRequestDto getMyRouteRequestById(String userId, String requestId) {
+  public RouteRequestDto getMyRouteRequestById(String userId, Long requestId) {
     RouteRequest request =
         routeRequestRepository
             .findByIdAndUserId(requestId, userId)
@@ -99,8 +99,8 @@ public class RouteRequestService {
   }
 
   @Transactional(readOnly = true)
-  public RouteRequestDto getRequestByIdForAdmin(String requestId) {
-    String nonNullRequestId = Objects.requireNonNull(requestId, "requestId must not be null");
+  public RouteRequestDto getRequestByIdForAdmin(Long requestId) {
+    Long nonNullRequestId = Objects.requireNonNull(requestId, "requestId must not be null");
     RouteRequest request =
         routeRequestRepository
             .findById(nonNullRequestId)
@@ -109,7 +109,7 @@ public class RouteRequestService {
   }
 
   private RouteRequestDto toDto(RouteRequest request, boolean includeRoutePoints) {
-    String requestId = Objects.requireNonNull(request.getId(), "Route request id must not be null");
+    Long requestId = Objects.requireNonNull(request.getId(), "Route request id must not be null");
     RouteSnapshotDto route =
         includeRoutePoints
             ? toRouteSnapshot(request.getRoute())

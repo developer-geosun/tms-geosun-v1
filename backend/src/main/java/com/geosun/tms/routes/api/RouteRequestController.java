@@ -53,7 +53,7 @@ public class RouteRequestController {
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping("/my/{requestId}")
   public RouteRequestDto getMyRouteRequestById(
-      @AuthenticationPrincipal UserPrincipal principal, @PathVariable String requestId) {
+      @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long requestId) {
     return routeRequestService.getMyRouteRequestById(principal.getUserId(), requestId);
   }
 }
