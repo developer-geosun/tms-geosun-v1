@@ -32,13 +32,11 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
 import {
   BackendApiService,
-  RouteRequestContractDto,
   RoutePointContract,
   RouteSnapshotContractDto,
   RouteSummaryContractDto,
   RoutesApiService
 } from '../../core/api';
-import { RouteRequestsApiService } from '../../core/api/route-requests-api.service';
 import { CHECKPOINTS_DATA } from '../../shared/constants/border-checkpoints.data';
 import {
   Checkpoint,
@@ -89,7 +87,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly http = inject(HttpClient);
   private readonly backendApi = inject(BackendApiService);
-  private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly routesApi = inject(RoutesApiService);
   private readonly dialog = inject(MatDialog);
   private readonly translate = inject(TranslateService);
@@ -108,7 +105,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly isSavingRoute = signal(false);
   readonly isLoadingSavedRoute = signal(false);
   readonly myRoutes = signal<RouteSummaryContractDto[]>([]);
-  readonly myRouteRequests = signal<RouteRequestContractDto[]>([]);
   readonly toastMessage = signal('');
   readonly toastMessageParams = signal<Record<string, unknown>>({});
   readonly borderCheckpointSelectValue = signal<Record<number, string>>({});
@@ -217,7 +213,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.queryParamsSubscription = this.activatedRoute.queryParamMap.subscribe((params) => {
       void this.loadRouteFromQuery(params);
     });
-    void this.loadMyRouteRequests();
   }
 
   ngOnDestroy(): void {
@@ -494,7 +489,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     );
     const submitted = await firstValueFrom(dialogRef.afterClosed());
     if (submitted) {
-      await this.loadMyRouteRequests();
       this.showToast('pages.freightCalculation.success');
     }
   }
@@ -1150,15 +1144,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       this.myRoutes.set(routes);
     } catch {
       this.myRoutes.set([]);
-    }
-  }
-
-  private async loadMyRouteRequests(): Promise<void> {
-    try {
-      const requests = await this.routeRequestsApi.getMyRouteRequests();
-      this.myRouteRequests.set(requests);
-    } catch {
-      this.myRouteRequests.set([]);
     }
   }
 

@@ -22,7 +22,6 @@ import * as L from 'leaflet';
 import {
   CreateRouteRequestContractRequest,
   BackendApiService,
-  RouteRequestContractDto,
   RoutePointContract,
   RouteSnapshotContractDto,
   RouteSummaryContractDto
@@ -65,7 +64,6 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   readonly isSavingRoute = signal(false);
   readonly isLoadingSavedRoute = signal(false);
   readonly myRoutes = signal<RouteSummaryContractDto[]>([]);
-  readonly myRouteRequests = signal<RouteRequestContractDto[]>([]);
   readonly toastMessage = signal('');
   readonly dropdownSegmentIndex = signal<number | null>(null);
   /** Порожнє значення другого mat-select після вибору КПП або зміни країни */
@@ -104,7 +102,6 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.initializeMapWhenContainerReady();
     void this.loadRouteFromQuery();
-    void this.loadMyRouteRequests();
   }
 
   ngOnDestroy(): void {
@@ -317,7 +314,6 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
         cargoVolumeM3: ''
       });
       this.requestOpen.set(false);
-      await this.loadMyRouteRequests();
       this.showToast('pages.freightCalculation.success');
     } catch {
       this.showToast('pages.freightCalculation.errors.submitFailed');
@@ -719,15 +715,6 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
       this.myRoutes.set(routes);
     } catch {
       this.myRoutes.set([]);
-    }
-  }
-
-  private async loadMyRouteRequests(): Promise<void> {
-    try {
-      const requests = await this.routeRequestsApi.getMyRouteRequests();
-      this.myRouteRequests.set(requests);
-    } catch {
-      this.myRouteRequests.set([]);
     }
   }
 
