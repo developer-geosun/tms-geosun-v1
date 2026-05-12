@@ -58,13 +58,12 @@
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
 }
 .sidebar-actions__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   gap: 8px;
 }
 .sidebar-actions__title {
-  flex: 1 1 auto;
   min-width: 0;
   font-size: 1.08rem;
   font-weight: 700;
@@ -76,7 +75,6 @@
   color: var(--mat-sys-on-surface);
 }
 .sidebar-actions__distance-chip {
-  flex: 0 0 auto;
   display: inline-flex;
   align-items: baseline;
   gap: 4px;
@@ -88,6 +86,7 @@
   font-weight: 700;
   font-size: 0.8125rem;
   line-height: 1;
+  justify-self: end;
 }
 .sidebar-actions__distance-value {
   font-size: 0.95rem;
@@ -647,12 +646,6 @@
   .freight-layout--compact-sidebar .sidebar {
     border-bottom: none;
   }
-  .sidebar-actions__head {
-    flex-wrap: wrap;
-  }
-  .sidebar-actions__title {
-    flex: 1 1 auto;
-  }
   .freight-layout:not(.freight-layout--compact-sidebar):not(.freight-layout--compact-map) .map {
     flex: 1 1 auto;
     min-height: 240px;
@@ -679,12 +672,7 @@
     border-radius: 12px;
   }
   .sidebar-actions__head {
-    align-items: flex-start;
-    flex-direction: column;
     gap: 10px;
-  }
-  .sidebar-actions__distance-chip {
-    align-self: flex-start;
   }
   .sidebar-actions__title {
     white-space: normal;
@@ -697,22 +685,6 @@
   /* Режим створення: три кнопки в стовпчик на вузькому екрані */
   .sidebar-actions__buttons--create-row {
     grid-template-columns: 1fr;
-  }
-  /* Перегляд: чотири mini-FAB в один ряд, кнопка запиту — на всю ширину нижче */
-  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 6px;
-    justify-items: center;
-  }
-  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) .sidebar-view-action {
-    flex: unset;
-  }
-  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) .sidebar-request-button {
-    grid-column: 1 / -1;
-    justify-self: stretch;
-    width: 100%;
-    max-width: 100%;
   }
   .map {
     min-height: min(42vh, 320px);
@@ -739,9 +711,6 @@
   .point-row {
     padding: 8px;
     gap: 8px;
-  }
-  .sidebar-actions__buttons:not(.sidebar-actions__buttons--edit):not(.sidebar-actions__buttons--create-row) {
-    gap: 4px;
   }
 }
 

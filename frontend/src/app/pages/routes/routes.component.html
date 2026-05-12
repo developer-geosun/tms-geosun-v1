@@ -47,16 +47,6 @@
                 <mat-card-subtitle class="route-card__meta route-card__meta--secondary">
                   {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
                 </mat-card-subtitle>
-                <button
-                  mat-raised-button
-                  color="primary"
-                  type="button"
-                  class="route-card__freight-request"
-                  (click)="openFreightRequestDialog(route)"
-                  [disabled]="route.points.length === 0 || deletingRouteId() === route.id"
-                >
-                  {{ 'pages.freightCalculation.openRequest' | translate }}
-                </button>
               </div>
             </div>
           </mat-card-header>
@@ -137,8 +127,6 @@
                 >
                   <mat-icon>edit</mat-icon>
                 </button>
-              </div>
-              <div class="route-card__actions-right">
                 <button
                   mat-mini-fab
                   class="route-card__open-action"
@@ -148,6 +136,18 @@
                   [title]="'pages.routesHistory.openRoute' | translate"
                 >
                   <mat-icon>open_in_new</mat-icon>
+                </button>
+              </div>
+              <div class="route-card__actions-right">
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="button"
+                  class="route-card__freight-request"
+                  (click)="openFreightRequestDialog(route)"
+                  [disabled]="route.points.length === 0 || deletingRouteId() === route.id"
+                >
+                  {{ 'pages.freightCalculation.openRequest' | translate }}
                 </button>
               </div>
             </div>
