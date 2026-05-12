@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { MAT_DIALOG_DATA, MatDialogConfig, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -56,6 +57,7 @@ export class RouteFreightRequestDialogComponent {
   readonly data = inject(MAT_DIALOG_DATA) as RouteFreightRequestDialogData;
   private readonly formBuilder = inject(FormBuilder);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
+  private readonly router = inject(Router);
   private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
     year: 'numeric',
     month: '2-digit',
@@ -111,6 +113,7 @@ export class RouteFreightRequestDialogComponent {
         cargoVolumeM3: ''
       });
       this.dialogRef.close(true);
+      void this.router.navigate(['/my-freight-requests']);
     } catch {
       this.submitErrorKey.set('pages.freightCalculation.errors.submitFailed');
     } finally {
