@@ -72,6 +72,22 @@ svg {
   transition: transform 0.25s ease;
 }
 
+// Ряд іконок у тулбарі при наведенні на логотип — крупніше, білий фон, кольорові піктограми
+:host-context(.logo-hover-icons) {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+  background-color: #fff;
+  border-color: rgba(61, 71, 82, 0.22);
+  color: var(--hover-color);
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+}
+
 // Адаптивність
 @media (max-width: 768px) {
   :host {
@@ -84,6 +100,18 @@ svg {
   svg {
     width: 12px;
     height: 12px;
+  }
+
+  :host-context(.logo-hover-icons) {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
   }
 }
 
