@@ -67,38 +67,44 @@
                 <mat-list-item>{{ 'pages.routes.pointsUnavailable' | translate }}</mat-list-item>
               </mat-list>
             } @else {
-              <mat-list class="route-card__points">
+              <div class="route-card__points" role="list">
                 @for (point of route.points; track point.order) {
-                  <mat-list-item class="route-point-row">
-                    <span matListItemIcon class="route-point-index">
-                      <span class="point-order" [class.point-order--regular]="!point.isBorder" [class.point-order--border]="point.isBorder">
-                        {{ point.order }}
-                      </span>
-                    </span>
-                    <div matListItemTitle class="route-point-content">
-                      <div class="route-point-main-line">
-                        <span class="route-point-address">{{ point.address }}</span>
+                  <mat-card class="route-point-card" appearance="outlined" role="listitem">
+                    <mat-card-content class="route-point-card__content">
+                      <div class="route-point-card__row">
+                        <span class="route-point-card__order" aria-hidden="true">
+                          <span
+                            class="point-order"
+                            [class.point-order--regular]="!point.isBorder"
+                            [class.point-order--border]="point.isBorder"
+                          >
+                            {{ point.order }}
+                          </span>
+                        </span>
+                        <div class="route-point-card__main">
+                          <p class="route-point-card__address">{{ point.address }}</p>
+                          <mat-chip-set class="route-point-operations" aria-label="Point operations">
+                            <mat-chip
+                              class="route-point-operation-chip route-point-operation-chip--coordinates"
+                              (click)="copyPointCoordinates(point)"
+                              [attr.aria-label]="'pages.routeBuilder.copyCoordinates' | translate"
+                              [title]="'pages.routeBuilder.copyCoordinates' | translate"
+                            >
+                              <mat-icon>content_copy</mat-icon>
+                              {{ formatPointCoordinates(point) }}
+                            </mat-chip>
+                            @for (operation of point.operations; track operation) {
+                              <mat-chip class="route-point-operation-chip">
+                                {{ ('pages.routeBuilder.operations.' + operation) | translate }}
+                              </mat-chip>
+                            }
+                          </mat-chip-set>
+                        </div>
                       </div>
-                      <mat-chip-set class="route-point-operations" aria-label="Point operations">
-                        <mat-chip
-                          class="route-point-operation-chip route-point-operation-chip--coordinates"
-                          (click)="copyPointCoordinates(point)"
-                          [attr.aria-label]="'pages.routeBuilder.copyCoordinates' | translate"
-                          [title]="'pages.routeBuilder.copyCoordinates' | translate"
-                        >
-                          <mat-icon>content_copy</mat-icon>
-                          {{ formatPointCoordinates(point) }}
-                        </mat-chip>
-                        @for (operation of point.operations; track operation) {
-                          <mat-chip class="route-point-operation-chip">
-                            {{ ('pages.routeBuilder.operations.' + operation) | translate }}
-                          </mat-chip>
-                        }
-                      </mat-chip-set>
-                    </div>
-                  </mat-list-item>
+                    </mat-card-content>
+                  </mat-card>
                 }
-              </mat-list>
+              </div>
             }
           </mat-card-content>
 

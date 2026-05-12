@@ -245,33 +245,54 @@
 }
 
 .route-card__points {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   margin: 0;
   padding: 0;
 }
 
-.route-point-row {
-  min-height: 26px;
+.route-point-card {
+  border-radius: 12px;
+  background: var(--mat-sys-surface-container-low);
+  border-color: var(--mat-sys-outline-variant);
+  box-shadow: none;
 }
 
-.route-card__points .mat-mdc-list-item {
-  height: auto !important;
-  min-height: 40px;
-  padding-top: 6px;
-  padding-bottom: 6px;
+.route-point-card__content {
+  padding: 0.5rem 0.75rem !important;
 }
 
-.route-card__points .mat-mdc-list-item .mdc-list-item__start {
-  align-self: center;
-  margin-inline-end: 10px;
-  margin-top: 0;
+.route-point-card__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  min-width: 0;
 }
 
-.route-card__points .mat-mdc-list-item .mdc-list-item__content {
-  overflow: visible;
+.route-point-card__order {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding-top: 2px;
 }
 
-.route-card__points .mat-mdc-list-item .mat-mdc-list-item-title {
-  white-space: normal;
+.route-point-card__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.route-point-card__address {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .point-order {
@@ -294,36 +315,6 @@
 
 .point-order--border {
   background: #16a34a;
-}
-
-.route-point-address {
-  display: inline-block;
-  font-size: 0.75rem;
-  line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.route-point-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  width: 100%;
-  min-width: 0;
-}
-
-.route-point-main-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
-}
-
-.route-point-index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .route-point-operations {
@@ -349,7 +340,8 @@
   height: 14px;
 }
 
-.route-card :is(.mat-mdc-card-title, .mat-mdc-card-subtitle, .mdc-list-item__primary-text, .mdc-button__label) {
+.route-card :is(.mat-mdc-card-title, .mat-mdc-card-subtitle, .mdc-list-item__primary-text, .mdc-button__label),
+.route-point-card :is(.mat-mdc-card-title, .mat-mdc-card-subtitle, .mdc-button__label) {
   font-size: inherit;
   line-height: inherit;
 }
@@ -359,6 +351,10 @@
   .route-card {
     background: color-mix(in srgb, var(--mat-sys-surface-container-high) 92%, #101218);
     box-shadow: 0 16px 36px rgba(0, 0, 0, 0.45);
+  }
+
+  .route-point-card {
+    background: color-mix(in srgb, var(--mat-sys-surface-container-low) 88%, #101218);
   }
 }
 
