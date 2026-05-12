@@ -14,7 +14,7 @@
       "adminSection": "Розділ адміністратора доступний",
       "freightCalculationLink": "Перейти до розрахунку фрахту",
       "freightCalculationHereLink": "Перейти до розрахунку фрахту (HERE API)",
-      "adminRouteRequestsLink": "Черга заявок (admin)"
+      "adminRouteRequestsLink": "Черга запитів (admin)"
     },
     "login": {
       "title": "Вхід до системи",
@@ -95,8 +95,8 @@
       "cargoType": "Тип вантажу",
       "cargoWeightKg": "Вага, кг",
       "cargoVolumeM3": "Об'єм, м³",
-      "myRequestsTitle": "Мої заявки",
-      "myRequestsEmpty": "Заявок поки немає",
+      "myRequestsTitle": "Мої запити",
+      "myRequestsEmpty": "Запитів поки немає",
       "pointsListEmpty": "Додайте точки на мапі або через пошук",
       "quoteReceived": "Отримано пропозицію",
       "quotePending": "Пропозиція очікується",
@@ -114,7 +114,7 @@
         "addAtLeastOneMorePoint": "Для можливості збереження маршруту, додайте ще одну точку",
         "selectBorderRequired": "Для продовження роботи з маршрутом оберіть прикордонний пункт",
         "routeMustBeSaved": "Перед надсиланням збережіть маршрут та відкрийте його з історії",
-        "requestOnlyInViewMode": "Надсилання заявки доступне лише в режимі перегляду",
+        "requestOnlyInViewMode": "Надсилання запиту доступне лише в режимі перегляду",
         "submitFailed": "Не вдалося надіслати запит",
         "routeSaveFailed": "Не вдалося зберегти маршрут",
         "routeLoadFailed": "Не вдалося завантажити маршрут"
@@ -209,14 +209,58 @@
       "editRoute": "Редагувати",
       "addNewRoute": "Новий маршрут"
     },
+    "myFreightRequests": {
+      "title": "Мої запити на розрахунок фрахту",
+      "loading": "Завантаження запитів...",
+      "loadFailed": "Не вдалося завантажити запити. Спробуйте ще раз.",
+      "empty": "Ви ще не надсилали запитів на розрахунок фрахту.",
+      "refresh": "Оновити",
+      "requestId": "ID запиту",
+      "routeId": "ID маршруту",
+      "createdAt": "Надіслано",
+      "updatedAt": "Останнє оновлення",
+      "preferredStartDate": "Бажана дата старту",
+      "comment": "Коментар",
+      "noComment": "Без коментаря",
+      "notSet": "Не вказано",
+      "countryDistances": "Пробіг за країнами",
+      "countryDistancesAlongRouteHint": "У порядку проходження маршруту",
+      "quoteSection": "Поточна пропозиція",
+      "quoteStatus": "Статус пропозиції",
+      "quoteAmount": "Сума",
+      "quoteTransit": "Транзит, днів (мін — макс)",
+      "quoteValidUntil": "Дійсно до",
+      "quotePublicNote": "Примітка від перевізника",
+      "noQuote": "Пропозиції ще немає — запит у обробці.",
+      "routeSection": "Маршрут",
+      "openRoute": "Відкрити маршрут",
+      "routePoints": "Точки маршруту",
+      "requestStatus": {
+        "new": "Новий",
+        "in_review": "На розгляді",
+        "quoted": "Є пропозиція",
+        "accepted": "Прийнято",
+        "rejected": "Відхилено",
+        "cancelled": "Скасовано",
+        "expired": "Прострочено"
+      },
+      "quoteStatus": {
+        "draft": "Чернетка",
+        "sent": "Надіслано",
+        "superseded": "Замінено",
+        "accepted": "Прийнято",
+        "rejected": "Відхилено",
+        "expired": "Прострочено"
+      }
+    },
     "adminRouteRequests": {
-      "title": "Черга заявок",
+      "title": "Черга запитів",
       "refresh": "Оновити",
       "backToMain": "На головну",
-      "loading": "Завантаження заявок...",
-      "loadFailed": "Не вдалося завантажити заявки",
-      "empty": "Заявок поки немає",
-      "details": "Деталі заявки",
+      "loading": "Завантаження запитів...",
+      "loadFailed": "Не вдалося завантажити запити",
+      "empty": "Запитів поки немає",
+      "details": "Деталі запиту",
       "status": "Статус",
       "preferredStartDate": "Бажана дата початку",
       "comment": "Коментар",
@@ -267,8 +311,9 @@
     "routeBuilder": "Побудова маршруту",
     "routesHistory": "Історія маршрутів",
     "routes": "Мої маршрути",
+    "myFreightRequests": "Запити на фрахт",
     "freightCalculationHere": "Розрахунок HERE",
-    "adminRouteRequests": "Черга заявок"
+    "adminRouteRequests": "Черга запитів"
   },
   "auth": {
     "register": "Реєстрація",

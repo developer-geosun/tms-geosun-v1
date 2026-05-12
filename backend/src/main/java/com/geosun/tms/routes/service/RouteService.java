@@ -19,6 +19,7 @@ import com.geosun.tms.routes.dto.response.RoutePointDto;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
 import com.geosun.tms.routes.dto.response.RouteSummaryDto;
+import com.geosun.tms.routes.repository.RouteCountryDistanceRepository;
 import com.geosun.tms.routes.repository.RouteRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -34,14 +35,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RouteService implements RouteContractsFacade {
   private final RouteRepository routeRepository;
+  private final RouteCountryDistanceRepository routeCountryDistanceRepository;
   private final UserRepository userRepository;
   private final RouteRequestService routeRequestService;
 
   public RouteService(
       RouteRepository routeRepository,
+      RouteCountryDistanceRepository routeCountryDistanceRepository,
       UserRepository userRepository,
       RouteRequestService routeRequestService) {
     this.routeRepository = routeRepository;
+    this.routeCountryDistanceRepository = routeCountryDistanceRepository;
     this.userRepository = userRepository;
     this.routeRequestService = routeRequestService;
   }
@@ -106,6 +110,9 @@ public class RouteService implements RouteContractsFacade {
     // унікальний індекс (route_id, point_order).
     routeRepository.flush();
     route.getPoints().addAll(new ArrayList<>(newPoints));
+
+    // Після зміни точок перерахунок пробігу по країнах має виконуватись заново.
+    routeCountryDistanceRepository.deleteByRouteId(route.getId());
 
     return toSnapshot(route);
   }

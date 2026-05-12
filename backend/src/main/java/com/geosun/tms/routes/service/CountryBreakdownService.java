@@ -46,9 +46,13 @@ public class CountryBreakdownService {
   @Transactional
   public List<CountryDistanceDto> getOrCalculate(Route route) {
     List<RouteCountryDistance> existing =
-        routeCountryDistanceRepository.findByRouteIdOrderByCountryCodeAsc(route.getId());
-    if (!existing.isEmpty()) {
+        routeCountryDistanceRepository.findByRouteIdOrderByAlongRouteOrderAscCountryCodeAsc(
+            route.getId());
+    if (!existing.isEmpty() && !looksLikeStaleSingleCountryBreakdown(route, existing)) {
       return toDto(existing);
+    }
+    if (!existing.isEmpty()) {
+      routeCountryDistanceRepository.deleteByRouteId(route.getId());
     }
 
     List<HereRoutingClient.CountryBreakdownRow> rows = loadFromHereOrFallback(route);
@@ -58,10 +62,12 @@ public class CountryBreakdownService {
 
     routeCountryDistanceRepository.deleteByRouteId(route.getId());
     List<RouteCountryDistance> toSave = new ArrayList<>(rows.size());
-    for (HereRoutingClient.CountryBreakdownRow row : rows) {
+    for (int i = 0; i < rows.size(); i++) {
+      HereRoutingClient.CountryBreakdownRow row = rows.get(i);
       RouteCountryDistance distance = new RouteCountryDistance();
       distance.setRoute(route);
       distance.setCountryCode(row.countryCode());
+      distance.setAlongRouteOrder(i);
       distance.setDistanceMeters(Math.max(0, row.distanceMeters()));
       distance.setDurationSeconds(row.durationSeconds());
       toSave.add(distance);
@@ -72,11 +78,14 @@ public class CountryBreakdownService {
 
   private List<CountryDistanceDto> toDto(List<RouteCountryDistance> items) {
     return items.stream()
-        .sorted(Comparator.comparing(RouteCountryDistance::getCountryCode))
+        .sorted(Comparator.comparingInt(RouteCountryDistance::getAlongRouteOrder))
         .map(
             item ->
                 new CountryDistanceDto(
-                    item.getCountryCode(), item.getDistanceMeters(), item.getDurationSeconds()))
+                    item.getCountryCode(),
+                    item.getDistanceMeters(),
+                    item.getDurationSeconds(),
+                    item.getAlongRouteOrder()))
         .toList();
   }
 
@@ -135,25 +144,46 @@ public class CountryBreakdownService {
         .toList();
   }
 
+  /**
+   * Старий fallback зберігав лише одну країну, якщо в точках було ≥2 коди країн (типово UA на КПП +
+   * PL у фіналі).
+   */
+  private static boolean looksLikeStaleSingleCountryBreakdown(
+      Route route, List<RouteCountryDistance> existing) {
+    if (existing.size() != 1) {
+      return false;
+    }
+    if (route.getPoints() == null || route.getPoints().isEmpty()) {
+      return false;
+    }
+    long distinctCountries =
+        route.getPoints().stream()
+            .map(RoutePoint::getCountry)
+            .filter(StringUtils::hasText)
+            .map(c -> c.toUpperCase())
+            .distinct()
+            .count();
+    return distinctCountries >= 2;
+  }
+
   private static List<HereRoutingClient.CountryBreakdownRow> fallbackFromRoute(Route route) {
     Map<String, long[]> grouped = new LinkedHashMap<>();
     List<RoutePoint> points =
         route.getPoints().stream().sorted(Comparator.comparing(RoutePoint::getPointOrder)).toList();
     for (int i = 0; i < points.size(); i++) {
-      RoutePoint point = points.get(i);
-      if (!StringUtils.hasText(point.getCountry())) {
+      RoutePoint from = points.get(i);
+      if (from.getSegmentDistanceKmToNext() == null) {
         continue;
       }
-      if (point.getSegmentDistanceKmToNext() == null) {
+      RoutePoint to = i + 1 < points.size() ? points.get(i + 1) : null;
+      if (to == null) {
         continue;
       }
       long distanceMeters =
           Math.max(
               0L,
-              point.getSegmentDistanceKmToNext().multiply(BigDecimal.valueOf(1000L)).longValue());
-      long[] values =
-          grouped.computeIfAbsent(point.getCountry().toUpperCase(), key -> new long[] {0, 0});
-      values[0] += distanceMeters;
+              from.getSegmentDistanceKmToNext().multiply(BigDecimal.valueOf(1000L)).longValue());
+      distributeSegmentDistanceToCountries(grouped, from, to, distanceMeters);
     }
     return grouped.entrySet().stream()
         .map(
@@ -161,6 +191,59 @@ public class CountryBreakdownService {
                 new HereRoutingClient.CountryBreakdownRow(
                     entry.getKey(), entry.getValue()[0], null))
         .toList();
+  }
+
+  /**
+   * Розподіл довжини сегмента між країнами без полілінії: враховуємо прапорець КПП та різні коди країн
+   * у кінцевих точках сегмента.
+   */
+  private static void distributeSegmentDistanceToCountries(
+      Map<String, long[]> grouped, RoutePoint from, RoutePoint to, long distanceMeters) {
+    if (distanceMeters <= 0) {
+      return;
+    }
+    String fromCountry = normalizeCountryCode(from.getCountry());
+    String toCountry = normalizeCountryCode(to.getCountry());
+
+    if (to.isBorder()) {
+      if (fromCountry != null) {
+        addMetersForCountry(grouped, fromCountry, distanceMeters);
+      }
+      return;
+    }
+    if (from.isBorder()) {
+      if (toCountry != null) {
+        addMetersForCountry(grouped, toCountry, distanceMeters);
+      } else if (fromCountry != null) {
+        addMetersForCountry(grouped, fromCountry, distanceMeters);
+      }
+      return;
+    }
+    if (fromCountry != null && toCountry != null && fromCountry.equals(toCountry)) {
+      addMetersForCountry(grouped, fromCountry, distanceMeters);
+      return;
+    }
+    if (fromCountry != null && toCountry != null) {
+      long firstHalf = distanceMeters / 2;
+      long secondHalf = distanceMeters - firstHalf;
+      addMetersForCountry(grouped, fromCountry, firstHalf);
+      addMetersForCountry(grouped, toCountry, secondHalf);
+      return;
+    }
+    String single = fromCountry != null ? fromCountry : toCountry;
+    if (single != null) {
+      addMetersForCountry(grouped, single, distanceMeters);
+    }
+  }
+
+  private static String normalizeCountryCode(String country) {
+    return StringUtils.hasText(country) ? country.toUpperCase() : null;
+  }
+
+  private static void addMetersForCountry(
+      Map<String, long[]> grouped, String countryCode, long meters) {
+    long[] values = grouped.computeIfAbsent(countryCode, key -> new long[] {0, 0});
+    values[0] += meters;
   }
 
   private static String buildCacheKey(Route route) {

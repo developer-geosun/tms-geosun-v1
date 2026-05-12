@@ -69,6 +69,12 @@ export class ToolbarComponent {
       roles: ['user'] as const
     },
     {
+      route: '/my-freight-requests',
+      labelKey: 'navigation.myFreightRequests',
+      icon: 'local_shipping',
+      roles: ['user'] as const
+    },
+    {
       route: '/admin/route-requests',
       labelKey: 'navigation.adminRouteRequests',
       roles: ['admin', 'manager'] as const

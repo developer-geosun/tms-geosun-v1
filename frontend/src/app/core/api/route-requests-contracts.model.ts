@@ -27,6 +27,8 @@ export interface CountryDistanceContractDto {
   countryCode: string;
   distanceMeters: number;
   durationSeconds: number | null;
+  /** 0 = перша країна на маршруті (якщо поле є у відповіді API). */
+  alongRouteOrder?: number | null;
 }
 
 export interface RouteRequestContractDto {

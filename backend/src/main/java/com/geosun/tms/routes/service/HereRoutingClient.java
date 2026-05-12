@@ -92,11 +92,11 @@ public class HereRoutingClient {
           if (!StringUtils.hasText(countryCode)) {
             continue;
           }
-          long length = span.path("length").asLong(0);
-          long duration = span.path("duration").asLong(0);
+          long length = readSpanLengthMeters(span);
+          Long durationSeconds = readSpanDurationSecondsNullable(span);
           rows.add(
               new CountryBreakdownRow(
-                  countryCode.toUpperCase(), length, duration > 0 ? duration : null));
+                  countryCode.toUpperCase(), length, durationSeconds));
         }
       }
       return rows;
@@ -113,6 +113,43 @@ public class HereRoutingClient {
 
   private static String latLng(RoutePoint point) {
     return point.getLat() + "," + point.getLng();
+  }
+
+  /** Довжина span у метрах: у відповіді v8 може бути число або об'єкт Distance. */
+  private static long readSpanLengthMeters(JsonNode span) {
+    JsonNode length = span.get("length");
+    if (length == null || length.isNull()) {
+      return 0L;
+    }
+    if (length.isNumber()) {
+      return length.asLong(0);
+    }
+    if (length.isObject()) {
+      long value = length.path("value").asLong(0);
+      String unit = length.path("unit").asText("m");
+      if ("km".equalsIgnoreCase(unit) || "kilometers".equalsIgnoreCase(unit)) {
+        return Math.round(value * 1000.0);
+      }
+      return value;
+    }
+    return 0L;
+  }
+
+  /** Тривалість span у секундах, якщо є в відповіді. */
+  private static Long readSpanDurationSecondsNullable(JsonNode span) {
+    JsonNode duration = span.get("duration");
+    if (duration == null || duration.isNull()) {
+      return null;
+    }
+    if (duration.isNumber()) {
+      long v = duration.asLong(0);
+      return v > 0 ? v : null;
+    }
+    if (duration.isObject()) {
+      long v = duration.path("value").asLong(0);
+      return v > 0 ? v : null;
+    }
+    return null;
   }
 
   public record CountryBreakdownRow(

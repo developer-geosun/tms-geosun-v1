@@ -209,6 +209,50 @@
       "editRoute": "Edit",
       "addNewRoute": "Add new route"
     },
+    "myFreightRequests": {
+      "title": "My freight calculation requests",
+      "loading": "Loading your requests...",
+      "loadFailed": "Failed to load requests. Try again.",
+      "empty": "You have not sent any freight calculation requests yet.",
+      "refresh": "Refresh",
+      "requestId": "Request ID",
+      "routeId": "Route ID",
+      "createdAt": "Submitted at",
+      "updatedAt": "Last update",
+      "preferredStartDate": "Preferred start date",
+      "comment": "Comment",
+      "noComment": "No comment",
+      "notSet": "Not set",
+      "countryDistances": "Distance by country",
+      "countryDistancesAlongRouteHint": "In order of travel along the route",
+      "quoteSection": "Current quote",
+      "quoteStatus": "Quote status",
+      "quoteAmount": "Amount",
+      "quoteTransit": "Transit days (min — max)",
+      "quoteValidUntil": "Valid until",
+      "quotePublicNote": "Note from carrier",
+      "noQuote": "No quote yet — your request is being processed.",
+      "routeSection": "Route",
+      "openRoute": "Open route",
+      "routePoints": "Route points",
+      "requestStatus": {
+        "new": "New",
+        "in_review": "In review",
+        "quoted": "Quoted",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      },
+      "quoteStatus": {
+        "draft": "Draft",
+        "sent": "Sent",
+        "superseded": "Superseded",
+        "accepted": "Accepted",
+        "rejected": "Rejected",
+        "expired": "Expired"
+      }
+    },
     "adminRouteRequests": {
       "title": "Route requests queue",
       "refresh": "Refresh",
@@ -267,6 +311,7 @@
     "routeBuilder": "Route builder",
     "routesHistory": "Route history",
     "routes": "My routes",
+    "myFreightRequests": "Freight requests",
     "freightCalculationHere": "HERE freight",
     "adminRouteRequests": "Requests queue"
   },

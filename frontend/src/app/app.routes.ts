@@ -52,6 +52,13 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/routes/routes.component').then((m) => m.RoutesComponent)
   },
   {
+    path: 'my-freight-requests',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['user'] },
+    loadComponent: () =>
+      import('./pages/my-freight-requests/my-freight-requests.component').then((m) => m.MyFreightRequestsComponent)
+  },
+  {
     path: 'admin/route-requests',
     canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
     data: { roles: ['admin', 'manager'] },

@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RouteCountryDistanceRepository
     extends JpaRepository<RouteCountryDistance, String> {
-  List<RouteCountryDistance> findByRouteIdOrderByCountryCodeAsc(Long routeId);
+  List<RouteCountryDistance> findByRouteIdOrderByAlongRouteOrderAscCountryCodeAsc(Long routeId);
 
   void deleteByRouteId(Long routeId);
 }

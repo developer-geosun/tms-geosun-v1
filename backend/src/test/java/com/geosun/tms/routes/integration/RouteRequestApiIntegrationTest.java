@@ -80,8 +80,13 @@ class RouteRequestApiIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(requestId))
         .andExpect(jsonPath("$.route.points.length()").value(2))
-        .andExpect(jsonPath("$.countryDistances.length()").value(1))
-        .andExpect(jsonPath("$.countryDistances[0].countryCode").value("UA"));
+        .andExpect(jsonPath("$.countryDistances.length()").value(2))
+        .andExpect(jsonPath("$.countryDistances[0].countryCode").value("UA"))
+        .andExpect(jsonPath("$.countryDistances[0].alongRouteOrder").value(0))
+        .andExpect(jsonPath("$.countryDistances[0].distanceMeters").value(60250))
+        .andExpect(jsonPath("$.countryDistances[1].countryCode").value("PL"))
+        .andExpect(jsonPath("$.countryDistances[1].alongRouteOrder").value(1))
+        .andExpect(jsonPath("$.countryDistances[1].distanceMeters").value(60250));
   }
 
   @Test

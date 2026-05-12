@@ -27,6 +27,9 @@ public class RouteCountryDistance {
   @Column(name = "country_code", nullable = false, length = 8)
   private String countryCode;
 
+  @Column(name = "along_route_order", nullable = false)
+  private int alongRouteOrder;
+
   @Column(name = "distance_m", nullable = false)
   private long distanceMeters;
 
@@ -66,6 +69,14 @@ public class RouteCountryDistance {
 
   public void setCountryCode(String countryCode) {
     this.countryCode = countryCode;
+  }
+
+  public int getAlongRouteOrder() {
+    return alongRouteOrder;
+  }
+
+  public void setAlongRouteOrder(int alongRouteOrder) {
+    this.alongRouteOrder = alongRouteOrder;
   }
 
   public long getDistanceMeters() {
