@@ -1,5 +1,6 @@
 package com.geosun.tms.routes.integration;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -71,6 +72,89 @@ class RouteApiIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(routeId))
         .andExpect(jsonPath("$.points.length()").value(2));
+  }
+
+  @Test
+  void saveRoute_responseHasCreatedAtEqualToUpdatedAt() throws Exception {
+    User user = createUser("routes-created-updated-eq@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(jsonMediaType())
+                    .content(toJson(routePayload("New route timestamps"))))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    JsonNode json = objectMapper.readTree(saveResult.getResponse().getContentAsString());
+    assertThat(json.hasNonNull("createdAt")).isTrue();
+    assertThat(json.hasNonNull("updatedAt")).isTrue();
+    assertThat(json.get("updatedAt").asText()).isEqualTo(json.get("createdAt").asText());
+
+    String routeId = json.get("id").asText();
+    MvcResult listResult =
+        mockMvc
+            .perform(get("/api/v1/routes/my").header("Authorization", bearer(access)))
+            .andExpect(status().isOk())
+            .andReturn();
+    JsonNode list = objectMapper.readTree(listResult.getResponse().getContentAsString());
+    JsonNode summary = null;
+    for (JsonNode node : list) {
+      if (routeId.equals(node.get("id").asText())) {
+        summary = node;
+        break;
+      }
+    }
+    assertThat(summary).isNotNull();
+    JsonNode row = Objects.requireNonNull(summary);
+    assertThat(row.get("updatedAt").asText()).isEqualTo(row.get("createdAt").asText());
+  }
+
+  @Test
+  void getMyRouteById_repeatedOpen_doesNotChangeUpdatedAt() throws Exception {
+    User user = createUser("routes-open-stamp@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(jsonMediaType())
+                    .content(toJson(routePayload("Stamp check"))))
+            .andExpect(status().isCreated())
+            .andReturn();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+
+    MvcResult firstOpen =
+        mockMvc
+            .perform(get("/api/v1/routes/my/" + routeId).header("Authorization", bearer(access)))
+            .andExpect(status().isOk())
+            .andReturn();
+    String updatedAtFirst =
+        objectMapper
+            .readTree(firstOpen.getResponse().getContentAsString())
+            .get("updatedAt")
+            .asText();
+
+    Thread.sleep(50);
+
+    MvcResult secondOpen =
+        mockMvc
+            .perform(get("/api/v1/routes/my/" + routeId).header("Authorization", bearer(access)))
+            .andExpect(status().isOk())
+            .andReturn();
+    String updatedAtSecond =
+        objectMapper
+            .readTree(secondOpen.getResponse().getContentAsString())
+            .get("updatedAt")
+            .asText();
+
+    assertThat(updatedAtSecond).isEqualTo(updatedAtFirst);
   }
 
   @Test

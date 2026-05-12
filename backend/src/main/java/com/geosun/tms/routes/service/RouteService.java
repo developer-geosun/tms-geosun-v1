@@ -121,11 +121,13 @@ public class RouteService implements RouteContractsFacade {
   @Override
   @Transactional
   public RouteSnapshotDto getMyRouteById(String userId, Long routeId) {
+    // Оновлення last_opened_at окремим UPDATE: інакше Hibernate оновлює updated_at через
+    // @UpdateTimestamp на сутності Route при будь-якій зміні полів (наприклад лише перегляд).
+    routeRepository.updateLastOpenedAt(routeId, userId, Instant.now());
     Route route =
         routeRepository
             .findByIdAndUserIdWithPoints(routeId, userId)
             .orElseThrow(() -> ApiException.notFound("Route not found"));
-    route.setLastOpenedAt(Instant.now());
     return toSnapshot(route);
   }
 
