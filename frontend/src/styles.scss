@@ -193,3 +193,28 @@ mat-button-toggle .mdc-button__label {
   font-size: 0.8125rem;
   line-height: 1.45;
 }
+
+/* Діалог заявки на фрахт: адаптивна панель (panelClass на `.cdk-overlay-pane`). */
+@media (max-width: 599.98px) {
+  .cdk-overlay-pane.route-freight-request-dialog-shell {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    margin: 0;
+  }
+
+  .cdk-overlay-pane.route-freight-request-dialog-shell .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    min-height: 100dvh;
+    max-height: 100dvh;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cdk-overlay-pane.route-freight-request-dialog-shell .mat-mdc-dialog-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+  }
+}

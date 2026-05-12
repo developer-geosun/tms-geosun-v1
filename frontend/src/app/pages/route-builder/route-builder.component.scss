@@ -151,7 +151,6 @@
   background-color: var(--mat-sys-error) !important;
   color: var(--mat-sys-on-error) !important;
 }
-.dialog input, .dialog textarea { width: 100%; box-sizing: border-box; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; }
 .results { margin-top: 8px; border: 1px solid var(--mat-sys-outline-variant); border-radius: 8px; overflow: hidden; background: var(--mat-sys-surface-container); }
 .results button { width: 100%; text-align: left; border: 0; background: transparent; padding: 8px; cursor: pointer; }
 .results button.active, .results button:hover { background: color-mix(in srgb, var(--mat-sys-primary) 10%, transparent); }
@@ -361,7 +360,7 @@
 .segment:has(> span) {
   min-height: 32px;
 }
-.point-actions button, .dialog-actions button { border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 6px 8px; cursor: pointer; }
+.point-actions button { border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 6px 8px; cursor: pointer; }
 .border-picker {
   margin: 0 0 8px;
   width: 100%;
@@ -574,10 +573,6 @@
   right: max(16px, env(safe-area-inset-right, 0px));
   bottom: max(16px, env(safe-area-inset-bottom, 0px));
 }
-.overlay { position: fixed; inset: 0; display: grid; place-items: center; background: rgba(15, 23, 42, .45); z-index: 5000; }
-.dialog { width: min(540px, 94vw); background: #fff; border-radius: 12px; padding: 16px; position: relative; z-index: 5001; }
-.dialog form { display: flex; flex-direction: column; gap: 10px; }
-.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
 .toast {
   position: fixed;
   left: 50%;

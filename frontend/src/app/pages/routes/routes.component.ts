@@ -10,7 +10,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
 import { RoutesApiService } from '../../core/api/routes-api.service';
 import { RoutePointContract, RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
-import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
+import { RouteDeleteConfirmDialogComponent, getRouteFreightRequestDialogConfig, RouteFreightRequestDialogComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-routes',
@@ -68,6 +68,26 @@ export class RoutesComponent {
   /** Перехід у конструктор для створення нового маршруту. */
   async createNewRoute(): Promise<void> {
     await this.router.navigate(['/route-builder'], { queryParams: { mode: 'create' } });
+  }
+
+  async openFreightRequestDialog(route: RouteCardViewModel): Promise<void> {
+    if (this.deletingRouteId()) {
+      return;
+    }
+    const dialogRef = this.dialog.open(
+      RouteFreightRequestDialogComponent,
+      getRouteFreightRequestDialogConfig({
+        routeId: route.id,
+        createdAt: route.createdAt,
+        updatedAt: route.updatedAt,
+        pointsCount: route.points.length,
+        distanceKm: route.distanceKm
+      })
+    );
+    const submitted = await firstValueFrom(dialogRef.afterClosed());
+    if (submitted) {
+      this.showToast('pages.freightCalculation.success');
+    }
   }
 
   async requestRouteDelete(

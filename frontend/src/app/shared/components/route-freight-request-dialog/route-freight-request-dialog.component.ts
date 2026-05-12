@@ -1,0 +1,169 @@
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogConfig, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { provideNativeDateAdapter } from '@angular/material/core';
+import { TranslateModule } from '@ngx-translate/core';
+import { CreateRouteRequestContractRequest } from '../../../core/api/route-requests-contracts.model';
+import { RouteRequestsApiService } from '../../../core/api/route-requests-api.service';
+
+/** Клас панелі діалогу для глобальних адаптивних стилів (у `styles.scss`). */
+export const ROUTE_FREIGHT_REQUEST_DIALOG_PANEL_CLASS = 'route-freight-request-dialog-shell';
+
+/** Конфігурація `MatDialog` для узгодженого вигляду на routes та route-builder. */
+export function getRouteFreightRequestDialogConfig(data: RouteFreightRequestDialogData): MatDialogConfig<RouteFreightRequestDialogData> {
+  return {
+    width: 'min(520px, calc(100vw - 24px))',
+    maxWidth: '100vw',
+    maxHeight: 'min(92vh, 720px)',
+    autoFocus: 'first-tabbable',
+    restoreFocus: true,
+    disableClose: true,
+    panelClass: ROUTE_FREIGHT_REQUEST_DIALOG_PANEL_CLASS,
+    data
+  };
+}
+
+@Component({
+  selector: 'app-route-freight-request-dialog',
+  standalone: true,
+  imports: [
+    TranslateModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule,
+    MatDatepickerModule,
+    MatProgressSpinnerModule,
+    ReactiveFormsModule
+  ],
+  providers: [provideNativeDateAdapter()],
+  templateUrl: './route-freight-request-dialog.component.html',
+  styleUrl: './route-freight-request-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { class: 'route-freight-request-dialog-host' }
+})
+export class RouteFreightRequestDialogComponent {
+  private readonly dialogRef = inject(MatDialogRef<RouteFreightRequestDialogComponent, boolean>);
+  readonly data = inject(MAT_DIALOG_DATA) as RouteFreightRequestDialogData;
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly routeRequestsApi = inject(RouteRequestsApiService);
+  private readonly dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  });
+
+  /** Помилка відправки (ключ перекладу). */
+  readonly submitErrorKey = signal<string | null>(null);
+  readonly isSubmitting = signal(false);
+
+  readonly form = this.formBuilder.group({
+    preferredStartDate: this.formBuilder.control<Date | null>(null),
+    comment: this.formBuilder.nonNullable.control(''),
+    cargoType: this.formBuilder.nonNullable.control(''),
+    cargoWeightKg: this.formBuilder.nonNullable.control(''),
+    cargoVolumeM3: this.formBuilder.nonNullable.control('')
+  });
+
+  /** Відображення дати маршруту у діалозі. */
+  formatRouteDateTime(isoDateTime: string | null | undefined): string {
+    if (!isoDateTime) {
+      return '—';
+    }
+    const parsedDate = new Date(isoDateTime);
+    if (Number.isNaN(parsedDate.getTime())) {
+      return isoDateTime;
+    }
+    return this.dateTimeFormatter.format(parsedDate);
+  }
+
+  /** Довжина маршруту для підсумку (км). */
+  formatDistanceKm(): string {
+    return (this.data.distanceKm ?? 0).toFixed(1);
+  }
+
+  cancel(): void {
+    this.dialogRef.close(false);
+  }
+
+  async submit(): Promise<void> {
+    this.submitErrorKey.set(null);
+    this.isSubmitting.set(true);
+    try {
+      await this.routeRequestsApi.createRouteRequest(this.buildPayload());
+      this.form.reset({
+        preferredStartDate: null,
+        comment: '',
+        cargoType: '',
+        cargoWeightKg: '',
+        cargoVolumeM3: ''
+      });
+      this.dialogRef.close(true);
+    } catch {
+      this.submitErrorKey.set('pages.freightCalculation.errors.submitFailed');
+    } finally {
+      this.isSubmitting.set(false);
+    }
+  }
+
+  private buildPayload(): CreateRouteRequestContractRequest {
+    const values = this.form.getRawValue();
+    const cargoType = values.cargoType.trim();
+    const cargoWeightKg = this.parseOptionalNumber(values.cargoWeightKg);
+    const cargoVolumeM3 = this.parseOptionalNumber(values.cargoVolumeM3);
+    const hasCargo = Boolean(cargoType) || cargoWeightKg !== null || cargoVolumeM3 !== null;
+
+    return {
+      routeId: this.data.routeId,
+      preferredStartDate: this.formatDateForApi(values.preferredStartDate),
+      comment: values.comment.trim() || null,
+      cargo: hasCargo
+        ? {
+            type: cargoType || null,
+            weightKg: cargoWeightKg,
+            volumeM3: cargoVolumeM3
+          }
+        : null
+    };
+  }
+
+  /** Локальна дата у форматі YYYY-MM-DD для API (без зсуву UTC). */
+  private formatDateForApi(value: Date | null): string | null {
+    if (!value || !(value instanceof Date) || Number.isNaN(value.getTime())) {
+      return null;
+    }
+    const y = value.getFullYear();
+    const m = value.getMonth() + 1;
+    const d = value.getDate();
+    return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+  }
+
+  private parseOptionalNumber(value: string): number | null {
+    const normalized = value.trim();
+    if (!normalized) {
+      return null;
+    }
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+}
+
+export interface RouteFreightRequestDialogData {
+  routeId: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+  pointsCount: number;
+  distanceKm: number | null;
+}

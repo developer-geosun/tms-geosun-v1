@@ -61,12 +61,62 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.route-card__distance-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.route-card__freight-request.mat-mdc-raised-button {
+  flex: 0 0 auto;
+  min-width: unset;
+  min-height: 46px;
+  border-radius: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  padding-inline: 10px;
+  white-space: nowrap;
+  --mdc-protected-button-container-color: var(--mat-sys-primary-container);
+  --mdc-protected-button-label-text-color: var(--mat-sys-on-primary-container);
+  --mat-protected-button-state-layer-color: var(--mat-sys-on-primary-container);
+  --mdc-protected-button-disabled-container-color: var(--mat-sys-primary-container);
+  --mdc-protected-button-disabled-label-text-color: var(--mat-sys-on-primary-container);
+  --mdc-protected-button-disabled-container-opacity: 1;
+  --mdc-protected-button-disabled-label-text-opacity: 1;
+}
+
+.route-card__freight-request:not(:disabled):not(.mat-mdc-button-disabled):not(.mdc-button--disabled) {
+  background-color: var(--mat-sys-primary-container) !important;
+  color: var(--mat-sys-on-primary-container) !important;
+}
+
+.route-card__freight-request:disabled,
+.route-card__freight-request.mat-mdc-button-disabled,
+.route-card__freight-request.mdc-button--disabled {
+  opacity: 1;
+}
+
+@media (max-width: 520px) {
+  .route-card__distance-actions {
+    flex: 1 1 100%;
+    margin-left: 0;
+    justify-content: flex-end;
+  }
 }
 
 .route-card__timestamps {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .route-card__timestamp-line {

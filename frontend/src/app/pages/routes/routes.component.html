@@ -43,9 +43,21 @@
                   {{ 'pages.routes.lastOpenedAt' | translate }}: {{ formatRouteDateTime(route.lastOpenedAt) || '-' }}
                 </div>
               </div>
-              <mat-card-subtitle class="route-card__meta route-card__meta--secondary">
-                {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
-              </mat-card-subtitle>
+              <div class="route-card__distance-actions">
+                <mat-card-subtitle class="route-card__meta route-card__meta--secondary">
+                  {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
+                </mat-card-subtitle>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  type="button"
+                  class="route-card__freight-request"
+                  (click)="openFreightRequestDialog(route)"
+                  [disabled]="route.points.length === 0 || deletingRouteId() === route.id"
+                >
+                  {{ 'pages.freightCalculation.openRequest' | translate }}
+                </button>
+              </div>
             </div>
           </mat-card-header>
 

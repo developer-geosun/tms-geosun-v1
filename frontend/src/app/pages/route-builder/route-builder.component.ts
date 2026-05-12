@@ -31,7 +31,6 @@ import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import * as L from 'leaflet';
 import {
-  CreateRouteRequestContractRequest,
   BackendApiService,
   RouteRequestContractDto,
   RoutePointContract,
@@ -58,7 +57,7 @@ import {
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Subscription } from 'rxjs';
-import { RouteDeleteConfirmDialogComponent } from '../../shared/components';
+import { RouteDeleteConfirmDialogComponent, getRouteFreightRequestDialogConfig, RouteFreightRequestDialogComponent } from '../../shared/components';
 
 @Component({
   selector: 'app-route-builder',
@@ -105,9 +104,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly highlightedSearchIndex = signal(-1);
   readonly selectedWaypointIndex = signal<number | null>(null);
   readonly selectedCountryBySegment = signal<Record<number, string | null>>({});
-  readonly requestOpen = signal(false);
   readonly isSearching = signal(false);
-  readonly isSubmitting = signal(false);
   readonly isSavingRoute = signal(false);
   readonly isLoadingSavedRoute = signal(false);
   readonly myRoutes = signal<RouteSummaryContractDto[]>([]);
@@ -128,12 +125,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     lastOpenedAt: null
   });
 
+  /** Коментар маршруту при збереженні знімка (не плутати з коментарем у заявці на фрахт). */
   readonly requestForm = this.formBuilder.nonNullable.group({
-    preferredStartDate: [''],
-    routeComment: [''],
-    cargoType: [''],
-    cargoWeightKg: [''],
-    cargoVolumeM3: ['']
+    routeComment: ['']
   });
 
   readonly totalDistanceMeters = computed(() => this.segmentDistances().reduce((sum, distance) => sum + distance, 0));
@@ -341,7 +335,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.segmentDistances.set([]);
     this.searchResults.set([]);
     this.selectedWaypointIndex.set(null);
-    this.requestOpen.set(false);
     this.selectedCountryBySegment.set({});
     this.borderCheckpointSelectValue.set({});
     if (this.routeLayer && this.map) {
@@ -466,7 +459,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     await this.recalculateRoute();
   }
 
-  openRequestPage(): void {
+  async openFreightRequestDialog(): Promise<void> {
     if (!this.isViewMode()) {
       this.showToast('pages.freightCalculation.errors.requestOnlyInViewMode');
       return;
@@ -484,40 +477,25 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       this.showToast(opsErrorKey);
       return;
     }
-    if (!this.getSelectedRouteId()) {
-      this.showToast('pages.freightCalculation.errors.routeMustBeSaved');
-      return;
-    }
-    this.requestOpen.set(true);
-  }
-
-  closeRequestPage(): void {
-    this.requestOpen.set(false);
-  }
-
-  async submitRequest(): Promise<void> {
     const routeId = this.getSelectedRouteId();
     if (!routeId) {
       this.showToast('pages.freightCalculation.errors.routeMustBeSaved');
       return;
     }
-    this.isSubmitting.set(true);
-    try {
-      await this.routeRequestsApi.createRouteRequest(this.createRouteRequestPayload(routeId));
-      this.requestForm.reset({
-        preferredStartDate: '',
-        routeComment: '',
-        cargoType: '',
-        cargoWeightKg: '',
-        cargoVolumeM3: ''
-      });
-      this.requestOpen.set(false);
+    const dialogRef = this.dialog.open(
+      RouteFreightRequestDialogComponent,
+      getRouteFreightRequestDialogConfig({
+        routeId,
+        createdAt: this.routeTimestamps().createdAt,
+        updatedAt: this.routeTimestamps().updatedAt,
+        pointsCount: this.waypoints().length,
+        distanceKm: Number((this.totalDistanceMeters() / 1000).toFixed(3))
+      })
+    );
+    const submitted = await firstValueFrom(dialogRef.afterClosed());
+    if (submitted) {
       await this.loadMyRouteRequests();
       this.showToast('pages.freightCalculation.success');
-    } catch {
-      this.showToast('pages.freightCalculation.errors.submitFailed');
-    } finally {
-      this.isSubmitting.set(false);
     }
   }
 
@@ -1021,36 +999,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
     const payload = (await response.json()) as OsrmResponse;
     return payload.routes[0] ?? null;
-  }
-
-  private createRouteRequestPayload(routeId: string): CreateRouteRequestContractRequest {
-    const values = this.requestForm.getRawValue();
-    const cargoType = values.cargoType.trim();
-    const cargoWeightKg = this.parseOptionalNumber(values.cargoWeightKg);
-    const cargoVolumeM3 = this.parseOptionalNumber(values.cargoVolumeM3);
-    const hasCargo = Boolean(cargoType) || cargoWeightKg !== null || cargoVolumeM3 !== null;
-
-    return {
-      routeId,
-      preferredStartDate: values.preferredStartDate || null,
-      comment: values.routeComment.trim() || null,
-      cargo: hasCargo
-        ? {
-            type: cargoType || null,
-            weightKg: cargoWeightKg,
-            volumeM3: cargoVolumeM3
-          }
-        : null
-    };
-  }
-
-  private parseOptionalNumber(value: string): number | null {
-    const normalized = value.trim();
-    if (!normalized) {
-      return null;
-    }
-    const parsed = Number(normalized);
-    return Number.isFinite(parsed) ? parsed : null;
   }
 
   private getSelectedRouteId(): string | null {

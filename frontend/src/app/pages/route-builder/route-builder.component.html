@@ -87,7 +87,7 @@
             mat-raised-button
             color="primary"
             type="button"
-            (click)="openRequestPage()"
+            (click)="openFreightRequestDialog()"
             [disabled]="!hasRoute() || hasOperationsError()"
           >
             {{ 'pages.freightCalculation.openRequest' | translate }}
@@ -355,40 +355,6 @@
         <mat-icon>view_list</mat-icon>
       </button>
     }
-  }
-
-  @if (requestOpen()) {
-    <section class="overlay">
-      <div class="dialog">
-        <h2>{{ 'pages.freightCalculation.requestTitle' | translate }}</h2>
-        <form [formGroup]="requestForm" (ngSubmit)="submitRequest()">
-          <label>
-            {{ 'pages.freightCalculation.preferredStartDate' | translate }}
-            <input formControlName="preferredStartDate" type="date" />
-          </label>
-          <label>
-            {{ 'pages.freightCalculation.routeComment' | translate }}
-            <textarea formControlName="routeComment" rows="3"></textarea>
-          </label>
-          <label>
-            {{ 'pages.freightCalculation.cargoType' | translate }}
-            <input formControlName="cargoType" type="text" />
-          </label>
-          <label>
-            {{ 'pages.freightCalculation.cargoWeightKg' | translate }}
-            <input formControlName="cargoWeightKg" type="number" min="0" step="0.001" />
-          </label>
-          <label>
-            {{ 'pages.freightCalculation.cargoVolumeM3' | translate }}
-            <input formControlName="cargoVolumeM3" type="number" min="0" step="0.001" />
-          </label>
-          <div class="dialog-actions">
-            <button type="button" (click)="closeRequestPage()">{{ 'pages.freightCalculation.back' | translate }}</button>
-            <button type="submit" [disabled]="isSubmitting()">{{ 'pages.freightCalculation.submit' | translate }}</button>
-          </div>
-        </form>
-      </div>
-    </section>
   }
 
   @if (toastMessage()) {
