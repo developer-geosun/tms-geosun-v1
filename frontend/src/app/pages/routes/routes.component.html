@@ -1,16 +1,30 @@
 <section class="routes-page">
   <header class="routes-page__header">
     <h1 class="routes-page__title">{{ 'pages.routes.title' | translate }}</h1>
-    <button
-      mat-mini-fab
-      type="button"
-      class="routes-page__add-route"
-      (click)="createNewRoute()"
-      [attr.aria-label]="'pages.routes.addNewRoute' | translate"
-      [title]="'pages.routes.addNewRoute' | translate"
-    >
-      <mat-icon>add</mat-icon>
-    </button>
+    <div class="routes-page__header-actions">
+      <mat-form-field appearance="outline" class="routes-page__view-field" subscriptSizing="dynamic">
+        <mat-label>{{ 'pages.routes.listViewLabel' | translate }}</mat-label>
+        <mat-select
+          [value]="listView()"
+          (selectionChange)="onListViewChange($event.value)"
+          [disabled]="isLoading() || deletingRouteId() !== null || restoringRouteId() !== null"
+        >
+          <mat-option value="active">{{ 'pages.routes.listViewActive' | translate }}</mat-option>
+          <mat-option value="all">{{ 'pages.routes.listViewAll' | translate }}</mat-option>
+          <mat-option value="deleted">{{ 'pages.routes.listViewDeleted' | translate }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button
+        mat-mini-fab
+        type="button"
+        class="routes-page__add-route"
+        (click)="createNewRoute()"
+        [attr.aria-label]="'pages.routes.addNewRoute' | translate"
+        [title]="'pages.routes.addNewRoute' | translate"
+      >
+        <mat-icon>add</mat-icon>
+      </button>
+    </div>
   </header>
 
   @if (deleteFailed()) {
@@ -22,7 +36,11 @@
   } @else if (loadFailed()) {
     <p>{{ 'pages.routes.loadFailed' | translate }}</p>
   } @else if (routeCards().length === 0) {
-    <p>{{ 'pages.routes.empty' | translate }}</p>
+    @if (listView() === 'deleted') {
+      <p>{{ 'pages.routes.emptyDeleted' | translate }}</p>
+    } @else {
+      <p>{{ 'pages.routes.empty' | translate }}</p>
+    }
   } @else {
     <div class="routes-page__cards">
       @for (route of routeCards(); track route.id) {
@@ -47,6 +65,16 @@
                 <mat-card-subtitle class="route-card__meta route-card__meta--secondary">
                   {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}
                 </mat-card-subtitle>
+                @if (route.deleted) {
+                  <mat-chip-set class="route-card__status-chips">
+                    <mat-chip color="warn">{{ 'pages.routes.deletedChip' | translate }}</mat-chip>
+                  </mat-chip-set>
+                }
+                @if (route.lockedByRequest) {
+                  <mat-chip-set class="route-card__status-chips">
+                    <mat-chip>{{ 'pages.routes.lockedByRequest' | translate }}</mat-chip>
+                  </mat-chip-set>
+                }
               </div>
             </div>
           </mat-card-header>
@@ -101,32 +129,57 @@
           <mat-card-footer class="route-card__footer">
             <div class="route-card__actions">
               <div class="route-card__actions-left">
-                <button
-                  mat-mini-fab
-                  type="button"
-                  class="route-card__delete-action"
-                  (click)="requestRouteDelete(route.id, route.title, route.createdAt, route.distanceKm)"
-                  [disabled]="deletingRouteId() !== null"
-                  [attr.aria-label]="'pages.routesHistory.deleteRoute' | translate"
-                  [title]="'pages.routesHistory.deleteRoute' | translate"
-                >
-                  <mat-icon>
-                    @if (deletingRouteId() === route.id) {
-                      hourglass_top
-                    } @else {
-                      delete
-                    }
-                  </mat-icon>
-                </button>
-                <button
-                  mat-mini-fab
-                  type="button"
-                  (click)="editRoute(route.id)"
-                  [attr.aria-label]="'pages.routes.editRoute' | translate"
-                  [title]="'pages.routes.editRoute' | translate"
-                >
-                  <mat-icon>edit</mat-icon>
-                </button>
+                @if (route.deleted) {
+                  <button
+                    mat-mini-fab
+                    type="button"
+                    class="route-card__restore-action"
+                    (click)="restoreRoute(route.id)"
+                    [disabled]="restoringRouteId() !== null || deletingRouteId() !== null"
+                    [attr.aria-label]="'pages.routes.restoreRoute' | translate"
+                    [title]="'pages.routes.restoreRoute' | translate"
+                  >
+                    <mat-icon>
+                      @if (restoringRouteId() === route.id) {
+                        hourglass_top
+                      } @else {
+                        restore
+                      }
+                    </mat-icon>
+                  </button>
+                } @else {
+                  <button
+                    mat-mini-fab
+                    type="button"
+                    class="route-card__delete-action"
+                    (click)="requestRouteDelete(route.id, route.title, route.createdAt, route.distanceKm)"
+                    [disabled]="deletingRouteId() !== null || restoringRouteId() !== null"
+                    [attr.aria-label]="'pages.routesHistory.deleteRoute' | translate"
+                    [title]="'pages.routesHistory.deleteRoute' | translate"
+                  >
+                    <mat-icon>
+                      @if (deletingRouteId() === route.id) {
+                        hourglass_top
+                      } @else {
+                        delete
+                      }
+                    </mat-icon>
+                  </button>
+                  <button
+                    mat-mini-fab
+                    type="button"
+                    (click)="editRoute(route.id)"
+                    [disabled]="route.lockedByRequest"
+                    [attr.aria-label]="'pages.routes.editRoute' | translate"
+                    [title]="
+                      route.lockedByRequest
+                        ? ('pages.routes.editDisabledLocked' | translate)
+                        : ('pages.routes.editRoute' | translate)
+                    "
+                  >
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                }
                 <button
                   mat-mini-fab
                   class="route-card__open-action"
@@ -145,7 +198,17 @@
                   type="button"
                   class="route-card__freight-request"
                   (click)="openFreightRequestDialog(route)"
-                  [disabled]="route.points.length === 0 || deletingRouteId() === route.id"
+                  [disabled]="
+                    route.points.length === 0 ||
+                    deletingRouteId() === route.id ||
+                    route.deleted ||
+                    route.lockedByRequest
+                  "
+                  [title]="
+                    route.lockedByRequest || route.deleted
+                      ? ('pages.routes.freightRequestDisabled' | translate)
+                      : ''
+                  "
                 >
                   {{ 'pages.freightCalculation.openRequest' | translate }}
                 </button>

@@ -103,6 +103,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   readonly selectedCountryBySegment = signal<Record<number, string | null>>({});
   readonly isSearching = signal(false);
   readonly isSavingRoute = signal(false);
+  readonly isDuplicatingRoute = signal(false);
   readonly isLoadingSavedRoute = signal(false);
   readonly myRoutes = signal<RouteSummaryContractDto[]>([]);
   readonly toastMessage = signal('');
@@ -120,6 +121,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     updatedAt: null,
     lastOpenedAt: null
   });
+  /** Маршрут не можна змінювати після створення заявки (блок на бекенді). */
+  readonly routeLockedByRequest = signal(false);
 
   /** Коментар маршруту при збереженні знімка (не плутати з коментарем у заявці на фрахт). */
   readonly requestForm = this.formBuilder.nonNullable.group({
@@ -145,7 +148,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
     return this.buildEditableRouteSignature() !== baseline;
   });
-  readonly canEditRoute = computed(() => this.isEditMode() || this.isCreateMode());
+  readonly canEditRoute = computed(
+    () => (this.isEditMode() || this.isCreateMode()) && !this.routeLockedByRequest()
+  );
   readonly isRouteInteractionLocked = computed(() => this.canEditRoute() && this.hasPendingBorder());
   readonly operationsValidationError = computed<RoutePointOperationsError | null>(() =>
     validateWaypointOperations(this.waypoints())
@@ -386,6 +391,11 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         queryParamsHandling: 'merge'
       });
     } catch (error) {
+      const lockedCode = this.extractApiErrorCode(error);
+      if (lockedCode === 'ROUTE_LOCKED_BY_REQUEST') {
+        this.showToast('pages.freightCalculation.errors.routeLockedByRequest');
+        return;
+      }
       const routeOpsError = this.extractRouteOperationsErrorFromApi(error);
       if (routeOpsError) {
         this.showToast(routeOpsError.key, routeOpsError.params);
@@ -394,6 +404,25 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       }
     } finally {
       this.isSavingRoute.set(false);
+    }
+  }
+
+  async duplicateLockedRoute(): Promise<void> {
+    const routeId = this.getSelectedRouteId();
+    if (!routeId || !this.hasRoute()) {
+      return;
+    }
+    this.isDuplicatingRoute.set(true);
+    try {
+      const snapshot = await this.routesApi.duplicateMyRoute(routeId);
+      this.showToast('pages.routeBuilder.duplicateRouteSuccess');
+      await this.router.navigate(['/route-builder'], {
+        queryParams: { routeId: snapshot.id, mode: 'edit' }
+      });
+    } catch {
+      this.showToast('pages.routeBuilder.duplicateRouteFailed');
+    } finally {
+      this.isDuplicatingRoute.set(false);
     }
   }
 
@@ -455,6 +484,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async openFreightRequestDialog(): Promise<void> {
+    if (this.routeLockedByRequest()) {
+      this.showToast('pages.routeBuilder.freightDisabledLocked');
+      return;
+    }
     if (!this.isViewMode()) {
       this.showToast('pages.freightCalculation.errors.requestOnlyInViewMode');
       return;
@@ -1052,6 +1085,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       this.editBaselineSignature.set(null);
       this.lastSavedAt.set(null);
       this.routeTimestamps.set({ createdAt: null, updatedAt: null, lastOpenedAt: null });
+      this.routeLockedByRequest.set(false);
       this.requestForm.patchValue({ routeComment: '' });
       await this.clearAllPoints();
       this.rebuildMarkers();
@@ -1059,9 +1093,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
     this.isLoadingSavedRoute.set(true);
     try {
-      const snapshot = await firstValueFrom(
-        this.http.get<RouteSnapshotContractDto>(`${this.backendApi.myRoutes}/${encodeURIComponent(routeId)}`)
-      );
+      const snapshot = await this.routesApi.getMyRouteById(routeId);
       await this.applySavedRoute(snapshot);
       if (this.isEditMode()) {
         this.captureEditBaseline();
@@ -1104,6 +1136,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       updatedAt: snapshot.updatedAt ?? snapshot.createdAt ?? null,
       lastOpenedAt: null
     });
+    this.routeLockedByRequest.set(snapshot.lockedByRequest === true);
     await this.drawSavedPolyline(snapshot.routePolyline, points);
   }
 
@@ -1141,7 +1174,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
 
   private async loadMyRoutes(): Promise<void> {
     try {
-      const routes = await firstValueFrom(this.http.get<RouteSummaryContractDto[]>(this.backendApi.myRoutes));
+      const routes = await this.routesApi.getMyRoutes();
       this.myRoutes.set(routes);
     } catch {
       this.myRoutes.set([]);
@@ -1168,6 +1201,18 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       this.toastMessage.set('');
       this.toastMessageParams.set({});
     }, 5000);
+  }
+
+  private extractApiErrorCode(error: unknown): string | null {
+    if (!(error instanceof HttpErrorResponse)) {
+      return null;
+    }
+    const payload = error.error;
+    if (!payload || typeof payload !== 'object') {
+      return null;
+    }
+    const code = payload['code'];
+    return typeof code === 'string' ? code : null;
   }
 
   private extractApiErrorMessage(error: unknown): string | null {
@@ -1282,6 +1327,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async switchToEditMode(): Promise<void> {
+    if (this.routeLockedByRequest()) {
+      this.showToast('pages.routeBuilder.routeLockedByRequest');
+      return;
+    }
     if (!this.getSelectedRouteId()) {
       return;
     }
@@ -1300,6 +1349,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     this.editBaselineSignature.set(null);
     this.lastSavedAt.set(null);
     this.routeTimestamps.set({ createdAt: null, updatedAt: null, lastOpenedAt: null });
+    this.routeLockedByRequest.set(false);
     await this.router.navigate([], {
       relativeTo: this.activatedRoute,
       queryParams: { routeId: null, mode: 'create' },

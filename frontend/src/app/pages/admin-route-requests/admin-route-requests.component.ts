@@ -14,6 +14,8 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
+import { MatButtonModule } from '@angular/material/button';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CreateQuoteContractRequest, QuoteContractDto, RouteRequestContractDto, RouteRequestsApiService } from '../../core/api';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
 import * as L from 'leaflet';
@@ -21,7 +23,7 @@ import * as L from 'leaflet';
 @Component({
   selector: 'app-admin-route-requests',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule],
+  imports: [CommonModule, TranslateModule, ReactiveFormsModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './admin-route-requests.component.html',
   styleUrl: './admin-route-requests.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -44,6 +46,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly quoteLoadError = signal('');
   readonly isCreatingQuote = signal(false);
   readonly isSendingQuote = signal(false);
+  readonly isCountryBreakdownLoading = signal(false);
   readonly quoteActionError = signal('');
   readonly quoteActionSuccess = signal('');
   readonly selectedRequest = computed(() =>
@@ -152,6 +155,25 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       this.quoteActionError.set('pages.adminRouteRequests.quoteSendFailed');
     } finally {
       this.isSendingQuote.set(false);
+    }
+  }
+
+  async recalculateCountryBreakdown(): Promise<void> {
+    const selected = this.selectedRequest();
+    if (!selected) {
+      return;
+    }
+    this.quoteActionError.set('');
+    this.quoteActionSuccess.set('');
+    this.isCountryBreakdownLoading.set(true);
+    try {
+      const updated = await this.routeRequestsApi.postAdminCountryBreakdown(selected.id);
+      this.requests.update((list) => list.map((item) => (item.id === updated.id ? updated : item)));
+      this.quoteActionSuccess.set('pages.adminRouteRequests.countryBreakdownSuccess');
+    } catch {
+      this.quoteActionError.set('pages.adminRouteRequests.countryBreakdownFailed');
+    } finally {
+      this.isCountryBreakdownLoading.set(false);
     }
   }
 

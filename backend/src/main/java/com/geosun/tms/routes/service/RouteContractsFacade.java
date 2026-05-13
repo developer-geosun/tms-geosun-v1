@@ -1,5 +1,6 @@
 package com.geosun.tms.routes.service;
 
+import com.geosun.tms.routes.dto.RouteListView;
 import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
 import com.geosun.tms.routes.dto.request.SaveRouteRequest;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
@@ -15,7 +16,11 @@ public interface RouteContractsFacade {
 
   RouteSnapshotDto updateMyRoute(String userId, Long routeId, SaveRouteRequest request);
 
-  List<RouteSummaryDto> getMyRoutes(String userId);
+  default List<RouteSummaryDto> getMyRoutes(String userId) {
+    return getMyRoutes(userId, RouteListView.ACTIVE);
+  }
+
+  List<RouteSummaryDto> getMyRoutes(String userId, RouteListView view);
 
   RouteSnapshotDto getMyRouteById(String userId, Long routeId);
 

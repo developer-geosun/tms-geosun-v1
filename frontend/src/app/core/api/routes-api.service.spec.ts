@@ -45,13 +45,23 @@ describe('RoutesApiService', () => {
     await expectAsync(pending).toBeResolvedTo(jasmine.objectContaining({ id: 'route-1' }));
   });
 
-  it('loads my routes via GET /routes/my', async () => {
+  it('loads my routes via GET /routes/my?view=active by default', async () => {
     const pending = service.getMyRoutes();
-    const request = httpMock.expectOne(backendApi.myRoutes);
-    expect(request.request.method).toBe('GET');
+    const request = httpMock.expectOne(
+      (req) => req.url === backendApi.myRoutes && req.method === 'GET' && req.params.get('view') === 'active'
+    );
     request.flush([{ id: 'route-1', title: 'A' }]);
 
     await expectAsync(pending).toBeResolvedTo([jasmine.objectContaining({ id: 'route-1' })]);
+  });
+
+  it('loads deleted routes with view=deleted', async () => {
+    const pending = service.getMyRoutes('deleted');
+    const request = httpMock.expectOne(
+      (req) => req.url === backendApi.myRoutes && req.params.get('view') === 'deleted'
+    );
+    request.flush([]);
+    await expectAsync(pending).toBeResolvedTo([]);
   });
 
   it('encodes routeId for GET /routes/my/{id}', async () => {

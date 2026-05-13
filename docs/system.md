@@ -11,8 +11,8 @@
 - Экраны `/route-builder` (построение и сохранение маршрута), `/routes` (список и открытие сохранённых маршрутов), `/my-freight-requests` (заявки пользователя) и диалог заявки на фрахт работают через backend API.
 - Есть admin-страница очереди заявок `/admin/route-requests`.
 - Backend на Java 21 + Spring Boot 3 с JWT auth, refresh token rotation и RBAC.
-- Backend модуль `routes`: сохранение, чтение списка/деталей, soft delete с ownership-check.
-- Backend модуль `route-requests`: создание заявок, список заявок пользователя, admin очередь.
+- Backend модуль `routes`: сохранение, чтение списка/деталей (в т.ч. `view=active|all|deleted`), soft delete, блокировка `PUT` после заявки, `duplicate`/`restore`.
+- Backend модуль `route-requests`: создание заявок, список заявок пользователя, admin очередь; пробіг по країнах у відповіді заявки — з БД до явного admin `POST .../country-breakdown` (HERE лише там).
 - Backend модуль `quotes`: создание draft, отправка оффера, история офферов и idempotency.
 - Деплой frontend на GitHub Pages через GitHub Actions (`main`/`master`).
 
@@ -37,14 +37,18 @@
 - `POST /api/v1/auth/logout` — завершение текущей refresh-сессии.
 - `GET /api/v1/auth/me` — профиль текущего пользователя.
 - `POST /api/v1/routes` — сохранить маршрут.
-- `GET /api/v1/routes/my` — получить список своих маршрутов.
-- `GET /api/v1/routes/my/{id}` — получить свой маршрут по ID.
-- `DELETE /api/v1/routes/my/{id}` — удалить свой маршрут (soft delete).
+- `GET /api/v1/routes/my?view=active|all|deleted` — список своих маршрутов (по умолчанию `active`).
+- `GET /api/v1/routes/my/{id}` — детали своего маршрута (в т.ч. soft-deleted для restore-потока).
+- `PUT /api/v1/routes/my/{id}` — обновить маршрут; после появления заявки по маршруту — **409** `ROUTE_LOCKED_BY_REQUEST`.
+- `POST /api/v1/routes/my/{id}/duplicate` — копия маршрута без заявок (только не удалённый).
+- `POST /api/v1/routes/my/{id}/restore` — снять soft delete (идемпотентно).
+- `DELETE /api/v1/routes/my/{id}` — soft delete своего маршрута.
 - `POST /api/v1/route-requests` — создать заявку по `routeId`.
 - `GET /api/v1/route-requests/my` — получить список своих заявок.
-- `GET /api/v1/route-requests/my/{id}` — получить свою заявку, включая `currentQuote`.
-- `GET /api/v1/admin/route-requests` — получить очередь заявок (`ADMIN`/`MANAGER`).
-- `GET /api/v1/admin/route-requests/{id}` — получить карточку заявки (`ADMIN`/`MANAGER`).
+- `GET /api/v1/route-requests/my/{id}` — своя заявка с `currentQuote`; `countryDistances` только из БД до явного `POST .../country-breakdown`.
+- `GET /api/v1/admin/route-requests` — очередь заявок (`ADMIN`/`MANAGER`).
+- `GET /api/v1/admin/route-requests/{id}` — карточка заявки (`ADMIN`/`MANAGER`).
+- `POST /api/v1/admin/route-requests/{id}/country-breakdown` — пересчёт пробега по странам (HERE + сохранение в БД), `ADMIN`/`MANAGER`.
 - `POST /api/v1/admin/route-requests/{id}/quotes` — создать draft quote (`ADMIN`).
 - `POST /api/v1/admin/quotes/{id}/send` — отправить quote (`ADMIN`).
 - `GET /api/v1/admin/route-requests/{id}/quotes` — получить историю quote (`ADMIN`/`MANAGER`).

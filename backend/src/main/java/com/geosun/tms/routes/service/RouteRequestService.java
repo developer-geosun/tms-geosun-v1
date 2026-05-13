@@ -108,6 +108,17 @@ public class RouteRequestService {
     return toDto(request, true);
   }
 
+  /** Явний перерахунок пробігу по країнах (HERE) для адмінки; ТЗ §3.3. */
+  @Transactional
+  public RouteRequestDto recalculateCountryBreakdownForAdmin(Long requestId) {
+    RouteRequest request =
+        routeRequestRepository
+            .findById(requestId)
+            .orElseThrow(() -> ApiException.notFound("Route request not found"));
+    countryBreakdownService.getOrCalculate(request.getRoute());
+    return toDto(request, true);
+  }
+
   private RouteRequestDto toDto(RouteRequest request, boolean includeRoutePoints) {
     Long requestId = Objects.requireNonNull(request.getId(), "Route request id must not be null");
     RouteSnapshotDto route =
@@ -115,7 +126,7 @@ public class RouteRequestService {
             ? toRouteSnapshot(request.getRoute())
             : toRouteSummaryAsSnapshot(request.getRoute());
     List<CountryDistanceDto> countryDistances =
-        countryBreakdownService.getOrCalculate(request.getRoute());
+        countryBreakdownService.listStoredOnly(request.getRoute());
     QuoteDto currentQuote = freightQuoteService.getCurrentQuoteForRequest(requestId);
     return new RouteRequestDto(
         request.getId(),
@@ -131,6 +142,7 @@ public class RouteRequestService {
   }
 
   private RouteSnapshotDto toRouteSummaryAsSnapshot(Route route) {
+    boolean locked = routeRequestRepository.existsByRoute_Id(route.getId());
     return new RouteSnapshotDto(
         String.valueOf(route.getId()),
         route.getTitle(),
@@ -142,10 +154,12 @@ public class RouteRequestService {
         route.getRouteComment(),
         route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
         route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
-        List.of());
+        List.of(),
+        locked);
   }
 
   private RouteSnapshotDto toRouteSnapshot(Route route) {
+    boolean locked = routeRequestRepository.existsByRoute_Id(route.getId());
     List<RoutePointDto> points =
         route.getPoints() == null
             ? List.of()
@@ -176,7 +190,8 @@ public class RouteRequestService {
         route.getRouteComment(),
         route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
         route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
-        points);
+        points,
+        locked);
   }
 
   private LocalDate parseDateOrNull(String rawDate) {

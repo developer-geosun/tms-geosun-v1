@@ -117,7 +117,8 @@
         "requestOnlyInViewMode": "Submitting a request is available only in view mode",
         "submitFailed": "Request sending failed",
         "routeSaveFailed": "Failed to save route",
-        "routeLoadFailed": "Failed to load route"
+        "routeLoadFailed": "Failed to load route",
+        "routeLockedByRequest": "The route is locked by a request; saving changes is not allowed"
       },
       "countries": {
         "pl": "Poland",
@@ -141,6 +142,11 @@
       "newRoute": "New route",
       "cancelEdit": "Back to view",
       "routeDeleted": "Route deleted",
+      "duplicateRoute": "Duplicate for editing",
+      "duplicateRouteSuccess": "Route copy created",
+      "duplicateRouteFailed": "Failed to duplicate route",
+      "routeLockedByRequest": "The route is locked after a freight request was created",
+      "freightDisabledLocked": "A request has already been created for this route",
       "showMap": "Map",
       "showSidebar": "Route panel",
       "copyCoordinates": "Copy coordinates",
@@ -207,7 +213,19 @@
       "pointsUnavailable": "Points are unavailable for this route",
       "points": "Route points",
       "editRoute": "Edit",
-      "addNewRoute": "Add new route"
+      "addNewRoute": "Add new route",
+      "listViewLabel": "Show",
+      "listViewActive": "Active",
+      "listViewAll": "All",
+      "listViewDeleted": "Deleted",
+      "emptyDeleted": "No deleted routes",
+      "restoreRoute": "Restore",
+      "restoreSuccess": "Route restored",
+      "restoreFailed": "Failed to restore route",
+      "lockedByRequest": "Has a request — editing is locked",
+      "deletedChip": "Deleted",
+      "editDisabledLocked": "Editing is locked by an existing request",
+      "freightRequestDisabled": "Not available for a deleted or locked route"
     },
     "myFreightRequests": {
       "title": "My freight calculation requests",
@@ -285,7 +303,15 @@
       "quoteCreateFailed": "Failed to create draft quote",
       "quoteSentSuccess": "Quote sent",
       "quoteSendFailed": "Failed to send quote",
-      "quoteHistoryLoadFailed": "Failed to load quote history"
+      "quoteHistoryLoadFailed": "Failed to load quote history",
+      "countryDistances": "Distance by country",
+      "countryDistancesEmpty": "Data will appear after recalculation (HERE)",
+      "countryBreakdownButton": "Recalculate distance by country",
+      "countryBreakdownSuccess": "Country breakdown updated",
+      "countryBreakdownFailed": "Failed to recalculate country breakdown",
+      "countryCode": "Country",
+      "distanceMeters": "Distance, m",
+      "alongRouteOrder": "Order"
     }
   },
   "theme": {

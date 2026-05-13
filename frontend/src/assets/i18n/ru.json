@@ -117,7 +117,8 @@
         "requestOnlyInViewMode": "Отправка запроса доступна только в режиме просмотра",
         "submitFailed": "Не удалось отправить запрос",
         "routeSaveFailed": "Не удалось сохранить маршрут",
-        "routeLoadFailed": "Не удалось загрузить маршрут"
+        "routeLoadFailed": "Не удалось загрузить маршрут",
+        "routeLockedByRequest": "Маршрут заблокирован заявкой; сохранение изменений невозможно"
       },
       "countries": {
         "pl": "Польша",
@@ -141,6 +142,11 @@
       "newRoute": "Новый маршрут",
       "cancelEdit": "К просмотру",
       "routeDeleted": "Маршрут удален",
+      "duplicateRoute": "Дублировать для редактирования",
+      "duplicateRouteSuccess": "Создана копия маршрута",
+      "duplicateRouteFailed": "Не удалось создать копию",
+      "routeLockedByRequest": "Маршрут заблокирован после создания заявки",
+      "freightDisabledLocked": "Заявка для этого маршрута уже создана",
       "showMap": "Карта",
       "showSidebar": "Маршрут",
       "copyCoordinates": "Скопировать координаты",
@@ -207,7 +213,19 @@
       "pointsUnavailable": "Точки недоступны для этого маршрута",
       "points": "Точки маршрута",
       "editRoute": "Редактировать",
-      "addNewRoute": "Новый маршрут"
+      "addNewRoute": "Новый маршрут",
+      "listViewLabel": "Показать",
+      "listViewActive": "Активные",
+      "listViewAll": "Все",
+      "listViewDeleted": "Удалённые",
+      "emptyDeleted": "Удалённых маршрутов нет",
+      "restoreRoute": "Восстановить",
+      "restoreSuccess": "Маршрут восстановлен",
+      "restoreFailed": "Не удалось восстановить маршрут",
+      "lockedByRequest": "Есть заявка — редактирование заблокировано",
+      "deletedChip": "Удалён",
+      "editDisabledLocked": "Редактирование заблокировано заявкой",
+      "freightRequestDisabled": "Недоступно для удалённого или заблокированного маршрута"
     },
     "myFreightRequests": {
       "title": "Мои запросы на расчёт фрахта",
@@ -285,7 +303,15 @@
       "quoteCreateFailed": "Не удалось создать draft предложения",
       "quoteSentSuccess": "Предложение отправлено",
       "quoteSendFailed": "Не удалось отправить предложение",
-      "quoteHistoryLoadFailed": "Не удалось загрузить историю предложений"
+      "quoteHistoryLoadFailed": "Не удалось загрузить историю предложений",
+      "countryDistances": "Пробег по странам",
+      "countryDistancesEmpty": "Данные появятся после пересчёта (HERE)",
+      "countryBreakdownButton": "Пересчитать пробег по странам",
+      "countryBreakdownSuccess": "Пробег по странам обновлён",
+      "countryBreakdownFailed": "Не удалось пересчитать пробег по странам",
+      "countryCode": "Страна",
+      "distanceMeters": "Расстояние, м",
+      "alongRouteOrder": "Порядок"
     }
   },
   "theme": {

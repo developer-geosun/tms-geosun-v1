@@ -1,7 +1,9 @@
 package com.geosun.tms.routes.api;
 
 import com.geosun.tms.auth.config.OpenApiConfig;
+import com.geosun.tms.auth.exception.ApiException;
 import com.geosun.tms.auth.security.UserPrincipal;
+import com.geosun.tms.routes.dto.RouteListView;
 import com.geosun.tms.routes.dto.request.SaveRouteRequest;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
 import com.geosun.tms.routes.dto.response.RouteSummaryDto;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "Routes")
@@ -43,11 +46,34 @@ public class RouteController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  @Operation(summary = "Get my routes")
+  @Operation(summary = "Get my routes (optional view=active|all|deleted)")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping("/my")
-  public List<RouteSummaryDto> getMyRoutes(@AuthenticationPrincipal UserPrincipal principal) {
-    return routeService.getMyRoutes(principal.getUserId());
+  public List<RouteSummaryDto> getMyRoutes(
+      @AuthenticationPrincipal UserPrincipal principal,
+      @RequestParam(required = false) String view) {
+    try {
+      return routeService.getMyRoutes(principal.getUserId(), RouteListView.fromQueryParam(view));
+    } catch (IllegalArgumentException ex) {
+      throw ApiException.badRequest("INVALID_VIEW", ex.getMessage());
+    }
+  }
+
+  @Operation(summary = "Duplicate my route for editing when locked")
+  @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+  @PostMapping("/my/{routeId}/duplicate")
+  public ResponseEntity<RouteSnapshotDto> duplicateMyRoute(
+      @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long routeId) {
+    RouteSnapshotDto body = routeService.duplicateMyRoute(principal.getUserId(), routeId);
+    return ResponseEntity.status(HttpStatus.CREATED).body(body);
+  }
+
+  @Operation(summary = "Restore soft-deleted my route")
+  @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
+  @PostMapping("/my/{routeId}/restore")
+  public RouteSnapshotDto restoreMyRoute(
+      @AuthenticationPrincipal UserPrincipal principal, @PathVariable Long routeId) {
+    return routeService.restoreMyRoute(principal.getUserId(), routeId);
   }
 
   @Operation(summary = "Update my route snapshot")

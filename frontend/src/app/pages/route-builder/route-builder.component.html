@@ -55,7 +55,9 @@
             type="button"
             class="sidebar-view-action"
             (click)="switchToEditMode()"
-            [disabled]="!hasRoute() || isLoadingSavedRoute()"
+            [disabled]="!hasRoute() || isLoadingSavedRoute() || routeLockedByRequest()"
+            [matTooltip]="routeLockedByRequest() ? ('pages.routeBuilder.routeLockedByRequest' | translate) : ''"
+            [matTooltipDisabled]="!routeLockedByRequest()"
             [attr.aria-label]="'pages.routeBuilder.editRoute' | translate"
             [title]="'pages.routeBuilder.editRoute' | translate"
           >
@@ -88,10 +90,31 @@
             color="primary"
             type="button"
             (click)="openFreightRequestDialog()"
-            [disabled]="!hasRoute() || hasOperationsError()"
+            [disabled]="!hasRoute() || hasOperationsError() || routeLockedByRequest()"
+            [matTooltip]="routeLockedByRequest() ? ('pages.routeBuilder.freightDisabledLocked' | translate) : ''"
+            [matTooltipDisabled]="!routeLockedByRequest()"
           >
             {{ 'pages.freightCalculation.openRequest' | translate }}
           </button>
+          @if (routeLockedByRequest()) {
+            <button
+              class="sidebar-login-button sidebar-request-button"
+              mat-stroked-button
+              color="primary"
+              type="button"
+              (click)="duplicateLockedRoute()"
+              [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute() || isDuplicatingRoute()"
+            >
+              @if (isDuplicatingRoute()) {
+                <span class="loading-content">
+                  <mat-spinner diameter="18"></mat-spinner>
+                  <span>{{ 'pages.routeBuilder.duplicateRoute' | translate }}</span>
+                </span>
+              } @else {
+                {{ 'pages.routeBuilder.duplicateRoute' | translate }}
+              }
+            </button>
+          }
         } @else {
           <button
             class="sidebar-login-button"

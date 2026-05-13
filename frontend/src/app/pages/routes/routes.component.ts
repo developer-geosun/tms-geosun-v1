@@ -3,8 +3,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
+import { MatSelectModule } from '@angular/material/select';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
@@ -15,7 +17,16 @@ import { RouteDeleteConfirmDialogComponent, getRouteFreightRequestDialogConfig, 
 @Component({
   selector: 'app-routes',
   standalone: true,
-  imports: [TranslateModule, MatCardModule, MatListModule, MatButtonModule, MatIconModule, MatChipsModule],
+  imports: [
+    TranslateModule,
+    MatCardModule,
+    MatListModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatFormFieldModule,
+    MatSelectModule
+  ],
   templateUrl: './routes.component.html',
   styleUrl: './routes.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -34,9 +45,11 @@ export class RoutesComponent {
   });
 
   readonly routeCards = signal<RouteCardViewModel[]>([]);
+  readonly listView = signal<'active' | 'all' | 'deleted'>('active');
   readonly isLoading = signal(true);
   readonly loadFailed = signal(false);
   readonly deletingRouteId = signal<string | null>(null);
+  readonly restoringRouteId = signal<string | null>(null);
   readonly deleteFailed = signal(false);
   readonly toastMessage = signal('');
 
@@ -70,8 +83,13 @@ export class RoutesComponent {
     await this.router.navigate(['/route-builder'], { queryParams: { mode: 'create' } });
   }
 
+  async onListViewChange(view: 'active' | 'all' | 'deleted'): Promise<void> {
+    this.listView.set(view);
+    await this.loadRouteCards();
+  }
+
   async openFreightRequestDialog(route: RouteCardViewModel): Promise<void> {
-    if (this.deletingRouteId()) {
+    if (this.deletingRouteId() || route.deleted || route.lockedByRequest) {
       return;
     }
     const dialogRef = this.dialog.open(
@@ -96,7 +114,7 @@ export class RoutesComponent {
     routeCreatedAt: string | null | undefined,
     routeDistanceKm: number | null | undefined
   ): Promise<void> {
-    if (this.deletingRouteId()) {
+    if (this.deletingRouteId() || this.restoringRouteId()) {
       return;
     }
 
@@ -116,6 +134,22 @@ export class RoutesComponent {
     }
 
     await this.deleteRoute(routeId);
+  }
+
+  async restoreRoute(routeId: string): Promise<void> {
+    if (this.restoringRouteId() || this.deletingRouteId()) {
+      return;
+    }
+    this.restoringRouteId.set(routeId);
+    try {
+      await this.routesApi.restoreMyRoute(routeId);
+      this.showToast('pages.routes.restoreSuccess');
+      await this.loadRouteCards();
+    } catch {
+      this.showToast('pages.routes.restoreFailed');
+    } finally {
+      this.restoringRouteId.set(null);
+    }
   }
 
   formatPointCoordinates(point: RoutePointContract): string {
@@ -148,7 +182,7 @@ export class RoutesComponent {
     this.loadFailed.set(false);
 
     try {
-      const summaries = await this.routesApi.getMyRoutes();
+      const summaries = await this.routesApi.getMyRoutes(this.listView());
       const cards = await Promise.all(
         summaries.map(async (summary) => {
           try {
@@ -176,6 +210,8 @@ export class RoutesComponent {
       createdAt: summary.createdAt,
       updatedAt: summary.updatedAt,
       lastOpenedAt: summary.lastOpenedAt,
+      lockedByRequest: summary.lockedByRequest ?? false,
+      deleted: summary.deleted ?? false,
       points: [...points].sort((first: RoutePointContract, second: RoutePointContract) => first.order - second.order)
     };
   }
@@ -227,5 +263,7 @@ interface RouteCardViewModel {
   createdAt: string;
   updatedAt: string;
   lastOpenedAt: string | null;
+  lockedByRequest: boolean;
+  deleted: boolean;
   points: RoutePointContract[];
 }

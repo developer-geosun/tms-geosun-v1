@@ -80,6 +80,18 @@ class RouteRequestApiIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value(requestId))
         .andExpect(jsonPath("$.route.points.length()").value(2))
+        .andExpect(jsonPath("$.route.lockedByRequest").value(true))
+        .andExpect(jsonPath("$.countryDistances.length()").value(0));
+
+    User admin = createUser("rq-admin-breakdown@example.com", "Secret123", Role.ADMIN);
+    String adminAccess = login(admin.getEmail(), "Secret123");
+
+    mockMvc
+        .perform(
+            post("/api/v1/admin/route-requests/" + requestId + "/country-breakdown")
+                .header("Authorization", bearer(adminAccess)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(requestId))
         .andExpect(jsonPath("$.countryDistances.length()").value(2))
         .andExpect(jsonPath("$.countryDistances[0].countryCode").value("UA"))
         .andExpect(jsonPath("$.countryDistances[0].alongRouteOrder").value(0))

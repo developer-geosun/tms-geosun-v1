@@ -117,7 +117,8 @@
         "requestOnlyInViewMode": "Надсилання запиту доступне лише в режимі перегляду",
         "submitFailed": "Не вдалося надіслати запит",
         "routeSaveFailed": "Не вдалося зберегти маршрут",
-        "routeLoadFailed": "Не вдалося завантажити маршрут"
+        "routeLoadFailed": "Не вдалося завантажити маршрут",
+        "routeLockedByRequest": "Маршрут заблоковано заявкою; збереження змін неможливе"
       },
       "countries": {
         "pl": "Польща",
@@ -141,6 +142,11 @@
       "newRoute": "Новий маршрут",
       "cancelEdit": "До перегляду",
       "routeDeleted": "Маршрут видалено",
+      "duplicateRoute": "Дублювати для редагування",
+      "duplicateRouteSuccess": "Створено копію маршруту",
+      "duplicateRouteFailed": "Не вдалося створити копію",
+      "routeLockedByRequest": "Маршрут заблоковано після створення заявки",
+      "freightDisabledLocked": "Заявку вже створено для цього маршруту",
       "showMap": "Карта",
       "showSidebar": "Маршрут",
       "copyCoordinates": "Скопіювати координати",
@@ -207,7 +213,19 @@
       "pointsUnavailable": "Точки недоступні для цього маршруту",
       "points": "Точки маршруту",
       "editRoute": "Редагувати",
-      "addNewRoute": "Новий маршрут"
+      "addNewRoute": "Новий маршрут",
+      "listViewLabel": "Показати",
+      "listViewActive": "Активні",
+      "listViewAll": "Усі",
+      "listViewDeleted": "Видалені",
+      "emptyDeleted": "Видалених маршрутів немає",
+      "restoreRoute": "Відновити",
+      "restoreSuccess": "Маршрут відновлено",
+      "restoreFailed": "Не вдалося відновити маршрут",
+      "lockedByRequest": "Є заявка — редагування заблоковано",
+      "deletedChip": "Видалено",
+      "editDisabledLocked": "Редагування заблоковано заявкою",
+      "freightRequestDisabled": "Недоступно для видаленого або заблокованого маршруту"
     },
     "myFreightRequests": {
       "title": "Мої запити на розрахунок фрахту",
@@ -285,7 +303,15 @@
       "quoteCreateFailed": "Не вдалося створити draft пропозиції",
       "quoteSentSuccess": "Пропозицію відправлено",
       "quoteSendFailed": "Не вдалося відправити пропозицію",
-      "quoteHistoryLoadFailed": "Не вдалося завантажити історію пропозицій"
+      "quoteHistoryLoadFailed": "Не вдалося завантажити історію пропозицій",
+      "countryDistances": "Пробіг за країнами",
+      "countryDistancesEmpty": "Дані з’являться після перерахунку (HERE)",
+      "countryBreakdownButton": "Перерахувати пробіг по країнах",
+      "countryBreakdownSuccess": "Пробіг по країнах оновлено",
+      "countryBreakdownFailed": "Не вдалося перерахувати пробіг по країнах",
+      "countryCode": "Країна",
+      "distanceMeters": "Відстань, м",
+      "alongRouteOrder": "Порядок"
     }
   },
   "theme": {

@@ -67,6 +67,15 @@ export class RouteRequestsApiService {
     );
   }
 
+  async postAdminCountryBreakdown(requestId: number): Promise<RouteRequestContractDto> {
+    return firstValueFrom(
+      this.http.post<RouteRequestContractDto>(
+        `${this.backendApi.adminRouteRequests}/${encodeURIComponent(String(requestId))}/country-breakdown`,
+        null
+      )
+    );
+  }
+
   private idempotencyHeaders(idempotencyKey: string): HttpHeaders {
     return new HttpHeaders({ 'Idempotency-Key': idempotencyKey.trim() });
   }

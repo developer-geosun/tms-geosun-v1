@@ -2,8 +2,8 @@
   <header class="admin-route-requests__header">
     <h1>{{ 'pages.adminRouteRequests.title' | translate }}</h1>
     <div class="admin-route-requests__actions">
-      <button type="button" (click)="loadRequests()">{{ 'pages.adminRouteRequests.refresh' | translate }}</button>
-      <button type="button" (click)="backToMain()">{{ 'pages.adminRouteRequests.backToMain' | translate }}</button>
+      <button mat-stroked-button type="button" (click)="loadRequests()">{{ 'pages.adminRouteRequests.refresh' | translate }}</button>
+      <button mat-stroked-button type="button" (click)="backToMain()">{{ 'pages.adminRouteRequests.backToMain' | translate }}</button>
     </div>
   </header>
 
@@ -73,8 +73,10 @@
               <textarea formControlName="internalNote" rows="2"></textarea>
             </label>
             <div class="quote-form__actions">
-              <button type="submit" [disabled]="isCreatingQuote()">{{ 'pages.adminRouteRequests.createDraftQuote' | translate }}</button>
+              <button mat-flat-button color="primary" type="submit" [disabled]="isCreatingQuote()">{{ 'pages.adminRouteRequests.createDraftQuote' | translate }}</button>
               <button
+                mat-flat-button
+                color="primary"
                 type="button"
                 [disabled]="!selectedDraftQuote() || isSendingQuote()"
                 (click)="sendSelectedDraft()">
@@ -120,6 +122,48 @@
             </ol>
           } @else {
             <p>{{ 'pages.adminRouteRequests.noRoutePoints' | translate }}</p>
+          }
+
+          <h3>{{ 'pages.adminRouteRequests.countryDistances' | translate }}</h3>
+          <div class="admin-route-requests__country-actions">
+            <button
+              mat-flat-button
+              color="primary"
+              type="button"
+              (click)="recalculateCountryBreakdown()"
+              [disabled]="isCountryBreakdownLoading()"
+            >
+              @if (isCountryBreakdownLoading()) {
+                <span class="admin-route-requests__btn-loading">
+                  <mat-spinner diameter="20"></mat-spinner>
+                  {{ 'pages.adminRouteRequests.countryBreakdownButton' | translate }}
+                </span>
+              } @else {
+                {{ 'pages.adminRouteRequests.countryBreakdownButton' | translate }}
+              }
+            </button>
+          </div>
+          @if (!selected.countryDistances.length) {
+            <p>{{ 'pages.adminRouteRequests.countryDistancesEmpty' | translate }}</p>
+          } @else {
+            <table class="admin-country-distances">
+              <thead>
+                <tr>
+                  <th>{{ 'pages.adminRouteRequests.countryCode' | translate }}</th>
+                  <th>{{ 'pages.adminRouteRequests.distanceMeters' | translate }}</th>
+                  <th>{{ 'pages.adminRouteRequests.alongRouteOrder' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (row of selected.countryDistances; track row.countryCode + '-' + $index) {
+                  <tr>
+                    <td>{{ row.countryCode }}</td>
+                    <td>{{ row.distanceMeters }}</td>
+                    <td>{{ row.alongRouteOrder ?? '—' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
           }
         }
       </article>

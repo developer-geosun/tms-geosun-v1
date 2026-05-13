@@ -16,4 +16,5 @@ public record RouteSnapshotDto(
     String routeComment,
     String createdAt,
     String updatedAt,
-    List<RoutePointDto> points) {}
+    List<RoutePointDto> points,
+    boolean lockedByRequest) {}

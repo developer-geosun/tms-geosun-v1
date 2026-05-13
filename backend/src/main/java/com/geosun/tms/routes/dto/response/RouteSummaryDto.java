@@ -11,4 +11,6 @@ public record RouteSummaryDto(
     Integer pointsCount,
     String createdAt,
     String updatedAt,
-    String lastOpenedAt) {}
+    String lastOpenedAt,
+    boolean lockedByRequest,
+    boolean deleted) {}

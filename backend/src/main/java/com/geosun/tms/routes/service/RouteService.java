@@ -10,6 +10,7 @@ import com.geosun.tms.routes.domain.RoutePointOperation;
 import com.geosun.tms.routes.domain.RoutePointOperationsRules;
 import com.geosun.tms.routes.domain.RoutePointOperationsRules.RoutePointWithOperations;
 import com.geosun.tms.routes.domain.RoutePointOperationsRules.ValidationError;
+import com.geosun.tms.routes.dto.RouteListView;
 import com.geosun.tms.routes.dto.RoutePointOperationDto;
 import com.geosun.tms.routes.dto.RoutePointType;
 import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
@@ -21,6 +22,7 @@ import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
 import com.geosun.tms.routes.dto.response.RouteSummaryDto;
 import com.geosun.tms.routes.repository.RouteCountryDistanceRepository;
 import com.geosun.tms.routes.repository.RouteRepository;
+import com.geosun.tms.routes.repository.RouteRequestRepository;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -34,19 +36,25 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class RouteService implements RouteContractsFacade {
+  /** Суфікс назви для дубліката маршруту (ТЗ §3.1). */
+  private static final String DUPLICATE_ROUTE_TITLE_SUFFIX = " (копія)";
+
   private final RouteRepository routeRepository;
   private final RouteCountryDistanceRepository routeCountryDistanceRepository;
   private final UserRepository userRepository;
+  private final RouteRequestRepository routeRequestRepository;
   private final RouteRequestService routeRequestService;
 
   public RouteService(
       RouteRepository routeRepository,
       RouteCountryDistanceRepository routeCountryDistanceRepository,
       UserRepository userRepository,
+      RouteRequestRepository routeRequestRepository,
       RouteRequestService routeRequestService) {
     this.routeRepository = routeRepository;
     this.routeCountryDistanceRepository = routeCountryDistanceRepository;
     this.userRepository = userRepository;
+    this.routeRequestRepository = routeRequestRepository;
     this.routeRequestService = routeRequestService;
   }
 
@@ -80,6 +88,45 @@ public class RouteService implements RouteContractsFacade {
     return toSnapshot(saved);
   }
 
+  /** Дублікат маршруту з новим id (ТЗ §3.1); лише не видалений маршрут. */
+  @Transactional
+  public RouteSnapshotDto duplicateMyRoute(String userId, Long routeId) {
+    Route source =
+        routeRepository
+            .findByIdAndUserIdWithPoints(routeId, userId)
+            .orElseThrow(() -> ApiException.notFound("Route not found"));
+    Route copy = new Route();
+    copy.setUser(source.getUser());
+    copy.setTitle(source.getTitle() + DUPLICATE_ROUTE_TITLE_SUFFIX);
+    copy.setRoutingProfile(source.getRoutingProfile());
+    copy.setRoutingMode(source.getRoutingMode());
+    copy.setRoutePolyline(source.getRoutePolyline());
+    copy.setDistanceKm(source.getDistanceKm());
+    copy.setDurationMin(source.getDurationMin());
+    copy.setRouteComment(source.getRouteComment());
+    copy.setDeleted(false);
+    copy.setDeletedAt(null);
+    copy.setPoints(copyRoutePointsFrom(source, copy));
+    Route saved = routeRepository.save(copy);
+    return toSnapshot(saved);
+  }
+
+  /** Скасування soft delete (ТЗ §5.2.1); ідемпотентність якщо вже активний. */
+  @Transactional
+  public RouteSnapshotDto restoreMyRoute(String userId, Long routeId) {
+    Route route =
+        routeRepository
+            .findByIdAndUserIdWithPointsIncludingDeleted(routeId, userId)
+            .orElseThrow(() -> ApiException.notFound("Route not found"));
+    if (!route.isDeleted()) {
+      return toSnapshot(route);
+    }
+    route.setDeleted(false);
+    route.setDeletedAt(null);
+    routeRepository.save(route);
+    return toSnapshot(route);
+  }
+
   @Override
   @Transactional
   public RouteSnapshotDto updateMyRoute(String userId, Long routeId, SaveRouteRequest request) {
@@ -89,6 +136,11 @@ public class RouteService implements RouteContractsFacade {
         routeRepository
             .findByIdAndUserIdWithPoints(routeId, safeUserId)
             .orElseThrow(() -> ApiException.notFound("Route not found"));
+    if (routeRequestRepository.existsByRoute_Id(routeId)) {
+      throw ApiException.conflict(
+          "ROUTE_LOCKED_BY_REQUEST",
+          "Route cannot be edited after a freight request exists; duplicate the route to edit.");
+    }
 
     route.setTitle(request.title());
     route.setRoutingProfile(request.routingProfile());
@@ -119,22 +171,26 @@ public class RouteService implements RouteContractsFacade {
 
   @Override
   @Transactional(readOnly = true)
-  public List<RouteSummaryDto> getMyRoutes(String userId) {
-    return routeRepository.findByUserIdAndDeletedFalseOrderByUpdatedAtDesc(userId).stream()
-        .map(this::toSummary)
-        .toList();
+  public List<RouteSummaryDto> getMyRoutes(String userId, RouteListView view) {
+    List<Route> routes =
+        switch (view) {
+          case ACTIVE -> routeRepository.findByUserIdAndDeletedFalseOrderByUpdatedAtDesc(userId);
+          case DELETED -> routeRepository.findByUserIdAndDeletedTrueOrderByUpdatedAtDesc(userId);
+          case ALL -> routeRepository.findByUserIdOrderByUpdatedAtDesc(userId);
+        };
+    return routes.stream().map(this::toSummary).toList();
   }
 
   @Override
   @Transactional
   public RouteSnapshotDto getMyRouteById(String userId, Long routeId) {
-    // Оновлення last_opened_at окремим UPDATE: інакше Hibernate оновлює updated_at через
-    // @UpdateTimestamp на сутності Route при будь-якій зміні полів (наприклад лише перегляд).
-    routeRepository.updateLastOpenedAt(routeId, userId, Instant.now());
     Route route =
         routeRepository
-            .findByIdAndUserIdWithPoints(routeId, userId)
+            .findByIdAndUserIdWithPointsIncludingDeleted(routeId, userId)
             .orElseThrow(() -> ApiException.notFound("Route not found"));
+    if (!route.isDeleted()) {
+      routeRepository.updateLastOpenedAt(routeId, userId, Instant.now());
+    }
     return toSnapshot(route);
   }
 
@@ -156,6 +212,32 @@ public class RouteService implements RouteContractsFacade {
   @Override
   public List<RouteRequestDto> getMyRouteRequests(String userId) {
     return routeRequestService.getMyRouteRequests(userId);
+  }
+
+  private static List<RoutePoint> copyRoutePointsFrom(Route source, Route target) {
+    if (source.getPoints() == null || source.getPoints().isEmpty()) {
+      return new ArrayList<>();
+    }
+    List<RoutePoint> copies = new ArrayList<>();
+    for (RoutePoint p :
+        source.getPoints().stream()
+            .sorted(Comparator.comparing(RoutePoint::getPointOrder))
+            .toList()) {
+      RoutePoint c = new RoutePoint();
+      c.setRoute(target);
+      c.setPointOrder(p.getPointOrder());
+      c.setPointType(p.getPointType());
+      c.setOperations(
+          p.getOperations() == null ? new ArrayList<>() : new ArrayList<>(p.getOperations()));
+      c.setAddress(p.getAddress());
+      c.setLat(p.getLat());
+      c.setLng(p.getLng());
+      c.setCountry(p.getCountry());
+      c.setBorder(p.isBorder());
+      c.setSegmentDistanceKmToNext(p.getSegmentDistanceKmToNext());
+      copies.add(c);
+    }
+    return copies;
   }
 
   private static RoutePoint toEntityPoint(Route route, RoutePointRequest request) {
@@ -213,7 +295,9 @@ public class RouteService implements RouteContractsFacade {
         route.getPoints() == null ? 0 : route.getPoints().size(),
         createdAt,
         route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
-        route.getLastOpenedAt() == null ? null : route.getLastOpenedAt().toString());
+        route.getLastOpenedAt() == null ? null : route.getLastOpenedAt().toString(),
+        routeRequestRepository.existsByRoute_Id(route.getId()),
+        route.isDeleted());
   }
 
   private RouteSnapshotDto toSnapshot(Route route) {
@@ -236,7 +320,8 @@ public class RouteService implements RouteContractsFacade {
         route.getRouteComment(),
         route.getCreatedAt() == null ? null : route.getCreatedAt().toString(),
         route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
-        points);
+        points,
+        routeRequestRepository.existsByRoute_Id(route.getId()));
   }
 
   private RoutePointDto toPointDto(RoutePoint point) {

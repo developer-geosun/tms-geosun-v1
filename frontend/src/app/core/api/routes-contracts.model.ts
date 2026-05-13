@@ -45,6 +45,8 @@ export interface RouteSummaryContractDto {
   createdAt: string;
   updatedAt: string;
   lastOpenedAt: string | null;
+  lockedByRequest: boolean;
+  deleted: boolean;
 }
 
 export interface RouteSnapshotContractDto {
@@ -59,5 +61,6 @@ export interface RouteSnapshotContractDto {
   createdAt: string;
   updatedAt: string;
   points: RoutePointContract[];
+  lockedByRequest?: boolean;
 }
 

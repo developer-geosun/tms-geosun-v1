@@ -43,6 +43,14 @@ public class CountryBreakdownService {
     this.meterRegistry = meterRegistry;
   }
 
+  @Transactional(readOnly = true)
+  public List<CountryDistanceDto> listStoredOnly(Route route) {
+    List<RouteCountryDistance> existing =
+        routeCountryDistanceRepository.findByRouteIdOrderByAlongRouteOrderAscCountryCodeAsc(
+            route.getId());
+    return toDto(existing);
+  }
+
   @Transactional
   public List<CountryDistanceDto> getOrCalculate(Route route) {
     List<RouteCountryDistance> existing =

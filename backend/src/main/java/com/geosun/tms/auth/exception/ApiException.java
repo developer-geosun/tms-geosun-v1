@@ -38,6 +38,11 @@ public class ApiException extends RuntimeException {
     return new ApiException(409, "CONFLICT", message);
   }
 
+  /** Конфлікт з явним {@code code} для клієнта (наприклад ROUTE_LOCKED_BY_REQUEST). */
+  public static ApiException conflict(String code, String message) {
+    return new ApiException(409, code, message);
+  }
+
   public static ApiException tooManyRequests(String message) {
     return new ApiException(429, "RATE_LIMIT_EXCEEDED", message);
   }

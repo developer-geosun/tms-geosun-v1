@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.lang.NonNull;
 
 public interface RouteRequestRepository extends JpaRepository<RouteRequest, Long> {
+  boolean existsByRoute_Id(Long routeId);
+
   @EntityGraph(attributePaths = {"route"})
   List<RouteRequest> findByUserIdOrderByCreatedAtDesc(String userId);
 

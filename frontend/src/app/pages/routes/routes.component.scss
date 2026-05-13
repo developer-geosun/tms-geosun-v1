@@ -15,6 +15,22 @@
   margin-bottom: 1rem;
 }
 
+.routes-page__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.routes-page__view-field {
+  width: min(220px, 55vw);
+  margin: 0;
+}
+
+.route-card__status-chips {
+  margin-top: 0.25rem;
+}
+
 .routes-page__title {
   margin: 0;
   font-size: 1.5rem;
@@ -204,6 +220,13 @@
   --mdc-fab-small-foreground-color: var(--mat-sys-on-error);
   background-color: var(--mat-sys-error) !important;
   color: var(--mat-sys-on-error) !important;
+}
+
+.route-card__restore-action {
+  --mdc-fab-small-container-color: var(--mat-sys-primary);
+  --mdc-fab-small-foreground-color: var(--mat-sys-on-primary);
+  background-color: var(--mat-sys-primary) !important;
+  color: var(--mat-sys-on-primary) !important;
 }
 
 .route-card__meta {

@@ -350,6 +350,140 @@ class RouteApiIntegrationTest {
         .andExpect(jsonPath("$.points[0].operations.length()").value(3));
   }
 
+  @Test
+  void putMyRoute_afterRouteRequest_returns409() throws Exception {
+    User user = createUser("routes-lock@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+    String body = toJson(routePayload("Lock me"));
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(jsonMediaType())
+                    .content(body))
+            .andExpect(status().isCreated())
+            .andReturn();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+
+    Map<String, Object> rq = new HashMap<>();
+    rq.put("routeId", routeId);
+    rq.put("preferredStartDate", "");
+    rq.put("comment", "");
+    rq.put("cargo", null);
+    mockMvc
+        .perform(
+            post("/api/v1/route-requests")
+                .header("Authorization", bearer(access))
+                .contentType(jsonMediaType())
+                .content(toJson(rq)))
+        .andExpect(status().isCreated());
+
+    mockMvc
+        .perform(
+            put("/api/v1/routes/my/" + routeId)
+                .header("Authorization", bearer(access))
+                .contentType(jsonMediaType())
+                .content(body))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.code").value("ROUTE_LOCKED_BY_REQUEST"));
+  }
+
+  @Test
+  void duplicateMyRoute_returns201WithNewId() throws Exception {
+    User user = createUser("routes-dup@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+    String body = toJson(routePayload("Original"));
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(jsonMediaType())
+                    .content(body))
+            .andExpect(status().isCreated())
+            .andReturn();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+
+    MvcResult dupResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes/my/" + routeId + "/duplicate")
+                    .header("Authorization", bearer(access)))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.title").value("Original (копія)"))
+            .andReturn();
+    String newId =
+        objectMapper.readTree(dupResult.getResponse().getContentAsString()).get("id").asText();
+    assertThat(newId).isNotEqualTo(routeId);
+    mockMvc
+        .perform(get("/api/v1/routes/my/" + newId).header("Authorization", bearer(access)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.lockedByRequest").value(false));
+  }
+
+  @Test
+  void getMyRoutes_viewDeletedAndRestore() throws Exception {
+    User user = createUser("routes-view-del@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+    MvcResult saveResult =
+        mockMvc
+            .perform(
+                post("/api/v1/routes")
+                    .header("Authorization", bearer(access))
+                    .contentType(jsonMediaType())
+                    .content(toJson(routePayload("To delete"))))
+            .andExpect(status().isCreated())
+            .andReturn();
+    String routeId =
+        objectMapper.readTree(saveResult.getResponse().getContentAsString()).get("id").asText();
+
+    mockMvc
+        .perform(delete("/api/v1/routes/my/" + routeId).header("Authorization", bearer(access)))
+        .andExpect(status().isNoContent());
+
+    mockMvc
+        .perform(get("/api/v1/routes/my").header("Authorization", bearer(access)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(0));
+
+    mockMvc
+        .perform(get("/api/v1/routes/my?view=deleted").header("Authorization", bearer(access)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1))
+        .andExpect(jsonPath("$[0].id").value(routeId));
+
+    mockMvc
+        .perform(
+            post("/api/v1/routes/my/" + routeId + "/restore")
+                .header("Authorization", bearer(access)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(routeId));
+
+    mockMvc
+        .perform(
+            post("/api/v1/routes/my/" + routeId + "/restore")
+                .header("Authorization", bearer(access)))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(get("/api/v1/routes/my").header("Authorization", bearer(access)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.length()").value(1));
+  }
+
+  @Test
+  void getMyRoutes_invalidView_returns400() throws Exception {
+    User user = createUser("routes-bad-view@example.com", "Secret123");
+    String access = login(user.getEmail(), "Secret123");
+    mockMvc
+        .perform(get("/api/v1/routes/my?view=trash").header("Authorization", bearer(access)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("INVALID_VIEW"));
+  }
+
   private User createUser(String email, String password) {
     User user = new User();
     user.setEmail(email);
