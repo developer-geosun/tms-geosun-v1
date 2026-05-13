@@ -111,9 +111,10 @@ public class RouteRequestService {
   /** Явний перерахунок пробігу по країнах (HERE) для адмінки; ТЗ §3.3. */
   @Transactional
   public RouteRequestDto recalculateCountryBreakdownForAdmin(Long requestId) {
+    Long nonNullRequestId = Objects.requireNonNull(requestId, "requestId must not be null");
     RouteRequest request =
         routeRequestRepository
-            .findById(requestId)
+            .findById(nonNullRequestId)
             .orElseThrow(() -> ApiException.notFound("Route request not found"));
     countryBreakdownService.getOrCalculate(request.getRoute());
     return toDto(request, true);
