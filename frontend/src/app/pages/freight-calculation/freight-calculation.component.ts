@@ -689,7 +689,7 @@ export class FreightCalculationComponent implements AfterViewInit, OnDestroy {
 
   private parseSavedPolyline(routePolyline: string): L.LatLng[] {
     try {
-      const parsed = JSON.parse(routePolyline) as Array<[number, number]>;
+      const parsed = JSON.parse(routePolyline) as [number, number][];
       if (!Array.isArray(parsed)) {
         return [];
       }
@@ -730,6 +730,6 @@ interface OsrmResponse {
 }
 
 interface OsrmRoute {
-  legs: Array<{ distance: number }>;
+  legs: { distance: number }[];
   geometry: { coordinates: [number, number][] };
 }

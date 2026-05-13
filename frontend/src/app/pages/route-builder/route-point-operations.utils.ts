@@ -42,7 +42,7 @@ export interface ValidationPoint {
   operations: RoutePointOperation[];
 }
 
-const ALLOWED_NON_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
+const ALLOWED_NON_BORDER: readonly (readonly RoutePointOperation[])[] = [
   [],
   ['LOADING'],
   ['EXPORT_CUSTOMS'],
@@ -55,7 +55,7 @@ const ALLOWED_NON_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
   ['LOADING', 'EXPORT_CUSTOMS', 'UNLOADING']
 ];
 
-const ALLOWED_BORDER: ReadonlyArray<ReadonlyArray<RoutePointOperation>> = [
+const ALLOWED_BORDER: readonly (readonly RoutePointOperation[])[] = [
   [],
   ['EXPORT_CUSTOMS'],
   ['IMPORT_CUSTOMS'],

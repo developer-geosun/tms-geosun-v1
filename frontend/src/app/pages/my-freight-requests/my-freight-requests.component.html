@@ -75,7 +75,7 @@
                   <dt>{{ 'pages.myFreightRequests.quoteAmount' | translate }}</dt>
                   <dd>{{ quote.totalAmount }} {{ quote.currency }}</dd>
                 </div>
-                @if (quote.transitDaysMin != null || quote.transitDaysMax != null) {
+                @if (quote.transitDaysMin !== null || quote.transitDaysMax !== null) {
                   <div class="freight-request-card__meta-row">
                     <dt>{{ 'pages.myFreightRequests.quoteTransit' | translate }}</dt>
                     <dd>

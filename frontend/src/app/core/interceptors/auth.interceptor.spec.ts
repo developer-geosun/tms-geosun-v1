@@ -1,4 +1,4 @@
-import { HTTP_INTERCEPTORS, HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
@@ -53,7 +53,7 @@ describe('authInterceptor', () => {
       throwError(() => new HttpErrorResponse({ status: 401, statusText: 'Unauthorized' }));
 
     http.get('/secure').subscribe({
-      error: () => {}
+      error: () => undefined
     });
     const request = httpMock.expectOne('/secure');
     request.flush({}, { status: 401, statusText: 'Unauthorized' });

@@ -210,14 +210,13 @@ export class RoutesComponent {
     document.body.appendChild(textarea);
     textarea.select();
     textarea.setSelectionRange(0, textarea.value.length);
-    let copied = false;
     try {
-      copied = document.execCommand('copy');
+      return document.execCommand('copy');
     } catch {
-      copied = false;
+      return false;
+    } finally {
+      document.body.removeChild(textarea);
     }
-    document.body.removeChild(textarea);
-    return copied;
   }
 }
 

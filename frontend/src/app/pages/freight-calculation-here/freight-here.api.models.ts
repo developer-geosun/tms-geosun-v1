@@ -31,10 +31,10 @@ export interface HereRouteResponse {
 }
 
 export interface HereRoute {
-  sections: Array<{
+  sections: {
     polyline: string;
     summary: {
       length: number;
     };
-  }>;
+  }[];
 }

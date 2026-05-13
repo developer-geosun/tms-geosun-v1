@@ -67,6 +67,21 @@ npm run watch
 npm test
 ```
 
+| ESLint | ESLint |
+| :-- | :-- |
+| Перевірка стилю та правил для `*.ts` / `*.html` у `src/` (конфіг `eslint.config.js`, ціль `ng lint`). | Lint TypeScript and templates under `src/` (`eslint.config.js`, `ng lint` target). |
+
+```powershell
+npm run lint
+```
+
+| ESLint (автофікс) | ESLint (autofix) |
+| :-- | :-- |
+
+```powershell
+npm run lint:fix
+```
+
 | Публикация | Deploy (GitHub Pages) |
 | :-- | :-- |
 | Сборка с `--base-href=/tms-geosun/` и выкладка содержимого `dist/tms-geosun` через **gh-pages** (нужны права на репозиторий и настроенный `git remote`). | Production build with `--base-href=/tms-geosun/` and publish `dist/tms-geosun` via **gh-pages** (requires repo permissions and a configured `git remote`). |

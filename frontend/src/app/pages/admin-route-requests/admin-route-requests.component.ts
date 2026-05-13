@@ -235,9 +235,9 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private parseRoutePolyline(routePolyline: string, points: Array<{ lat: number; lng: number }>): L.LatLng[] {
+  private parseRoutePolyline(routePolyline: string, points: { lat: number; lng: number }[]): L.LatLng[] {
     try {
-      const parsed = JSON.parse(routePolyline) as Array<[number, number]>;
+      const parsed = JSON.parse(routePolyline) as [number, number][];
       if (Array.isArray(parsed)) {
         return parsed
           .filter((item) => Array.isArray(item) && item.length === 2)

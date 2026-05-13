@@ -104,7 +104,13 @@
 </mat-menu>
 
 <mat-menu #settingsMenu="matMenu" class="settings-menu" panelClass="settings-menu-panel">
-  <div class="settings-menu-content" (click)="$event.stopPropagation()">
+  <div
+    class="settings-menu-content"
+    tabindex="0"
+    (click)="$event.stopPropagation()"
+    (keydown.enter)="$event.stopPropagation()"
+    (keydown.space)="$event.preventDefault(); $event.stopPropagation()"
+  >
     <div class="settings-menu-section-title">{{ getLanguageSectionTitle() }}</div>
     <mat-button-toggle-group
       [value]="currentLanguage()"

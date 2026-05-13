@@ -68,7 +68,7 @@ describe('AuthService', () => {
     });
 
     service.refreshAccessToken().subscribe({
-      error: () => {}
+      error: () => undefined
     });
     httpMock.expectOne('http://localhost:8080/api/v1/auth/refresh').flush({ message: 'invalid' }, { status: 401, statusText: 'Unauthorized' });
 

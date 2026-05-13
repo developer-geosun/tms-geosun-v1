@@ -17,9 +17,9 @@ import { SocialNetworkType } from '../../models/social-network.model';
 })
 export class SocialIconComponent {
   @Input() type: SocialNetworkType = 'telegram';
-  @Input() url: string = '';
-  @Input() title: string = '';
-  @Input() backgroundColor: string = '';
+  @Input() url = '';
+  @Input() title = '';
+  @Input() backgroundColor = '';
 
   /**
    * Отримує  SVG path для іконки залежно від типу

@@ -44,7 +44,16 @@
 
     <div class="points-list">
       @for (point of waypoints(); track $index; let segmentIndex = $index) {
-        <div class="point-row" [class.border]="point.isBorder" [class.selected]="$index === selectedWaypointIndex()" (click)="selectWaypoint($index)">
+        <div
+          class="point-row"
+          role="button"
+          tabindex="0"
+          [class.border]="point.isBorder"
+          [class.selected]="$index === selectedWaypointIndex()"
+          (click)="selectWaypoint($index)"
+          (keydown.enter)="selectWaypoint($index)"
+          (keydown.space)="$event.preventDefault(); selectWaypoint($index)"
+        >
           <div
             class="point-order"
             [class.point-order--regular]="!point.isBorder"

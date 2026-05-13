@@ -46,9 +46,9 @@ describe('RouteRequestsApiService', () => {
   });
 
   it('sends idempotency key header for createAdminQuote', async () => {
-    const pending = service.createAdminQuote('req/1', {} as never, ' key-1 ');
+    const pending = service.createAdminQuote(1, {} as never, ' key-1 ');
 
-    const request = httpMock.expectOne(`${backendApi.adminRouteRequests}/req%2F1/quotes`);
+    const request = httpMock.expectOne(`${backendApi.adminRouteRequests}/1/quotes`);
     expect(request.request.method).toBe('POST');
     expect(request.request.headers.get('Idempotency-Key')).toBe('key-1');
     request.flush({ id: 'q1' });

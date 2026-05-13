@@ -365,10 +365,9 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
       return;
     }
     this.isSavingRoute.set(true);
-    let snapshotPayload: ReturnType<RouteBuilderComponent['createRouteSnapshotRequest']> | null = null;
     try {
       const selectedRouteId = this.getSelectedRouteId();
-      snapshotPayload = this.createRouteSnapshotRequest();
+      const snapshotPayload = this.createRouteSnapshotRequest();
       const snapshot = selectedRouteId && this.isEditMode()
         ? await this.routesApi.updateMyRoute(selectedRouteId, snapshotPayload)
         : await firstValueFrom(this.http.post<RouteSnapshotContractDto>(this.backendApi.routes, snapshotPayload));
@@ -387,7 +386,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
         queryParamsHandling: 'merge'
       });
     } catch (error) {
-      const routeOpsError = this.extractRouteOperationsErrorFromApi(error, snapshotPayload);
+      const routeOpsError = this.extractRouteOperationsErrorFromApi(error);
       if (routeOpsError) {
         this.showToast(routeOpsError.key, routeOpsError.params);
       } else {
@@ -1127,7 +1126,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
 
   private parseSavedPolyline(routePolyline: string): L.LatLng[] {
     try {
-      const parsed = JSON.parse(routePolyline) as Array<[number, number]>;
+      const parsed = JSON.parse(routePolyline) as [number, number][];
       if (!Array.isArray(parsed)) {
         return [];
       }
@@ -1191,10 +1190,10 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     return null;
   }
 
-  private extractRouteOperationsErrorFromApi(
-    error: unknown,
-    snapshotPayload: ReturnType<RouteBuilderComponent['createRouteSnapshotRequest']> | null = null
-  ): { key: string; params: Record<string, unknown> } | null {
+  private extractRouteOperationsErrorFromApi(error: unknown): {
+    key: string;
+    params: Record<string, unknown>;
+  } | null {
     if (!(error instanceof HttpErrorResponse)) {
       return null;
     }
@@ -1272,14 +1271,13 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     document.body.appendChild(textarea);
     textarea.select();
     textarea.setSelectionRange(0, textarea.value.length);
-    let copied = false;
     try {
-      copied = document.execCommand('copy');
+      return document.execCommand('copy');
     } catch {
-      copied = false;
+      return false;
+    } finally {
+      document.body.removeChild(textarea);
     }
-    document.body.removeChild(textarea);
-    return copied;
   }
 
   async switchToEditMode(): Promise<void> {
@@ -1476,7 +1474,7 @@ interface OsrmResponse {
 }
 
 interface OsrmRoute {
-  legs: Array<{ distance: number }>;
+  legs: { distance: number }[];
   geometry: { coordinates: [number, number][] };
 }
 

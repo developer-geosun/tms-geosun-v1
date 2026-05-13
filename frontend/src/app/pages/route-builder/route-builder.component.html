@@ -199,10 +199,14 @@
         <div
           #pointRowRef
           class="point-row"
+          role="button"
+          tabindex="0"
           [class.border]="point.isBorder"
           [class.selected]="pointIndex === selectedWaypointIndex()"
           [class.point-row--disabled]="!isPointCardInteractive()"
           (click)="selectWaypoint(pointIndex)"
+          (keydown.enter)="selectWaypoint(pointIndex)"
+          (keydown.space)="$event.preventDefault(); selectWaypoint(pointIndex)"
         >
           <div
             class="point-order"
@@ -230,7 +234,13 @@
                 {{ formatPointCoordinates(point) }}
               </mat-chip>
             </mat-chip-set>
-            <div class="point-operations-block" (click)="$event.stopPropagation()">
+            <div
+              class="point-operations-block"
+              tabindex="0"
+              (click)="$event.stopPropagation()"
+              (keydown.enter)="$event.stopPropagation()"
+              (keydown.space)="$event.preventDefault(); $event.stopPropagation()"
+            >
               @if (isViewMode()) {
                 <mat-chip-set class="point-operations-chips" aria-label="Point operations">
                   @for (op of getPointOperations(pointIndex); track op) {

@@ -95,8 +95,6 @@ export class ToolbarComponent {
     { code: 'cyan-orange', label: 'Cyan & Orange' }
   ];
 
-  constructor() {}
-
   /**
    * Змінює тему інтерфейсу
    */
