@@ -94,9 +94,7 @@ public class HereRoutingClient {
           }
           long length = readSpanLengthMeters(span);
           Long durationSeconds = readSpanDurationSecondsNullable(span);
-          rows.add(
-              new CountryBreakdownRow(
-                  countryCode.toUpperCase(), length, durationSeconds));
+          rows.add(new CountryBreakdownRow(countryCode.toUpperCase(), length, durationSeconds));
         }
       }
       return rows;
