@@ -397,7 +397,8 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async goToRoutesHistory(): Promise<void> {
+  /** Перехід на список збережених маршрутів (`/routes`). */
+  async goToRoutesList(): Promise<void> {
     await this.router.navigate(['/routes']);
   }
 
