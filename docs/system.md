@@ -8,8 +8,8 @@
 ## Что уже умеет система
 
 - Frontend на Angular 21 с маршрутизацией, i18n и auth-слоем (`AuthService`, `AuthGuard`, `AuthInterceptor`, login-page).
-- Активная страница `freight-calculation` сохраняет маршрут и создает заявку через backend.
-- Есть user-страница истории маршрутов и admin-страница очереди заявок.
+- Экраны `/route-builder` (построение и сохранение маршрута), `/routes` (список и открытие сохранённых маршрутов), `/my-freight-requests` (заявки пользователя) и диалог заявки на фрахт работают через backend API.
+- Есть admin-страница очереди заявок `/admin/route-requests`.
 - Backend на Java 21 + Spring Boot 3 с JWT auth, refresh token rotation и RBAC.
 - Backend модуль `routes`: сохранение, чтение списка/деталей, soft delete с ownership-check.
 - Backend модуль `route-requests`: создание заявок, список заявок пользователя, admin очередь.

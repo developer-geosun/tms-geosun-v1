@@ -32,18 +32,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/stop-service/stop-service.component').then((m) => m.StopServiceComponent)
   },
   {
-    path: 'freight-calculation',
-    redirectTo: '/404'
-  },
-  {
     path: 'route-builder',
     canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
     data: { roles: ['user'] },
     loadComponent: () => import('./pages/route-builder/route-builder.component').then((m) => m.RouteBuilderComponent)
-  },
-  {
-    path: 'routes-history',
-    redirectTo: '/404'
   },
   {
     path: 'routes',
@@ -66,10 +58,6 @@ export const routes: Routes = [
       import('./pages/admin-route-requests/admin-route-requests.component').then(
         (m) => m.AdminRouteRequestsComponent
       )
-  },
-  {
-    path: 'freight-calculation-here',
-    redirectTo: '/404'
   },
   {
     path: '404',

@@ -14,8 +14,7 @@
 
 ## Frontend
 
-- `freight-calculation` переведен на backend flow для заявок на фрахт.
-- Добавлена страница `routes-history` для повторного открытия сохраненного маршрута.
+- Исторически: `freight-calculation` и `routes-history` переводили flow на backend; в текущей кодовой базе эти SPA-страницы удалены — актуальные маршруты: `/route-builder`, `/routes`, заявки: `/my-freight-requests`.
 - Добавлена admin-страница `admin/route-requests` для обработки заявок и quote workflow.
 - Контракты backend API вынесены в typed-модели и сервисы (`routes`, `route-requests`, `quotes`).
 

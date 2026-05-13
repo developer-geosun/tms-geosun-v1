@@ -12,11 +12,12 @@
 
 ## 2) Context / Контекст
 - **Project/module / Проект/модуль:** `backend` (Java 21, Spring Boot 3), интеграция с `frontend` (Angular 21).
-- **Current behavior / Текущее поведение:** Целевой серверный workflow маршрутов и `quote` в основном домене отсутствует; legacy-страница `freight-calculation-here` не используется в актуальном продукте.
-- **Frontend integration baseline / Базовая интеграция frontend:** При проектировании и реализации учитывать уже используемую страницу `freight-calculation` как основной клиентский экран маршрутного сценария.
+- **Current behavior / Текущее поведение:** Целевой серверный workflow маршрутов и `quote` в основном домене отсутствует; standalone SPA-страницы `freight-calculation`, `freight-calculation-here` и `routes-history` удалены из кодовой базы и не являются источником требований.
+- **Frontend integration baseline / Базовая интеграция frontend:** При проектировании и реализации учитывать актуальные экраны: `/route-builder` (построение и сохранение маршрута), `/routes` (история и открытие маршрута), `/my-freight-requests` (заявки пользователя), диалог заявки на фрахт из конструктора/списка, `/admin/route-requests` (очередь и quote для admin/manager).
 - **Related docs / Связанные документы:**
   - `docs/specs/auth-authentication-authorization.md` (**основной источник истины по auth и ролям**).
   - `docs/specs/route-point-operations-rules.md` (**canonical source для правил операций точек маршрута**).
+  - `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md` (**блокировка маршрута после заявки, фильтры списка по soft delete, отложенный country breakdown**).
   - `docs/system.md`.
   - `backend/TECHNICAL_SPECIFICATION_API_SERVER_v1.0.md`.
 - **Environment constraints / Ограничения окружения:**
@@ -31,16 +32,16 @@
 - Отправка пользователем запроса на расчет фрахта по сохраненному маршруту.
 - Админский просмотр входящих запросов и маршрутов.
 - Формирование и отправка админом предложения по фрахту (`quote`) с версионностью.
-- Расчет протяженности маршрута по странам на backend.
+- Расчет протяженности маршрута по странам на backend **по явному шагу** в админском/менеджерском контуре (см. `freight-cost-scenario-nbu-pricing.md` и `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md`); **не** при создании пользовательской заявки `POST /api/v1/route-requests`.
 - Ролевой доступ к API (user/admin/manager) в соответствии с auth-спецификацией.
-- Проектирование API-контрактов и переходного интеграционного слоя с учетом текущей логики страницы `freight-calculation`.
+- Проектирование API-контрактов и переходного интеграционного слоя с учётом актуальных user-экранов (`/route-builder`, `/routes`, `/my-freight-requests`) и админского `/admin/route-requests`.
 
 ## 4) Out of Scope / Out of Scope (не входит)
 - Публичная регистрация и изменения auth-механизма (все правила берутся из auth-спецификации).
 - Онлайн-оплата фрахта и бухгалтерские документы.
 - Полноценный workflow тендеров/аукционов между несколькими перевозчиками.
 - Оптимизация маршрутов между альтернативными вариантами в UI (v2+).
-- Любые доработки legacy-экрана `freight-calculation-here` (экран исключен из MVP и не является источником требований для backend).
+- Любые доработки удалённых standalone-экранов `freight-calculation`, `freight-calculation-here`, `routes-history` (не входят в MVP и не являются источником требований для backend).
 
 ## 5) User Stories / Пользовательские сценарии
 1. **As a / Как** user, **I want / я хочу** сохранить построенный маршрут, **so that / чтобы** позже открыть его без повторного построения.
@@ -55,8 +56,8 @@
 4. Пользователь может создать `route request` на фрахт по сохраненному маршруту.
 5. Admin может просматривать все `route requests`, фильтровать по статусам и открывать детали.
 6. Admin может создавать и отправлять `quote`; система хранит историю версий предложений.
-7. Backend рассчитывает и сохраняет breakdown расстояния по странам для маршрута, используемого в заявке.
-8. Повторные пересчеты маршрута для уже отправленного запроса не допускаются без явного действия admin (чтобы избежать расхождения с пользовательским маршрутом).
+7. Backend рассчитывает и сохраняет breakdown расстояния по странам **после** явного запроса расчёта (например отдельный admin endpoint / шаг перед quote), когда выполнены предусловия из `freight-cost-scenario-nbu-pricing.md` §3.1; при **`POST /api/v1/route-requests`** расчёт и сохранение breakdown **не** выполняются.
+8. После создания заявки по `routeId` изменение snapshot этого маршрута запрещено; для правок пользователь дублирует маршрут (новый `id`) — см. `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md`. Повторные пересчёты геометрии для того же snapshot при привязанной заявке не допускаются.
 9. Все защищенные endpoint-ы используют bearer `access token` и проверки ролей по RBAC из auth-спецификации.
 
 ## 7) Non-functional Requirements / Нефункциональные требования
@@ -67,7 +68,7 @@
 - **Performance / Производительность:**
   - `GET /api/v1/routes/my` p95 <= 300 ms при типичном объеме истории.
   - `GET /api/v1/admin/route-requests` p95 <= 400 ms при фильтрации по статусу.
-  - Расчет country-breakdown после фиксации маршрута <= 2 s p95 (при доступном HERE API).
+  - Расчет country-breakdown после явного запроса расчёта (не при создании user-заявки) <= 2 s p95 (при доступном HERE API).
 - **Reliability / Надежность:**
   - При недоступности HERE API запрос переводится в `pending_recalculation`, без потери сохраненного snapshot.
   - `quote` операции должны быть идемпотентны по `idempotency key` (для create/send).
@@ -140,8 +141,9 @@
     }
     ```
 
-- `GET /api/v1/routes/my` - список маршрутов текущего пользователя.
+- `GET /api/v1/routes/my` - список маршрутов текущего пользователя (параметр `view` — см. `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md` §3.2).
 - `GET /api/v1/routes/my/{routeId}` - открыть сохраненный маршрут текущего пользователя.
+- `POST /api/v1/routes/my/{routeId}/restore` - восстановить soft-deleted маршрут (см. то же ТЗ §5.2.1).
 
 - `POST /api/v1/route-requests` - отправить запрос на фрахт по сохраненному маршруту (`user`).
   - Request:
@@ -170,7 +172,7 @@
 - `GET /api/v1/route-requests/my/{requestId}` - детали запроса пользователя + актуальный `quote` (если есть).
 
 - `GET /api/v1/admin/route-requests` - список запросов для admin/manager.
-- `GET /api/v1/admin/route-requests/{requestId}` - детали запроса + маршрут + breakdown по странам.
+- `GET /api/v1/admin/route-requests/{requestId}` - детали запроса + маршрут + breakdown по странам (**если уже рассчитан**; до расчёта — пусто/null или отдельный флаг «не рассчитано» в DTO).
 
 - `POST /api/v1/admin/route-requests/{requestId}/quotes` - создать draft `quote` (`admin`).
 - `POST /api/v1/admin/quotes/{quoteId}/send` - отправить `quote` пользователю (`admin`).
@@ -183,7 +185,7 @@
   - Форма отправки запроса на фрахт по выбранному маршруту.
 - Админский раздел:
   - Очередь `route requests` с фильтрами статусов.
-  - Карточка запроса: маршрут, breakdown по странам, блок предложений.
+  - Карточка запроса: маршрут, breakdown по странам (плейсхолдер, пока не выполнен расчёт), блок предложений.
   - Создание/редактирование draft и отправка `quote`.
 - RBAC-ограничения UI строго синхронизированы с backend (см. auth-спецификацию).
 
@@ -208,24 +210,23 @@
 - Не выполнять тяжелые HERE-запросы из frontend для финального расчета цены.
 - Не вводить новые внешние зависимости без обоснования в PR.
 - Не менять несвязанные модули и endpoint-ы `auth`.
-- Не закладывать backend-контракты под legacy-страницу `freight-calculation-here`; контракты проектируются под новый маршрутный flow (`routes`/`route_requests`/`quotes`).
-- При добавлении/изменении контрактов учитывать обратную совместимость для активного frontend-экрана `freight-calculation` (или предоставить явный migration plan для фронтенда).
+- Не закладывать backend-контракты под удалённые standalone-страницы `freight-calculation-here` / `freight-calculation` / `routes-history`; контракты проектируются под маршрутный flow (`routes`/`route_requests`/`quotes`) и перечисленные актуальные Angular-экраны.
+- При добавлении/изменении контрактов учитывать обратную совместимость для активного frontend (`/route-builder`, `/routes`, `/my-freight-requests`, диалоги заявок, `/admin/route-requests`) или предоставить явный migration plan для фронтенда.
 - Любые изменения правил операций точек маршрута выполнять с обязательной синхронизацией с `docs/specs/route-point-operations-rules.md`.
 
 ## Legacy Note / Примечание по legacy
-- Страница `freight-calculation-here` считается неиспользуемой в текущем продукте.
-- Данная спецификация не использует ее как источник бизнес-правил, API-контрактов или критериев приемки.
-- При расхождении между legacy-реализацией и этим ТЗ приоритет имеет данная спецификация и auth-спецификация `docs/specs/auth-authentication-authorization.md`.
+- Standalone SPA-страницы `freight-calculation-here`, `freight-calculation` и `routes-history` удалены из репозитория; данная спецификация не использует их как источник бизнес-правил, API-контрактов или критериев приемки.
+- При расхождении между старыми описаниями в release notes и этим ТЗ приоритет имеет данная спецификация и auth-спецификация `docs/specs/auth-authentication-authorization.md`.
 
 ## Active Frontend Note / Примечание по активному frontend
-- Страница `freight-calculation` считается активной и должна учитываться при детализации endpoint-ов, DTO и сценариев перехода.
+- Базовые клиентские сценарии маршрутов и заявок реализуются на `/route-builder`, `/routes`, `/my-freight-requests` и в связанных диалогах; админский контур — `/admin/route-requests`. При детализации endpoint-ов, DTO и переходов между шагами эти экраны должны учитываться как потребители API.
 - Если для MVP требуется изменение frontend-контракта, это изменение должно быть явно зафиксировано в разделе API с указанием стратегии совместимости.
 
 ## 12) Implementation Plan / План реализации
 1. Подготовить миграции Flyway для сущностей маршрутов, запросов и `quote`.
 2. Реализовать CRUD API для `routes/my` и проверку владения ресурсом.
 3. Реализовать API `route-requests` для user и админский read-модуль.
-4. Реализовать backend постобработку: расчет country-breakdown и сохранение результата.
+4. Реализовать backend: расчёт country-breakdown и сохранение результата **только на отложенном шаге** (не в обработчике `POST /route-requests`); см. связанные ТЗ.
 5. Реализовать `quote`-workflow (draft/send/history) и статусную модель запроса.
 6. Добавить интеграционные тесты RBAC и ownership-проверок.
 7. Обновить `docs/system.md` и release notes.
@@ -237,7 +238,7 @@
 - [ ] Пользователь может отправить запрос на фрахт по сохраненному маршруту.
 - [ ] Admin видит список отправленных запросов и может открыть детали маршрута.
 - [ ] Admin может создать и отправить `quote`; история предложений доступна.
-- [ ] Для запроса сохранен breakdown расстояния по странам.
+- [ ] После явного шага расчёта (admin/manager) для заявки сохранён breakdown расстояния по странам; до этого шага создание user-заявки не создаёт breakdown.
 - [ ] Все проверки доступа соответствуют auth-спецификации.
 - [ ] Добавлены и проходят unit/integration тесты для критичных сценариев.
 - [ ] Документация обновлена (включая ссылку на auth-спецификацию).
@@ -245,7 +246,7 @@
 ## 14) Test Plan / Тест-план
 - **Unit:**
   - Валидация payload маршрута и `quote`.
-  - Расчет breakdown по странам на основе route snapshot.
+  - Расчёт breakdown по странам на основе route snapshot при отложенном вызове (не при `POST route-requests`).
   - Статусные переходы `route_requests` и `quotes`.
 - **Integration:**
   - `save route -> open route -> create request`.
