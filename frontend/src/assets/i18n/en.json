@@ -213,7 +213,10 @@
       "points": "Route points",
       "editRoute": "Edit",
       "addNewRoute": "Add new route",
-      "listViewLabel": "Show",
+      "listViewHeadingAll": "All routes",
+      "listViewHeadingActive": "Active routes",
+      "listViewHeadingDeleted": "Deleted routes",
+      "listViewLabel": "Show routes",
       "listViewActive": "Active",
       "listViewAll": "All",
       "listViewDeleted": "Deleted",
@@ -224,7 +227,15 @@
       "lockedByRequest": "Has a request — editing is locked",
       "deletedChip": "Deleted",
       "editDisabledLocked": "Editing is locked by an existing request",
-      "freightRequestDisabled": "Not available for a deleted route"
+      "freightRequestDisabled": "Not available for a deleted route",
+      "sortCardTitle": "Route sorting",
+      "sortById": "Route ID",
+      "sortByCreated": "Created",
+      "sortByUpdated": "Last modified",
+      "sortByDistance": "Route length",
+      "sortAsc": "Ascending",
+      "sortDesc": "Descending",
+      "sortDirectionGroup": "Sort direction"
     },
     "myFreightRequests": {
       "title": "My freight calculation requests",

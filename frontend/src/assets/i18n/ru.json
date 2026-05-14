@@ -213,7 +213,10 @@
       "points": "Точки маршрута",
       "editRoute": "Редактировать",
       "addNewRoute": "Новый маршрут",
-      "listViewLabel": "Показать",
+      "listViewHeadingAll": "Все маршруты",
+      "listViewHeadingActive": "Активные маршруты",
+      "listViewHeadingDeleted": "Удалённые маршруты",
+      "listViewLabel": "Показывать маршруты",
       "listViewActive": "Активные",
       "listViewAll": "Все",
       "listViewDeleted": "Удалённые",
@@ -224,7 +227,15 @@
       "lockedByRequest": "Есть заявка — редактирование заблокировано",
       "deletedChip": "Удалён",
       "editDisabledLocked": "Редактирование заблокировано заявкой",
-      "freightRequestDisabled": "Недоступно для удалённого маршрута"
+      "freightRequestDisabled": "Недоступно для удалённого маршрута",
+      "sortCardTitle": "Сортировка маршрута",
+      "sortById": "ID маршрута",
+      "sortByCreated": "Создан",
+      "sortByUpdated": "Последнее изменение",
+      "sortByDistance": "Длина маршрута",
+      "sortAsc": "По возрастанию",
+      "sortDesc": "По убыванию",
+      "sortDirectionGroup": "Направление сортировки"
     },
     "myFreightRequests": {
       "title": "Мои запросы на расчёт фрахта",

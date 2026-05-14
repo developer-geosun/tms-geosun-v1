@@ -213,7 +213,10 @@
       "points": "Точки маршруту",
       "editRoute": "Редагувати",
       "addNewRoute": "Новий маршрут",
-      "listViewLabel": "Показати",
+      "listViewHeadingAll": "Усі маршрути",
+      "listViewHeadingActive": "Активні маршрути",
+      "listViewHeadingDeleted": "Видалені маршрути",
+      "listViewLabel": "Показувати маршрути",
       "listViewActive": "Активні",
       "listViewAll": "Усі",
       "listViewDeleted": "Видалені",
@@ -224,7 +227,15 @@
       "lockedByRequest": "Є заявка — редагування заблоковано",
       "deletedChip": "Видалено",
       "editDisabledLocked": "Редагування заблоковано заявкою",
-      "freightRequestDisabled": "Недоступно для видаленого маршруту"
+      "freightRequestDisabled": "Недоступно для видаленого маршруту",
+      "sortCardTitle": "Сортування маршруту",
+      "sortById": "ID маршруту",
+      "sortByCreated": "Створено",
+      "sortByUpdated": "Остання зміна",
+      "sortByDistance": "Довжина маршруту",
+      "sortAsc": "За зростанням",
+      "sortDesc": "За спаданням",
+      "sortDirectionGroup": "Напрямок сортування"
     },
     "myFreightRequests": {
       "title": "Мої запити на розрахунок фрахту",

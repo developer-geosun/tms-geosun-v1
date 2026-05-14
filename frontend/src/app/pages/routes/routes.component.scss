@@ -1,9 +1,17 @@
 .routes-page {
   min-height: 100%;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   padding: 1.25rem;
+  padding-left: max(1.25rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1.25rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
 
   @media (max-width: 600px) {
     padding: 0.75rem 0.75rem 1rem;
+    padding-left: max(0.75rem, env(safe-area-inset-left, 0px));
+    padding-right: max(0.75rem, env(safe-area-inset-right, 0px));
   }
 }
 
@@ -11,8 +19,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem;
   margin-bottom: 1rem;
+  /* Заголовок і пара FAB завжди в одному рядку при вузькому екрані. */
+  flex-wrap: nowrap;
+  min-width: 0;
 }
 
 .routes-page__header-actions {
@@ -20,11 +31,7 @@
   align-items: center;
   gap: 0.75rem;
   flex-shrink: 0;
-}
-
-.routes-page__view-field {
-  width: min(220px, 55vw);
-  margin: 0;
+  min-width: 0;
 }
 
 .route-card__status-chips {
@@ -35,21 +42,47 @@
   margin: 0;
   font-size: 1.5rem;
   line-height: 1.25;
+  flex: 1 1 auto;
+  min-width: 0;
 
   @media (max-width: 600px) {
     font-size: 1.25rem;
   }
 }
 
-.routes-page__add-route {
+.routes-page__header-fabs {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.5rem;
   flex-shrink: 0;
 }
 
+.routes-page__add-route,
+.routes-page__routes-settings {
+  flex-shrink: 0;
+}
+
+/* Сітка карток: однакова висота рядка (stretch), футер вирівнюється по низу. */
 .routes-page__cards {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
-  align-items: flex-start;
+  width: 100%;
+  align-items: stretch;
+  min-width: 0;
+}
+
+@media (min-width: 840px) {
+  .routes-page__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1320px) {
+  .routes-page__cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .route-card {
@@ -58,10 +91,32 @@
   background: var(--mat-sys-surface-container-high);
   color: var(--mat-sys-on-surface);
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   font-size: 0.8125rem;
   line-height: 1.25;
   transition: box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 14px 30px rgba(0, 0, 0, 0.14);
+}
+
+.route-card mat-card-header.route-card__header {
+  flex-shrink: 0;
+}
+
+.route-card mat-card-content.route-card__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.route-card mat-card-footer.route-card__footer {
+  flex-shrink: 0;
 }
 
 .route-card:hover {
@@ -85,26 +140,56 @@
 }
 
 .route-card__header-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 0.75rem;
 }
 
-.route-card__timestamps {
+/* Ширина за вмістом (не на всю колонку), на вузькому екрані — не ширше картки маршруту. */
+.route-card__meta-subcard {
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+  align-self: flex-start;
+}
+
+.route-card__meta-subcard-content {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
-  flex: 1 1 auto;
+  gap: 0.35rem;
+  width: max-content;
+  max-width: 100%;
   min-width: 0;
 }
 
-.route-card__timestamp-line {
-  margin: 0;
-  color: var(--mat-sys-on-surface);
-  font-size: 0.8125rem;
-  line-height: 1.25;
+.route-card__meta-row {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 0.5rem 1rem;
+  min-width: 0;
+}
+
+.route-card__meta-label {
+  min-width: 0;
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.75rem;
   font-weight: 500;
+  line-height: 1.25;
+}
+
+.route-card__meta-value {
+  justify-self: end;
+  text-align: end;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--mat-sys-on-surface);
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .route-card__distance-actions {
@@ -114,8 +199,14 @@
   justify-content: flex-end;
   gap: 0.5rem;
   flex-shrink: 0;
-  justify-self: end;
   min-width: 0;
+  margin-left: auto;
+
+  @media (max-width: 479px) {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 .route-card__freight-request.mat-mdc-raised-button {
@@ -173,16 +264,35 @@
 }
 
 @media (max-width: 520px) {
-  .route-card__timestamp-line {
+  .route-card__meta-label,
+  .route-card__meta-value {
     font-size: 0.75rem;
     line-height: 1.35;
-    overflow-wrap: anywhere;
-    word-break: break-word;
+  }
+}
+
+/* Вузька ширина: метадані та бейдж км у колонку; субкартка лишається за вмістом (не на всю ширину). */
+@media (max-width: 479px) {
+  .route-card__header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .route-card__distance-actions {
+    margin-left: 0;
+    width: auto;
+    justify-content: flex-start;
   }
 }
 
 .route-card__content {
   padding: 0.75rem 1rem 0.5rem;
+  min-width: 0;
+
+  @media (max-width: 600px) {
+    padding: 0.625rem 0.75rem 0.5rem;
+  }
 }
 
 .route-card__footer {
@@ -190,6 +300,11 @@
   justify-content: flex-end;
   border-top: 1px solid var(--mat-sys-outline-variant);
   padding: 0.6rem 1rem 1rem;
+  min-width: 0;
+
+  @media (max-width: 600px) {
+    padding: 0.5rem 0.75rem 0.75rem;
+  }
 }
 
 .route-card__actions {
@@ -266,12 +381,19 @@
   font-weight: 600;
 }
 
+.route-card__content > mat-list {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .route-card__points {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   margin: 0;
   padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .route-point-card {
@@ -318,6 +440,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  @media (max-width: 600px) {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 }
 
 .point-order {
@@ -386,11 +516,14 @@
 .toast {
   position: fixed;
   left: 50%;
-  bottom: 20px;
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
+  max-width: min(420px, calc(100vw - 1.5rem));
+  box-sizing: border-box;
+  padding: 10px 14px;
   background: #0f172a;
   color: #fff;
   border-radius: 8px;
-  padding: 10px 14px;
+  text-align: center;
   z-index: 6000;
 }

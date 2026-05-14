@@ -1,29 +1,29 @@
 <section class="routes-page">
   <header class="routes-page__header">
-    <h1 class="routes-page__title">{{ 'pages.routes.title' | translate }}</h1>
+    <h1 class="routes-page__title">{{ listViewPageHeadingKey() | translate }}</h1>
     <div class="routes-page__header-actions">
-      <mat-form-field appearance="outline" class="routes-page__view-field" subscriptSizing="dynamic">
-        <mat-label>{{ 'pages.routes.listViewLabel' | translate }}</mat-label>
-        <mat-select
-          [value]="listView()"
-          (selectionChange)="onListViewChange($event.value)"
-          [disabled]="isLoading() || deletingRouteId() !== null || restoringRouteId() !== null"
+      <div class="routes-page__header-fabs">
+        <button
+          mat-mini-fab
+          type="button"
+          class="routes-page__add-route"
+          (click)="createNewRoute()"
+          [attr.aria-label]="'pages.routes.addNewRoute' | translate"
+          [title]="'pages.routes.addNewRoute' | translate"
         >
-          <mat-option value="active">{{ 'pages.routes.listViewActive' | translate }}</mat-option>
-          <mat-option value="all">{{ 'pages.routes.listViewAll' | translate }}</mat-option>
-          <mat-option value="deleted">{{ 'pages.routes.listViewDeleted' | translate }}</mat-option>
-        </mat-select>
-      </mat-form-field>
-      <button
-        mat-mini-fab
-        type="button"
-        class="routes-page__add-route"
-        (click)="createNewRoute()"
-        [attr.aria-label]="'pages.routes.addNewRoute' | translate"
-        [title]="'pages.routes.addNewRoute' | translate"
-      >
-        <mat-icon>add</mat-icon>
-      </button>
+          <mat-icon>add</mat-icon>
+        </button>
+        <button
+          mat-mini-fab
+          type="button"
+          class="routes-page__routes-settings"
+          (click)="onRoutesSettingsClick()"
+          [attr.aria-label]="'settings.buttonLabel' | translate"
+          [title]="'settings.buttonLabel' | translate"
+        >
+          <mat-icon fontSet="material-icons-outlined">settings</mat-icon>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -47,20 +47,28 @@
         <mat-card class="route-card" appearance="outlined">
           <mat-card-header class="route-card__header">
             <div class="route-card__header-row">
-              <div class="route-card__timestamps">
-                <div class="route-card__timestamp-line">
-                  {{ 'pages.routeBuilder.routeId' | translate }}: {{ route.id }}
-                </div>
-                <div class="route-card__timestamp-line">
-                  {{ 'pages.routes.createdAt' | translate }}: {{ formatRouteDateTime(route.createdAt) }}
-                </div>
-                <div class="route-card__timestamp-line">
-                  {{ 'pages.routes.savedAt' | translate }}: {{ formatRouteDateTime(route.updatedAt) }}
-                </div>
-                <div class="route-card__timestamp-line">
-                  {{ 'pages.routes.lastOpenedAt' | translate }}: {{ formatRouteDateTime(route.lastOpenedAt) || '-' }}
-                </div>
-              </div>
+              <mat-card class="route-point-card route-card__meta-subcard" appearance="outlined">
+                <mat-card-content class="route-point-card__content route-card__meta-subcard-content">
+                  <div class="route-card__meta-row">
+                    <span class="route-card__meta-label">{{ 'pages.routeBuilder.routeId' | translate }}</span>
+                    <span class="route-card__meta-value">{{ route.id }}</span>
+                  </div>
+                  <div class="route-card__meta-row">
+                    <span class="route-card__meta-label">{{ 'pages.routes.createdAt' | translate }}</span>
+                    <span class="route-card__meta-value">{{ formatRouteDateTime(route.createdAt) }}</span>
+                  </div>
+                  <div class="route-card__meta-row">
+                    <span class="route-card__meta-label">{{ 'pages.routes.savedAt' | translate }}</span>
+                    <span class="route-card__meta-value">{{ formatRouteDateTime(route.updatedAt) }}</span>
+                  </div>
+                  <div class="route-card__meta-row">
+                    <span class="route-card__meta-label">{{ 'pages.routes.lastOpenedAt' | translate }}</span>
+                    <span class="route-card__meta-value">{{
+                      formatRouteDateTime(route.lastOpenedAt) || '-'
+                    }}</span>
+                  </div>
+                </mat-card-content>
+              </mat-card>
               <div class="route-card__distance-actions">
                 <mat-card-subtitle class="route-card__meta route-card__meta--secondary">
                   {{ route.distanceKm?.toFixed(1) ?? '0.0' }} {{ 'pages.freightCalculation.km' | translate }}

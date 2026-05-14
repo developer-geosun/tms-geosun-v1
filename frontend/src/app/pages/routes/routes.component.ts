@@ -1,12 +1,18 @@
-import { ChangeDetectionStrategy, Component, inject, LOCALE_ID, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  inject,
+  LOCALE_ID,
+  signal
+} from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatBottomSheet, MatBottomSheetModule } from '@angular/material/bottom-sheet';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
-import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,6 +20,13 @@ import { firstValueFrom } from 'rxjs';
 import { RoutesApiService } from '../../core/api/routes-api.service';
 import { RoutePointContract, RouteSummaryContractDto } from '../../core/api/routes-contracts.model';
 import { RouteDeleteConfirmDialogComponent, getRouteFreightRequestDialogConfig, RouteFreightRequestDialogComponent } from '../../shared/components';
+import { RoutesToolbarBottomSheetComponent } from './routes-toolbar-bottom-sheet.component';
+import {
+  RoutesToolbarListView,
+  RoutesToolbarSheetData,
+  RoutesToolbarSortDirection,
+  RoutesToolbarSortKey
+} from './routes-toolbar-sheet.model';
 
 @Component({
   selector: 'app-routes',
@@ -25,8 +38,7 @@ import { RouteDeleteConfirmDialogComponent, getRouteFreightRequestDialogConfig, 
     MatButtonModule,
     MatIconModule,
     MatChipsModule,
-    MatFormFieldModule,
-    MatSelectModule,
+    MatBottomSheetModule,
     MatTooltipModule
   ],
   templateUrl: './routes.component.html',
@@ -37,6 +49,7 @@ export class RoutesComponent {
   private readonly routesApi = inject(RoutesApiService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly bottomSheet = inject(MatBottomSheet);
   private readonly dateTimeFormatter = new Intl.DateTimeFormat(inject(LOCALE_ID), {
     year: 'numeric',
     month: '2-digit',
@@ -46,8 +59,32 @@ export class RoutesComponent {
     second: '2-digit'
   });
 
-  readonly routeCards = signal<RouteCardViewModel[]>([]);
-  readonly listView = signal<'active' | 'all' | 'deleted'>('active');
+  /** Повний кеш карток (GET view=all + деталі); перемикач списку лише фільтрує локально. */
+  private readonly allRouteCards = signal<RouteCardViewModel[]>([]);
+  readonly routeCards = computed(() => {
+    const filtered = this.filterRouteCardsByListView(this.allRouteCards(), this.listView());
+    return this.sortRouteCards(filtered, this.sortBy(), this.sortDirection());
+  });
+  readonly listView = signal<RoutesToolbarListView>('active');
+  /** Заголовок сторінки залежно від фільтра «Показати». */
+  readonly listViewPageHeadingKey = computed(() => {
+    switch (this.listView()) {
+      case 'all':
+        return 'pages.routes.listViewHeadingAll';
+      case 'active':
+        return 'pages.routes.listViewHeadingActive';
+      case 'deleted':
+        return 'pages.routes.listViewHeadingDeleted';
+    }
+  });
+  /** Локальне сортування відфільтрованого списку (без запитів до API). */
+  readonly sortBy = signal<RoutesToolbarSortKey>('updatedAt');
+  /** Напрямок сортування для обраного критерію. */
+  readonly sortDirection = signal<RoutesToolbarSortDirection>('desc');
+  /** Блокування керування фільтром/сортуванням у bottom sheet. */
+  readonly toolbarControlsBusy = computed(
+    () => this.isLoading() || this.deletingRouteId() !== null || this.restoringRouteId() !== null
+  );
   readonly isLoading = signal(true);
   readonly loadFailed = signal(false);
   readonly deletingRouteId = signal<string | null>(null);
@@ -85,9 +122,18 @@ export class RoutesComponent {
     await this.router.navigate(['/route-builder'], { queryParams: { mode: 'create' } });
   }
 
-  async onListViewChange(view: 'active' | 'all' | 'deleted'): Promise<void> {
-    this.listView.set(view);
-    await this.loadRouteCards();
+  /** Відкрити bottom sheet з картками «Показати» та «Сортування». */
+  protected onRoutesSettingsClick(): void {
+    const data: RoutesToolbarSheetData = {
+      listView: this.listView,
+      sortBy: this.sortBy,
+      sortDirection: this.sortDirection,
+      isBusy: this.toolbarControlsBusy
+    };
+    this.bottomSheet.open(RoutesToolbarBottomSheetComponent, {
+      data,
+      panelClass: 'routes-toolbar-bottom-sheet-panel'
+    });
   }
 
   async openFreightRequestDialog(route: RouteCardViewModel): Promise<void> {
@@ -184,7 +230,7 @@ export class RoutesComponent {
     this.loadFailed.set(false);
 
     try {
-      const summaries = await this.routesApi.getMyRoutes(this.listView());
+      const summaries = await this.routesApi.getMyRoutes('all');
       const cards = await Promise.all(
         summaries.map(async (summary) => {
           try {
@@ -195,13 +241,91 @@ export class RoutesComponent {
           }
         })
       );
-      this.routeCards.set(cards);
+      this.allRouteCards.set(cards);
     } catch {
-      this.routeCards.set([]);
+      this.allRouteCards.set([]);
       this.loadFailed.set(true);
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  private filterRouteCardsByListView(
+    cards: RouteCardViewModel[],
+    view: RoutesToolbarListView
+  ): RouteCardViewModel[] {
+    switch (view) {
+      case 'active':
+        return cards.filter((card) => !card.deleted);
+      case 'deleted':
+        return cards.filter((card) => card.deleted);
+      default:
+        return cards;
+    }
+  }
+
+  /** Сортування копії масиву за критерієм і напрямком (null км завжди в кінці). */
+  private sortRouteCards(
+    cards: RouteCardViewModel[],
+    key: RoutesToolbarSortKey,
+    direction: RoutesToolbarSortDirection
+  ): RouteCardViewModel[] {
+    const next = [...cards];
+    next.sort((a, b) => {
+      switch (key) {
+        case 'id': {
+          const d = this.parseRouteIdForSort(a.id) - this.parseRouteIdForSort(b.id);
+          return direction === 'asc' ? d : -d;
+        }
+        case 'createdAt': {
+          const d = this.compareTimeAsc(a.createdAt, b.createdAt);
+          return direction === 'asc' ? d : -d;
+        }
+        case 'updatedAt': {
+          const d = this.compareTimeAsc(a.updatedAt, b.updatedAt);
+          return direction === 'asc' ? d : -d;
+        }
+        case 'distanceKm':
+          return this.compareDistanceKm(a, b, direction);
+        default:
+          return 0;
+      }
+    });
+    return next;
+  }
+
+  private parseRouteIdForSort(id: string): number {
+    const n = Number.parseInt(id, 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  private compareTimeAsc(isoA: string, isoB: string): number {
+    const ta = new Date(isoA).getTime();
+    const tb = new Date(isoB).getTime();
+    const va = Number.isFinite(ta) ? ta : 0;
+    const vb = Number.isFinite(tb) ? tb : 0;
+    return va - vb;
+  }
+
+  /** Порівняння довжини: null завжди після всіх значень; asc — від меншої км до більшої. */
+  private compareDistanceKm(
+    a: RouteCardViewModel,
+    b: RouteCardViewModel,
+    direction: RoutesToolbarSortDirection
+  ): number {
+    const na = a.distanceKm == null;
+    const nb = b.distanceKm == null;
+    if (na && nb) {
+      return 0;
+    }
+    if (na) {
+      return 1;
+    }
+    if (nb) {
+      return -1;
+    }
+    const d = a.distanceKm! - b.distanceKm!;
+    return direction === 'asc' ? d : -d;
   }
 
   private mapToCard(summary: RouteSummaryContractDto, points: RoutePointContract[]): RouteCardViewModel {
@@ -223,7 +347,9 @@ export class RoutesComponent {
     this.deletingRouteId.set(routeId);
     try {
       await this.routesApi.deleteMyRoute(routeId);
-      this.routeCards.update((currentCards) => currentCards.filter((card) => card.id !== routeId));
+      this.allRouteCards.update((currentCards) =>
+        currentCards.map((card) => (card.id === routeId ? { ...card, deleted: true } : card))
+      );
     } catch {
       this.deleteFailed.set(true);
     } finally {

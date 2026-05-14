@@ -218,3 +218,10 @@ mat-button-toggle .mdc-button__label {
     max-height: none !important;
   }
 }
+
+/* Панель налаштувань списку маршрутів (MatBottomSheet). */
+.routes-toolbar-bottom-sheet-panel .mat-bottom-sheet-container,
+.routes-toolbar-bottom-sheet-panel .mat-mdc-bottom-sheet-container {
+  padding: 0;
+  max-height: min(90dvh, 900px);
+}
