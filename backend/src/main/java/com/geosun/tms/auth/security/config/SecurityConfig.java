@@ -39,7 +39,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
   JwtProperties.class,
   AppEmailProperties.class,
   RateLimitProperties.class,
-  HereProperties.class
+  HereProperties.class,
+  CorsProperties.class
 })
 public class SecurityConfig {
 
@@ -118,13 +119,9 @@ public class SecurityConfig {
   }
 
   @Bean
-  public CorsConfigurationSource corsConfigurationSource() {
+  public CorsConfigurationSource corsConfigurationSource(CorsProperties corsProperties) {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOriginPatterns(
-        List.of(
-            "http://localhost:4200",
-            "http://127.0.0.1:4200",
-            "https://scavenger-correct-sprinkler.ngrok-free.dev"));
+    configuration.setAllowedOriginPatterns(corsProperties.resolveAllowedOriginPatterns());
     configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
     configuration.setAllowedHeaders(List.of("*"));
     configuration.setAllowCredentials(true);

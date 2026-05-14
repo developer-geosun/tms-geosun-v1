@@ -51,6 +51,9 @@ springdoc:
   override-with-generic-response: false
 
 app:
+  cors:
+    ngrok-domain: ${NGROK_DOMAIN:}
+    allowed-origin-patterns-extra: ${CORS_ALLOWED_ORIGIN_PATTERNS:}
   security:
     jwt:
       secret: ${JWT_SECRET:replace-me-with-strong-secret-of-at-least-32-characters}
