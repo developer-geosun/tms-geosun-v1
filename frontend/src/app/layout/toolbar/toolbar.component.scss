@@ -103,8 +103,9 @@ app-social-icon {
   overflow: hidden;
 }
 
-.nav-menu-button {
-  display: none;
+// Кнопка «гамбургер»: за замовчуванням прихована; mat-mini-fab задає display — тому !important
+.nav-menu-button.mat-mdc-mini-fab {
+  display: none !important;
   flex-shrink: 0;
   margin-right: 8px;
   --mdc-fab-container-shape: 20px;
@@ -139,34 +140,7 @@ app-social-icon {
   padding: 4px 0 !important;
 }
 
-// Бургер-меню: інверсія primary-container ↔ on-primary-container (як у .toolbar-nav)
-.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active {
-  --mat-menu-item-label-text-color: var(--mat-sys-primary-container);
-  --mat-menu-item-icon-color: var(--mat-sys-primary-container);
-  --mat-menu-item-hover-state-layer-color: color-mix(
-    in srgb,
-    var(--mat-sys-primary-container) 16%,
-    transparent
-  );
-  --mat-menu-item-focus-state-layer-color: color-mix(
-    in srgb,
-    var(--mat-sys-primary-container) 22%,
-    transparent
-  );
-  background-color: var(--mat-sys-on-primary-container) !important;
-  color: var(--mat-sys-primary-container) !important;
-}
-
-.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active:hover,
-.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active:focus-visible {
-  background-color: var(--mat-sys-on-primary-container) !important;
-}
-
-.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active .mat-icon,
-.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active .mat-mdc-menu-item-text,
-.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active span {
-  color: var(--mat-sys-primary-container) !important;
-}
+// Активний пункт бургер-меню задається через [ngStyle] у шаблоні (navMenuActiveStyles) — перебиває MDC
 
 // Група кнопок авторизації та налаштувань — без переносу та стиснення
 .toolbar-actions {
@@ -465,13 +439,25 @@ a.company-site-button:active {
   }
 }
 
-@media (max-width: 1024px) {
+// Широкий екран: лише горизонтальна навігація (бургер прибрано з потоку й з таб-ордеру)
+@media (min-width: 1025px) {
   .toolbar-nav {
-    display: none;
+    display: flex;
   }
 
-  .nav-menu-button {
-    display: inline-flex;
+  .nav-menu-button.mat-mdc-mini-fab {
+    display: none !important;
+  }
+}
+
+// Вузький екран: лише бургер (рядок кнопок навігації не займає місце)
+@media (max-width: 1024px) {
+  .toolbar-nav {
+    display: none !important;
+  }
+
+  .nav-menu-button.mat-mdc-mini-fab {
+    display: inline-flex !important;
   }
 }
 

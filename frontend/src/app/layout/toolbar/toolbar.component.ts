@@ -76,6 +76,7 @@ export class ToolbarComponent {
     {
       route: '/main',
       labelKey: 'navigation.main',
+      icon: 'home',
       roles: ['admin', 'manager', 'employee', 'user'] as const
     },
     {
@@ -152,6 +153,25 @@ export class ToolbarComponent {
     this.navigationUrl();
     const url = this.router.url;
     return url === route || url.startsWith(`${route}/`) || url.startsWith(`${route}?`);
+  }
+
+  /**
+   * Інлайн-стилі для активного пункту навігаційного mat-menu: MDC перебиває звичайний CSS,
+   * а інлайн background/color мають вищий пріоритет за стилі з класів (без !important).
+   * Ті самі токени, що й у .nav-button--active (on-primary-container / primary-container).
+   */
+  navMenuActiveStyles(route: string): Record<string, string> | null {
+    if (!this.isRouteActive(route)) {
+      return null;
+    }
+    return {
+      'background-color': 'var(--mat-sys-on-primary-container)',
+      color: 'var(--mat-sys-primary-container)',
+      '--mat-menu-item-label-text-color': 'var(--mat-sys-primary-container)',
+      '--mat-menu-item-icon-color': 'var(--mat-sys-primary-container)',
+      '--mat-menu-item-hover-state-layer-color': 'color-mix(in srgb, var(--mat-sys-primary-container) 18%, transparent)',
+      '--mat-menu-item-focus-state-layer-color': 'color-mix(in srgb, var(--mat-sys-primary-container) 26%, transparent)'
+    };
   }
 
   canAccess(allowedRoles: readonly UserRole[]): boolean {

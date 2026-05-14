@@ -97,7 +97,8 @@
         mat-menu-item
         type="button"
         class="navigation-menu-item"
-        [class.navigation-menu-item--active]="isRouteActive(item.route)"
+        [ngStyle]="navMenuActiveStyles(item.route)"
+        [attr.aria-current]="isRouteActive(item.route) ? 'page' : null"
         (click)="navigateTo(item.route)">
         @if (item.icon; as icon) {
           <mat-icon aria-hidden="true">{{ icon }}</mat-icon>
