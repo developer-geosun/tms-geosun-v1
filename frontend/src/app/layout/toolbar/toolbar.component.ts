@@ -1,6 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, inject, signal, ViewEncapsulation } from '@angular/core';
-import { Router } from '@angular/router';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  ElementRef,
+  HostListener,
+  inject,
+  signal,
+  ViewEncapsulation
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { NavigationEnd, Router } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { MatButtonModule } from '@angular/material/button';
 import { MatButtonToggleModule } from '@angular/material/button-toggle';
 import { MatIconModule } from '@angular/material/icon';
@@ -45,6 +55,18 @@ export class ToolbarComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly elementRef = inject(ElementRef<HTMLElement>);
+
+  /** Після NavigationEnd — щоб OnPush оновлював клас активного маршруту */
+  private readonly navigationUrl = signal(this.router.url);
+
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntilDestroyed()
+      )
+      .subscribe(() => this.navigationUrl.set(this.router.url));
+  }
 
   readonly currentLanguage = this.languageService.language;
   readonly currentTheme = this.themeService.theme;
@@ -127,11 +149,9 @@ export class ToolbarComponent {
   }
 
   isRouteActive(route: string): boolean {
-    return (
-      this.router.url === route ||
-      this.router.url.startsWith(`${route}/`) ||
-      this.router.url.startsWith(`${route}?`)
-    );
+    this.navigationUrl();
+    const url = this.router.url;
+    return url === route || url.startsWith(`${route}/`) || url.startsWith(`${route}?`);
   }
 
   canAccess(allowedRoles: readonly UserRole[]): boolean {

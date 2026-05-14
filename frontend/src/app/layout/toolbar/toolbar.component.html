@@ -93,7 +93,12 @@
 <mat-menu #navigationMenu="matMenu" class="navigation-menu" panelClass="navigation-menu-panel">
   @for (item of navigationItems; track item.route) {
     @if (canAccess(item.roles)) {
-      <button mat-menu-item type="button" (click)="navigateTo(item.route)">
+      <button
+        mat-menu-item
+        type="button"
+        class="navigation-menu-item"
+        [class.navigation-menu-item--active]="isRouteActive(item.route)"
+        (click)="navigateTo(item.route)">
         @if (item.icon; as icon) {
           <mat-icon aria-hidden="true">{{ icon }}</mat-icon>
         }

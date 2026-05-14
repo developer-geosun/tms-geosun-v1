@@ -122,13 +122,50 @@ app-social-icon {
   line-height: 1;
 }
 
-.nav-button--active {
-  background: rgba(255, 255, 255, .14);
-  border-color: rgba(255, 255, 255, .5);
+// Активний пункт: інверсія primary-container ↔ on-primary-container (фон і текст)
+.toolbar-nav .nav-button.nav-button--active.mat-mdc-outlined-button {
+  --mdc-outlined-button-label-text-color: var(--mat-sys-primary-container) !important;
+  --mat-outlined-button-state-layer-color: var(--mat-sys-primary-container) !important;
+  --mdc-outlined-button-outline-color: color-mix(in srgb, var(--mat-sys-on-primary-container) 55%, var(--mat-sys-primary-container)) !important;
+  background-color: var(--mat-sys-on-primary-container) !important;
+  color: var(--mat-sys-primary-container) !important;
+}
+
+.toolbar-nav .nav-button.nav-button--active.mat-mdc-outlined-button mat-icon {
+  color: var(--mat-sys-primary-container) !important;
 }
 
 .navigation-menu-panel .mat-mdc-menu-content {
   padding: 4px 0 !important;
+}
+
+// Бургер-меню: інверсія primary-container ↔ on-primary-container (як у .toolbar-nav)
+.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active {
+  --mat-menu-item-label-text-color: var(--mat-sys-primary-container);
+  --mat-menu-item-icon-color: var(--mat-sys-primary-container);
+  --mat-menu-item-hover-state-layer-color: color-mix(
+    in srgb,
+    var(--mat-sys-primary-container) 16%,
+    transparent
+  );
+  --mat-menu-item-focus-state-layer-color: color-mix(
+    in srgb,
+    var(--mat-sys-primary-container) 22%,
+    transparent
+  );
+  background-color: var(--mat-sys-on-primary-container) !important;
+  color: var(--mat-sys-primary-container) !important;
+}
+
+.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active:hover,
+.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active:focus-visible {
+  background-color: var(--mat-sys-on-primary-container) !important;
+}
+
+.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active .mat-icon,
+.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active .mat-mdc-menu-item-text,
+.navigation-menu-panel .mat-mdc-menu-item.navigation-menu-item--active span {
+  color: var(--mat-sys-primary-container) !important;
 }
 
 // Група кнопок авторизації та налаштувань — без переносу та стиснення
