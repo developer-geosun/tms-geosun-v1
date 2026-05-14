@@ -146,7 +146,6 @@
       "duplicateRouteSuccess": "Створено копію маршруту",
       "duplicateRouteFailed": "Не вдалося створити копію",
       "routeLockedByRequest": "Маршрут заблоковано після створення заявки",
-      "freightDisabledLocked": "Заявку вже створено для цього маршруту",
       "showMap": "Карта",
       "showSidebar": "Маршрут",
       "copyCoordinates": "Скопіювати координати",
@@ -225,7 +224,7 @@
       "lockedByRequest": "Є заявка — редагування заблоковано",
       "deletedChip": "Видалено",
       "editDisabledLocked": "Редагування заблоковано заявкою",
-      "freightRequestDisabled": "Недоступно для видаленого або заблокованого маршруту"
+      "freightRequestDisabled": "Недоступно для видаленого маршруту"
     },
     "myFreightRequests": {
       "title": "Мої запити на розрахунок фрахту",

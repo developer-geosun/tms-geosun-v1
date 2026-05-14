@@ -90,9 +90,7 @@
             color="primary"
             type="button"
             (click)="openFreightRequestDialog()"
-            [disabled]="!hasRoute() || hasOperationsError() || routeLockedByRequest()"
-            [matTooltip]="routeLockedByRequest() ? ('pages.routeBuilder.freightDisabledLocked' | translate) : ''"
-            [matTooltipDisabled]="!routeLockedByRequest()"
+            [disabled]="!hasRoute() || hasOperationsError()"
           >
             {{ 'pages.freightCalculation.openRequest' | translate }}
           </button>

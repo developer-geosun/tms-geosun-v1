@@ -484,10 +484,6 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   }
 
   async openFreightRequestDialog(): Promise<void> {
-    if (this.routeLockedByRequest()) {
-      this.showToast('pages.routeBuilder.freightDisabledLocked');
-      return;
-    }
     if (!this.isViewMode()) {
       this.showToast('pages.freightCalculation.errors.requestOnlyInViewMode');
       return;

@@ -7,6 +7,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatListModule } from '@angular/material/list';
 import { MatSelectModule } from '@angular/material/select';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { firstValueFrom } from 'rxjs';
@@ -25,7 +26,8 @@ import { RouteDeleteConfirmDialogComponent, getRouteFreightRequestDialogConfig, 
     MatIconModule,
     MatChipsModule,
     MatFormFieldModule,
-    MatSelectModule
+    MatSelectModule,
+    MatTooltipModule
   ],
   templateUrl: './routes.component.html',
   styleUrl: './routes.component.scss',
@@ -89,7 +91,7 @@ export class RoutesComponent {
   }
 
   async openFreightRequestDialog(route: RouteCardViewModel): Promise<void> {
-    if (this.deletingRouteId() || route.deleted || route.lockedByRequest) {
+    if (this.deletingRouteId() || route.deleted) {
       return;
     }
     const dialogRef = this.dialog.open(

@@ -146,7 +146,6 @@
       "duplicateRouteSuccess": "Route copy created",
       "duplicateRouteFailed": "Failed to duplicate route",
       "routeLockedByRequest": "The route is locked after a freight request was created",
-      "freightDisabledLocked": "A request has already been created for this route",
       "showMap": "Map",
       "showSidebar": "Route panel",
       "copyCoordinates": "Copy coordinates",
@@ -225,7 +224,7 @@
       "lockedByRequest": "Has a request — editing is locked",
       "deletedChip": "Deleted",
       "editDisabledLocked": "Editing is locked by an existing request",
-      "freightRequestDisabled": "Not available for a deleted or locked route"
+      "freightRequestDisabled": "Not available for a deleted route"
     },
     "myFreightRequests": {
       "title": "My freight calculation requests",
