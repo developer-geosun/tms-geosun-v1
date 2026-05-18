@@ -50,19 +50,35 @@
           >
             <mat-icon>route</mat-icon>
           </button>
-          <button
-            mat-mini-fab
-            type="button"
-            class="sidebar-view-action"
-            (click)="switchToEditMode()"
-            [disabled]="!hasRoute() || isLoadingSavedRoute() || routeLockedByRequest()"
-            [matTooltip]="routeLockedByRequest() ? ('pages.routeBuilder.routeLockedByRequest' | translate) : ''"
-            [matTooltipDisabled]="!routeLockedByRequest()"
-            [attr.aria-label]="'pages.routeBuilder.editRoute' | translate"
-            [title]="'pages.routeBuilder.editRoute' | translate"
-          >
-            <mat-icon>edit</mat-icon>
-          </button>
+          @if (!routeLockedByRequest()) {
+            <button
+              mat-mini-fab
+              type="button"
+              class="sidebar-view-action"
+              (click)="switchToEditMode()"
+              [disabled]="!hasRoute() || isLoadingSavedRoute()"
+              [attr.aria-label]="'pages.routeBuilder.editRoute' | translate"
+              [title]="'pages.routeBuilder.editRoute' | translate"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+          } @else {
+            <button
+              mat-mini-fab
+              type="button"
+              class="sidebar-view-action"
+              (click)="duplicateLockedRoute()"
+              [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute() || isDuplicatingRoute()"
+              [attr.aria-label]="'pages.routeBuilder.duplicateRoute' | translate"
+              [title]="'pages.routeBuilder.duplicateRoute' | translate"
+            >
+              @if (isDuplicatingRoute()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              } @else {
+                <mat-icon>content_copy</mat-icon>
+              }
+            </button>
+          }
           <button
             mat-mini-fab
             type="button"
@@ -94,25 +110,6 @@
           >
             {{ 'pages.freightCalculation.openRequest' | translate }}
           </button>
-          @if (routeLockedByRequest()) {
-            <button
-              class="sidebar-login-button sidebar-request-button"
-              mat-stroked-button
-              color="primary"
-              type="button"
-              (click)="duplicateLockedRoute()"
-              [disabled]="!hasRoute() || isSavingRoute() || isLoadingSavedRoute() || isDuplicatingRoute()"
-            >
-              @if (isDuplicatingRoute()) {
-                <span class="loading-content">
-                  <mat-spinner diameter="18"></mat-spinner>
-                  <span>{{ 'pages.routeBuilder.duplicateRoute' | translate }}</span>
-                </span>
-              } @else {
-                {{ 'pages.routeBuilder.duplicateRoute' | translate }}
-              }
-            </button>
-          }
         } @else {
           <button
             class="sidebar-login-button"
