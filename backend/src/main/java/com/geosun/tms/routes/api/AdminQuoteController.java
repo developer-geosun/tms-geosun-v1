@@ -36,7 +36,6 @@ public class AdminQuoteController {
 
   @Operation(summary = "Create draft quote for route request")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
-  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping(RoutesApiPaths.ADMIN_ROUTE_REQUESTS_BASE + "/{requestId}/quotes")
   public ResponseEntity<QuoteDto> createDraftQuote(
       @AuthenticationPrincipal @NonNull UserPrincipal principal,
@@ -54,7 +53,6 @@ public class AdminQuoteController {
 
   @Operation(summary = "Send draft quote")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
-  @PreAuthorize("hasRole('ADMIN')")
   @PostMapping(RoutesApiPaths.ADMIN_QUOTES_BASE + "/{quoteId}/send")
   public QuoteDto sendQuote(
       @AuthenticationPrincipal @NonNull UserPrincipal principal,

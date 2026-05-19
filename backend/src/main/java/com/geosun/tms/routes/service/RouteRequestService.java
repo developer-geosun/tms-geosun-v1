@@ -7,24 +7,34 @@ import com.geosun.tms.routes.domain.RouteRequest;
 import com.geosun.tms.routes.domain.RouteRequestStatusHistory;
 import com.geosun.tms.routes.dto.RoutePointType;
 import com.geosun.tms.routes.dto.RouteRequestStatus;
+import com.geosun.tms.routes.dto.request.AdminRouteRequestListQuery;
 import com.geosun.tms.routes.dto.request.CargoDetailsRequest;
 import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
+import com.geosun.tms.routes.dto.response.PageResponse;
 import com.geosun.tms.routes.dto.response.QuoteDto;
 import com.geosun.tms.routes.dto.response.RoutePointDto;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
 import com.geosun.tms.routes.repository.RouteRepository;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
+import com.geosun.tms.routes.repository.RouteRequestSpecifications;
 import com.geosun.tms.routes.repository.RouteRequestStatusHistoryRepository;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 @Service
 public class RouteRequestService {
@@ -92,10 +102,23 @@ public class RouteRequestService {
   }
 
   @Transactional(readOnly = true)
-  public List<RouteRequestDto> getAllRequestsForAdmin() {
-    return routeRequestRepository.findAllByOrderByCreatedAtDesc().stream()
-        .map((request) -> toDto(request, false))
-        .toList();
+  public PageResponse<RouteRequestDto> getAllRequestsForAdmin(AdminRouteRequestListQuery query) {
+    int page = Math.max(0, query.page());
+    int size = Math.min(100, Math.max(1, query.size()));
+    Sort sort = resolveAdminSort(query.sort(), query.order());
+    Specification<RouteRequest> spec =
+        RouteRequestSpecifications.adminFilter(
+            query.status(),
+            parseInstantDate(query.createdFrom(), true),
+            parseInstantDate(query.createdTo(), false),
+            query.ownerEmail(),
+            query.routeTitle());
+    Page<RouteRequest> result =
+        routeRequestRepository.findAll(spec, PageRequest.of(page, size, sort));
+    List<RouteRequestDto> content =
+        result.getContent().stream().map((request) -> toDto(request, false)).toList();
+    return new PageResponse<>(
+        content, result.getTotalElements(), result.getTotalPages(), result.getNumber(), result.getSize());
   }
 
   @Transactional(readOnly = true)
@@ -193,6 +216,33 @@ public class RouteRequestService {
         route.getUpdatedAt() == null ? null : route.getUpdatedAt().toString(),
         points,
         locked);
+  }
+
+  @NonNull
+  private static Sort resolveAdminSort(String sortField, String order) {
+    String field =
+        switch (sortField == null ? "" : sortField) {
+          case "status" -> "status";
+          case "preferredStartDate" -> "preferredStartDate";
+          default -> "createdAt";
+        };
+    Sort.Direction direction =
+        "asc".equalsIgnoreCase(order) ? Sort.Direction.ASC : Sort.Direction.DESC;
+    return Sort.by(direction, field);
+  }
+
+  private static Instant parseInstantDate(String raw, boolean startOfDay) {
+    if (!StringUtils.hasText(raw)) {
+      return null;
+    }
+    try {
+      LocalDate date = LocalDate.parse(raw.trim());
+      return startOfDay
+          ? RouteRequestSpecifications.startOfDay(date)
+          : RouteRequestSpecifications.endOfDay(date);
+    } catch (DateTimeParseException ex) {
+      throw ApiException.badRequest("VALIDATION_ERROR", "Invalid date filter format");
+    }
   }
 
   private LocalDate parseDateOrNull(String rawDate) {

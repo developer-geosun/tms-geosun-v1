@@ -2,10 +2,60 @@
   <header class="admin-route-requests__header">
     <h1>{{ 'pages.adminRouteRequests.title' | translate }}</h1>
     <div class="admin-route-requests__actions">
+      <button mat-stroked-button type="button" (click)="openScenariosPage()">
+        {{ 'pages.adminRouteRequests.manageScenarios' | translate }}
+      </button>
       <button mat-stroked-button type="button" (click)="loadRequests()">{{ 'pages.adminRouteRequests.refresh' | translate }}</button>
       <button mat-stroked-button type="button" (click)="backToMain()">{{ 'pages.adminRouteRequests.backToMain' | translate }}</button>
     </div>
   </header>
+
+  <form class="admin-route-requests__filters" [formGroup]="filterForm" (ngSubmit)="applyFilters()">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'pages.adminRouteRequests.filterStatus' | translate }}</mat-label>
+      <mat-select formControlName="status">
+        <mat-option value="">{{ 'pages.adminRouteRequests.filterAll' | translate }}</mat-option>
+        @for (status of statusOptions; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'pages.adminRouteRequests.filterCreatedFrom' | translate }}</mat-label>
+      <input matInput type="date" formControlName="createdFrom" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'pages.adminRouteRequests.filterCreatedTo' | translate }}</mat-label>
+      <input matInput type="date" formControlName="createdTo" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'pages.adminRouteRequests.filterOwnerEmail' | translate }}</mat-label>
+      <input matInput formControlName="ownerEmail" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'pages.adminRouteRequests.filterRouteTitle' | translate }}</mat-label>
+      <input matInput formControlName="routeTitle" />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'pages.adminRouteRequests.filterSort' | translate }}</mat-label>
+      <mat-select formControlName="sort">
+        <mat-option value="createdAt">{{ 'pages.adminRouteRequests.sortCreatedAt' | translate }}</mat-option>
+        <mat-option value="status">{{ 'pages.adminRouteRequests.sortStatus' | translate }}</mat-option>
+        <mat-option value="preferredStartDate">{{ 'pages.adminRouteRequests.sortPreferredStartDate' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'pages.adminRouteRequests.filterOrder' | translate }}</mat-label>
+      <mat-select formControlName="order">
+        <mat-option value="desc">{{ 'pages.adminRouteRequests.orderDesc' | translate }}</mat-option>
+        <mat-option value="asc">{{ 'pages.adminRouteRequests.orderAsc' | translate }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <div class="admin-route-requests__filter-actions">
+      <button mat-flat-button color="primary" type="submit">{{ 'pages.adminRouteRequests.applyFilters' | translate }}</button>
+      <button mat-stroked-button type="button" (click)="resetFilters()">{{ 'pages.adminRouteRequests.resetFilters' | translate }}</button>
+    </div>
+  </form>
 
   @if (isLoading()) {
     <p>{{ 'pages.adminRouteRequests.loading' | translate }}</p>
@@ -29,6 +79,12 @@
             <small>{{ request.createdAt | date: 'short' }}</small>
           </button>
         }
+        <mat-paginator
+          [length]="totalElements()"
+          [pageIndex]="pageIndex()"
+          [pageSize]="pageSize()"
+          [pageSizeOptions]="[10, 20, 50]"
+          (page)="onPageChange($event)" />
       </aside>
 
       <article class="admin-route-requests__details">
@@ -41,6 +97,77 @@
             {{ selected.preferredStartDate || '-' }}
           </p>
           <p><strong>{{ 'pages.adminRouteRequests.comment' | translate }}:</strong> {{ selected.comment || '-' }}</p>
+
+          <h3>{{ 'pages.adminRouteRequests.aiCalculation' | translate }}</h3>
+          <form class="ai-form" [formGroup]="aiForm" (ngSubmit)="runAiCalculation()">
+            <mat-form-field appearance="outline" class="ai-form__field">
+              <mat-label>{{ 'pages.adminRouteRequests.aiScenario' | translate }}</mat-label>
+              <mat-select formControlName="scenarioId">
+                @for (scenario of scenarios(); track scenario.id) {
+                  <mat-option [value]="scenario.id">{{ scenario.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="ai-form__field">
+              <mat-label>{{ 'pages.adminRouteRequests.aiCalculationDate' | translate }}</mat-label>
+              <input matInput type="date" formControlName="calculationDate" />
+            </mat-form-field>
+            <button mat-flat-button color="primary" type="submit" [disabled]="isAiCalculating() || !scenarios().length">
+              @if (isAiCalculating()) {
+                <mat-spinner diameter="20"></mat-spinner>
+              }
+              {{ 'pages.adminRouteRequests.aiCalculate' | translate }}
+            </button>
+          </form>
+          @if (aiErrorDisplay(); as aiErr) {
+            <p class="admin-route-requests__error">{{ aiErr.messageKey | translate: aiErr.params }}</p>
+            @if (aiErr.detail) {
+              <p class="admin-route-requests__error-detail">{{ aiErr.detail }}</p>
+            }
+          }
+          @if (aiResult(); as result) {
+            <mat-card class="admin-route-requests__ai-result">
+              <mat-card-title>{{ 'pages.adminRouteRequests.aiResult' | translate }} ({{ result.status }})</mat-card-title>
+              <mat-card-content>
+                @if (aiResultFailure(); as failure) {
+                  <p class="admin-route-requests__error">
+                    {{ failure.messageKey | translate: failure.params }}
+                  </p>
+                  @if (failure.detail) {
+                    <p class="admin-route-requests__error-detail">{{ failure.detail }}</p>
+                  }
+                }
+                @if (result.responseText) {
+                  <pre class="admin-route-requests__ai-text">{{ result.responseText }}</pre>
+                }
+                @if (result.responseStructured) {
+                  <mat-expansion-panel>
+                    <mat-expansion-panel-header>
+                      <mat-panel-title>{{ 'pages.adminRouteRequests.aiStructured' | translate }}</mat-panel-title>
+                    </mat-expansion-panel-header>
+                    <pre>{{ aiStructuredJson() }}</pre>
+                  </mat-expansion-panel>
+                }
+                @if (result.responseStructured) {
+                  <button mat-stroked-button type="button" (click)="applyAiTotalToQuote()">
+                    {{ 'pages.adminRouteRequests.applyAiToQuote' | translate }}
+                  </button>
+                }
+              </mat-card-content>
+            </mat-card>
+          }
+          @if (aiHistory().length) {
+            <h4>{{ 'pages.adminRouteRequests.aiHistory' | translate }}</h4>
+            <ul class="admin-route-requests__ai-history">
+              @for (item of aiHistory(); track item.id) {
+                <li>
+                  <button type="button" mat-button (click)="viewAiCalculation(item.id)">
+                    {{ item.createdAt | date: 'short' }} — {{ item.scenarioName || '-' }} ({{ item.status }})
+                  </button>
+                </li>
+              }
+            </ul>
+          }
 
           <h3>{{ 'pages.adminRouteRequests.quoteEditor' | translate }}</h3>
           <form class="quote-form" [formGroup]="quoteDraftForm" (ngSubmit)="createDraftQuote()">
@@ -131,8 +258,7 @@
               color="primary"
               type="button"
               (click)="recalculateCountryBreakdown()"
-              [disabled]="isCountryBreakdownLoading()"
-            >
+              [disabled]="isCountryBreakdownLoading()">
               @if (isCountryBreakdownLoading()) {
                 <span class="admin-route-requests__btn-loading">
                   <mat-spinner diameter="20"></mat-spinner>

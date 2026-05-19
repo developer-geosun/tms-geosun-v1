@@ -9,7 +9,7 @@
 
 - Frontend на Angular 21 с маршрутизацией, i18n и auth-слоем (`AuthService`, `AuthGuard`, `AuthInterceptor`, login-page).
 - Экраны `/route-builder` (построение и сохранение маршрута), `/routes` (список и открытие сохранённых маршрутов), `/my-freight-requests` (заявки пользователя) и диалог заявки на фрахт работают через backend API.
-- Есть admin-страница очереди заявок `/admin/route-requests`.
+- Есть admin-страницы `/admin/route-requests` (очередь, ИИ-расчёт, quote) и `/admin/freight-calculation-scenarios` (сценарии).
 - Backend на Java 21 + Spring Boot 3 с JWT auth, refresh token rotation и RBAC.
 - Backend модуль `routes`: сохранение, чтение списка/деталей (в т.ч. `view=active|all|deleted`), soft delete, блокировка `PUT` после заявки, `duplicate`/`restore`.
 - Backend модуль `route-requests`: создание заявок, список заявок пользователя, admin очередь; пробіг по країнах у відповіді заявки — з БД до явного admin `POST .../country-breakdown` (HERE лише там).
@@ -46,12 +46,19 @@
 - `POST /api/v1/route-requests` — создать заявку по `routeId`.
 - `GET /api/v1/route-requests/my` — получить список своих заявок.
 - `GET /api/v1/route-requests/my/{id}` — своя заявка с `currentQuote`; `countryDistances` только из БД до явного `POST .../country-breakdown`.
-- `GET /api/v1/admin/route-requests` — очередь заявок (`ADMIN`/`MANAGER`).
+- `GET /api/v1/admin/route-requests` — очередь заявок с фильтрами и пагинацией (`ADMIN`/`MANAGER`).
 - `GET /api/v1/admin/route-requests/{id}` — карточка заявки (`ADMIN`/`MANAGER`).
 - `POST /api/v1/admin/route-requests/{id}/country-breakdown` — пересчёт пробега по странам (HERE + сохранение в БД), `ADMIN`/`MANAGER`.
-- `POST /api/v1/admin/route-requests/{id}/quotes` — создать draft quote (`ADMIN`).
-- `POST /api/v1/admin/quotes/{id}/send` — отправить quote (`ADMIN`).
+- `GET/POST/PUT/DELETE /api/v1/admin/freight-calculation-scenarios` — CRUD текстовых сценариев расчёта (`ADMIN`/`MANAGER`).
+- `POST /api/v1/admin/freight-calculation-scenarios/import` — импорт сценария из `.txt`/`.md`/`.json`.
+- `POST /api/v1/admin/route-requests/{id}/ai-calculations` — расчёт фрахта через Gemini (`ADMIN`/`MANAGER`).
+- `GET /api/v1/admin/route-requests/{id}/ai-calculations` — история ИИ-расчётов по заявке.
+- `GET /api/v1/admin/ai-calculations/{id}` — детали одного ИИ-расчёта.
+- `POST /api/v1/admin/route-requests/{id}/quotes` — создать draft quote (`ADMIN`/`MANAGER`).
+- `POST /api/v1/admin/quotes/{id}/send` — отправить quote (`ADMIN`/`MANAGER`).
 - `GET /api/v1/admin/route-requests/{id}/quotes` — получить историю quote (`ADMIN`/`MANAGER`).
+
+Переменные окружения для Vertex AI: `VERTEX_AI_PROJECT_ID`, `VERTEX_AI_LOCATION`, `VERTEX_AI_MODEL`, `GCP_CREDENTIALS_FILE` / `GOOGLE_APPLICATION_CREDENTIALS` (service account JSON). Опционально: `VERTEX_AI_TIMEOUT_MILLIS`, `VERTEX_AI_MAX_OUTPUT_TOKENS`, `VERTEX_AI_RATE_LIMIT_PER_HOUR`. См. `docs/vertex-ai-setup.md`.
 
 ### Поведение auth и RBAC
 

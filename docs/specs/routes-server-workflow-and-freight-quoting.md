@@ -18,6 +18,7 @@
   - `docs/specs/auth-authentication-authorization.md` (**основной источник истины по auth и ролям**).
   - `docs/specs/route-point-operations-rules.md` (**canonical source для правил операций точек маршрута**).
   - `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md` (**блокировка маршрута после заявки, фильтры списка по soft delete, отложенный country breakdown**).
+  - `docs/specs/freight-calculation-gemini-scenarios.md` (**актуальная спецификация расчёта фрахта через ИИ Gemini**).
   - `docs/system.md`.
   - `backend/TECHNICAL_SPECIFICATION_API_SERVER_v1.0.md`.
 - **Environment constraints / Ограничения окружения:**
@@ -32,7 +33,7 @@
 - Отправка пользователем запроса на расчет фрахта по сохраненному маршруту.
 - Админский просмотр входящих запросов и маршрутов.
 - Формирование и отправка админом предложения по фрахту (`quote`) с версионностью.
-- Расчет протяженности маршрута по странам на backend **по явному шагу** в админском/менеджерском контуре (см. `freight-cost-scenario-nbu-pricing.md` и `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md`); **не** при создании пользовательской заявки `POST /api/v1/route-requests`.
+- Расчет протяженности маршрута по странам на backend **по явному шагу** в админском/менеджерском контуре (см. `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md`); **не** при создании пользовательской заявки `POST /api/v1/route-requests`. Опциональный вход для Gemini-расчёта фрахта — см. `docs/specs/freight-calculation-gemini-scenarios.md`.
 - Ролевой доступ к API (user/admin/manager) в соответствии с auth-спецификацией.
 - Проектирование API-контрактов и переходного интеграционного слоя с учётом актуальных user-экранов (`/route-builder`, `/routes`, `/my-freight-requests`) и админского `/admin/route-requests`.
 
@@ -56,7 +57,7 @@
 4. Пользователь может создать `route request` на фрахт по сохраненному маршруту.
 5. Admin может просматривать все `route requests`, фильтровать по статусам и открывать детали.
 6. Admin может создавать и отправлять `quote`; система хранит историю версий предложений.
-7. Backend рассчитывает и сохраняет breakdown расстояния по странам **после** явного запроса расчёта (например отдельный admin endpoint / шаг перед quote), когда выполнены предусловия из `freight-cost-scenario-nbu-pricing.md` §3.1; при **`POST /api/v1/route-requests`** расчёт и сохранение breakdown **не** выполняются.
+7. Backend рассчитывает и сохраняет breakdown расстояния по странам **после** явного запроса расчёта (отдельный admin endpoint); при **`POST /api/v1/route-requests`** расчёт и сохранение breakdown **не** выполняются. Расчёт коммерческой ставки через Gemini — см. `docs/specs/freight-calculation-gemini-scenarios.md`.
 8. После создания заявки по `routeId` изменение snapshot этого маршрута запрещено; для правок пользователь дублирует маршрут (новый `id`) — см. `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md`. Повторные пересчёты геометрии для того же snapshot при привязанной заявке не допускаются.
 9. Все защищенные endpoint-ы используют bearer `access token` и проверки ролей по RBAC из auth-спецификации.
 

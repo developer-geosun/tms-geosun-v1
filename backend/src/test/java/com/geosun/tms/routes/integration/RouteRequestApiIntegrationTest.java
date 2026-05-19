@@ -157,7 +157,7 @@ class RouteRequestApiIntegrationTest {
     mockMvc
         .perform(get("/api/v1/admin/route-requests").header("Authorization", bearer(adminAccess)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$[0].id").value(requestId));
+        .andExpect(jsonPath("$.content[0].id").value(requestId));
 
     mockMvc
         .perform(
@@ -299,8 +299,8 @@ class RouteRequestApiIntegrationTest {
                             2,
                             "transitDaysMax",
                             3))))
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.code").value("FORBIDDEN"));
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.status").value("DRAFT"));
   }
 
   private String createRoute(String access, String title) throws Exception {

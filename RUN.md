@@ -51,6 +51,7 @@ cp .env.example .env
 - Для production-сборки frontend оставьте `FRONTEND_BUILD_CONFIGURATION=production`.
 - Для dev-сборки frontend в Docker укажите `FRONTEND_BUILD_CONFIGURATION=development` (в этом режиме будут видны dev-значения из `environment.ts`, включая автозаполнение тестового логина).
 - Для страницы расчета через HERE укажите `HERE_API_KEY=<ваш_ключ_here>`.
+- Для расчёта фрахта через Vertex AI (admin) укажите `VERTEX_AI_PROJECT_ID`, `GCP_CREDENTIALS_FILE` (JSON service account) — см. [`docs/vertex-ai-setup.md`](docs/vertex-ai-setup.md).
 - Для публичного адреса через ngrok (один домен для frontend + backend) укажите:
   - `NGROK_AUTHTOKEN=<ваш_ngrok_authtoken>`
   - `NGROK_DOMAIN=<ваш_домен_из_ngrok>`

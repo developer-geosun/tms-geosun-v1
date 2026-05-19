@@ -16,14 +16,48 @@ import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { CreateQuoteContractRequest, QuoteContractDto, RouteRequestContractDto, RouteRequestsApiService } from '../../core/api';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatCardModule } from '@angular/material/card';
+import { MatExpansionModule } from '@angular/material/expansion';
+import {
+  AdminRouteRequestListParams,
+  CreateQuoteContractRequest,
+  FreightAiCalculationContractDto,
+  FreightAiCalculationSummaryContractDto,
+  FreightAiCalculationsApiService,
+  FreightScenariosApiService,
+  QuoteContractDto,
+  RouteRequestContractDto,
+  RouteRequestsApiService,
+  ScenarioContractDto
+} from '../../core/api';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
+import {
+  AiCalculationErrorDisplay,
+  resolveAiCalculationError,
+  resolveAiCalculationFailure
+} from '../../core/utils/resolve-ai-calculation-error';
 import * as L from 'leaflet';
 
 @Component({
   selector: 'app-admin-route-requests',
   standalone: true,
-  imports: [CommonModule, TranslateModule, ReactiveFormsModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    TranslateModule,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatPaginatorModule,
+    MatCardModule,
+    MatExpansionModule
+  ],
   templateUrl: './admin-route-requests.component.html',
   styleUrl: './admin-route-requests.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -34,6 +68,8 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
+  private readonly scenariosApi = inject(FreightScenariosApiService);
+  private readonly aiCalculationsApi = inject(FreightAiCalculationsApiService);
   private map: L.Map | null = null;
   private mapRouteLayer: L.Polyline | null = null;
   private mapMarkers: L.Marker[] = [];
@@ -41,6 +77,9 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly isLoading = signal(false);
   readonly loadError = signal('');
   readonly requests = signal<RouteRequestContractDto[]>([]);
+  readonly totalElements = signal(0);
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(20);
   readonly selectedRequestId = signal<number | null>(null);
   readonly quoteHistory = signal<QuoteContractDto[]>([]);
   readonly quoteLoadError = signal('');
@@ -49,12 +88,29 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly isCountryBreakdownLoading = signal(false);
   readonly quoteActionError = signal('');
   readonly quoteActionSuccess = signal('');
+
+  readonly scenarios = signal<ScenarioContractDto[]>([]);
+  readonly aiHistory = signal<FreightAiCalculationSummaryContractDto[]>([]);
+  readonly aiResult = signal<FreightAiCalculationContractDto | null>(null);
+  readonly isAiCalculating = signal(false);
+  readonly aiErrorDisplay = signal<AiCalculationErrorDisplay | null>(null);
+
   readonly selectedRequest = computed(() =>
     this.requests().find((request) => request.id === this.selectedRequestId()) ?? null
   );
   readonly selectedDraftQuote = computed(
     () => this.quoteHistory().find((quote) => quote.status === 'draft') ?? null
   );
+
+  readonly filterForm = this.formBuilder.nonNullable.group({
+    status: [''],
+    createdFrom: [''],
+    createdTo: [''],
+    ownerEmail: [''],
+    routeTitle: [''],
+    sort: ['createdAt'],
+    order: ['desc']
+  });
 
   readonly quoteDraftForm = this.formBuilder.nonNullable.group({
     currency: ['EUR'],
@@ -66,18 +122,29 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     internalNote: ['']
   });
 
+  readonly aiForm = this.formBuilder.nonNullable.group({
+    scenarioId: [''],
+    calculationDate: [new Date().toISOString().slice(0, 10)]
+  });
+
+  readonly statusOptions = ['new', 'in_review', 'quoted', 'accepted', 'rejected', 'cancelled', 'expired'];
+
   constructor() {
+    void this.loadScenarios();
     void this.loadRequests();
     effect(() => {
       const request = this.selectedRequest();
       if (!request) {
         this.quoteHistory.set([]);
+        this.aiHistory.set([]);
+        this.aiResult.set(null);
         return;
       }
       queueMicrotask(() => {
         this.renderMapForRequest(request);
       });
       void this.loadQuoteHistory(request.id);
+      void this.loadAiHistory(request.id);
     });
   }
 
@@ -96,22 +163,66 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.quoteActionError.set('');
     this.quoteActionSuccess.set('');
     try {
-      const data = await this.routeRequestsApi.getAdminRouteRequests();
-      this.requests.set(data);
-      this.selectedRequestId.set(data[0]?.id ?? null);
+      const filters = this.filterForm.getRawValue();
+      const params: AdminRouteRequestListParams = {
+        status: filters.status || undefined,
+        createdFrom: filters.createdFrom || undefined,
+        createdTo: filters.createdTo || undefined,
+        ownerEmail: filters.ownerEmail || undefined,
+        routeTitle: filters.routeTitle || undefined,
+        sort: filters.sort || 'createdAt',
+        order: filters.order === 'asc' ? 'asc' : 'desc',
+        page: this.pageIndex(),
+        size: this.pageSize()
+      };
+      const page = await this.routeRequestsApi.getAdminRouteRequests(params);
+      this.requests.set(page.content);
+      this.totalElements.set(page.totalElements);
+      const stillSelected = page.content.some((item) => item.id === this.selectedRequestId());
+      if (!stillSelected) {
+        this.selectedRequestId.set(page.content[0]?.id ?? null);
+      }
     } catch {
       this.requests.set([]);
       this.selectedRequestId.set(null);
+      this.totalElements.set(0);
       this.loadError.set('pages.adminRouteRequests.loadFailed');
     } finally {
       this.isLoading.set(false);
     }
   }
 
+  async applyFilters(): Promise<void> {
+    this.pageIndex.set(0);
+    await this.loadRequests();
+  }
+
+  async resetFilters(): Promise<void> {
+    this.filterForm.reset({
+      status: '',
+      createdFrom: '',
+      createdTo: '',
+      ownerEmail: '',
+      routeTitle: '',
+      sort: 'createdAt',
+      order: 'desc'
+    });
+    this.pageIndex.set(0);
+    await this.loadRequests();
+  }
+
+  async onPageChange(event: PageEvent): Promise<void> {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    await this.loadRequests();
+  }
+
   selectRequest(requestId: number): void {
     this.selectedRequestId.set(requestId);
     this.quoteActionError.set('');
     this.quoteActionSuccess.set('');
+    this.clearAiError();
+    this.aiResult.set(null);
   }
 
   async createDraftQuote(): Promise<void> {
@@ -158,6 +269,70 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  applyAiTotalToQuote(): void {
+    const structured = this.aiResult()?.responseStructured;
+    if (!structured) {
+      return;
+    }
+    const total = structured['total'];
+    const currency = structured['currency'];
+    if (typeof total === 'number' && Number.isFinite(total)) {
+      this.quoteDraftForm.patchValue({ totalAmount: String(total) });
+    }
+    if (typeof currency === 'string' && currency.trim()) {
+      this.quoteDraftForm.patchValue({ currency: currency.trim().toUpperCase() });
+    }
+  }
+
+  async runAiCalculation(): Promise<void> {
+    const selected = this.selectedRequest();
+    const scenarioId = this.aiForm.controls.scenarioId.value.trim();
+    if (!selected || !scenarioId) {
+      this.aiErrorDisplay.set({ messageKey: 'pages.adminRouteRequests.aiScenarioRequired' });
+      return;
+    }
+    this.clearAiError();
+    this.isAiCalculating.set(true);
+    try {
+      const result = await this.aiCalculationsApi.run(selected.id, {
+        scenarioId,
+        calculationDate: this.aiForm.controls.calculationDate.value || undefined
+      });
+      this.aiResult.set(result);
+      await this.loadAiHistory(selected.id);
+    } catch (error) {
+      this.aiErrorDisplay.set(resolveAiCalculationError(error));
+      await this.loadAiHistory(selected.id);
+    } finally {
+      this.isAiCalculating.set(false);
+    }
+  }
+
+  async viewAiCalculation(calculationId: string): Promise<void> {
+    this.clearAiError();
+    try {
+      const detail = await this.aiCalculationsApi.getById(calculationId);
+      this.aiResult.set(detail);
+    } catch (error) {
+      this.aiErrorDisplay.set({
+        messageKey: 'pages.adminRouteRequests.aiHistoryLoadFailed',
+        detail: resolveAiCalculationError(error).detail
+      });
+    }
+  }
+
+  aiResultFailure(): AiCalculationErrorDisplay | null {
+    const result = this.aiResult();
+    if (!result || result.status !== 'FAILED') {
+      return null;
+    }
+    return resolveAiCalculationFailure(result.errorMessage);
+  }
+
+  private clearAiError(): void {
+    this.aiErrorDisplay.set(null);
+  }
+
   async recalculateCountryBreakdown(): Promise<void> {
     const selected = this.selectedRequest();
     if (!selected) {
@@ -177,8 +352,25 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  async openScenariosPage(): Promise<void> {
+    await this.router.navigate(['/admin/freight-calculation-scenarios']);
+  }
+
   async backToMain(): Promise<void> {
     await this.router.navigate(['/main']);
+  }
+
+  aiStructuredJson(): string {
+    const structured = this.aiResult()?.responseStructured;
+    return structured ? JSON.stringify(structured, null, 2) : '';
+  }
+
+  private async loadScenarios(): Promise<void> {
+    try {
+      this.scenarios.set(await this.scenariosApi.list(true));
+    } catch {
+      this.scenarios.set([]);
+    }
   }
 
   private async loadQuoteHistory(requestId: number): Promise<void> {
@@ -189,6 +381,14 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     } catch {
       this.quoteHistory.set([]);
       this.quoteLoadError.set('pages.adminRouteRequests.quoteHistoryLoadFailed');
+    }
+  }
+
+  private async loadAiHistory(requestId: number): Promise<void> {
+    try {
+      this.aiHistory.set(await this.aiCalculationsApi.listByRequest(requestId));
+    } catch {
+      this.aiHistory.set([]);
     }
   }
 

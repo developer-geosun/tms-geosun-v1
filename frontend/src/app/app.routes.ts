@@ -60,6 +60,15 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'admin/freight-calculation-scenarios',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['admin', 'manager'] },
+    loadComponent: () =>
+      import('./pages/admin-freight-calculation-scenarios/admin-freight-calculation-scenarios.component').then(
+        (m) => m.AdminFreightCalculationScenariosComponent
+      )
+  },
+  {
     path: '404',
     loadComponent: () => import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent)
   },

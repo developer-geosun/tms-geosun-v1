@@ -36,6 +36,14 @@ export class BackendApiService {
     return this.build('/admin/quotes');
   }
 
+  get adminFreightScenarios(): string {
+    return this.build('/admin/freight-calculation-scenarios');
+  }
+
+  get adminAiCalculations(): string {
+    return this.build('/admin/ai-calculations');
+  }
+
   private build(path: string): string {
     return `${this.baseUrl}${this.basePath}${path}`;
   }

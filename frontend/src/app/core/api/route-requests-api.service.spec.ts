@@ -35,14 +35,22 @@ describe('RouteRequestsApiService', () => {
     await expectAsync(pending).toBeResolvedTo(jasmine.objectContaining({ id: 'req-1' }));
   });
 
-  it('applies status query param for admin list', async () => {
-    const pending = service.getAdminRouteRequests('NEW');
+  it('applies query params for paginated admin list', async () => {
+    const pending = service.getAdminRouteRequests({ status: 'NEW', page: 1, size: 10 });
 
-    const request = httpMock.expectOne((r) => r.url === backendApi.adminRouteRequests && r.params.get('status') === 'NEW');
+    const request = httpMock.expectOne(
+      (r) =>
+        r.url === backendApi.adminRouteRequests &&
+        r.params.get('status') === 'NEW' &&
+        r.params.get('page') === '1' &&
+        r.params.get('size') === '10'
+    );
     expect(request.request.method).toBe('GET');
-    request.flush([]);
+    request.flush({ content: [], totalElements: 0, totalPages: 0, page: 1, size: 10 });
 
-    await expectAsync(pending).toBeResolvedTo([]);
+    await expectAsync(pending).toBeResolvedTo(
+      jasmine.objectContaining({ content: [], totalElements: 0, totalPages: 0, page: 1, size: 10 })
+    );
   });
 
   it('sends idempotency key header for createAdminQuote', async () => {

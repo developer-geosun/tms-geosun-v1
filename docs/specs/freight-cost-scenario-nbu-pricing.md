@@ -1,5 +1,9 @@
 # ТЗ: сценарий себестоимости, точка 0, дороги Европы, маржа и курсы НБУ
 
+> **Статус: УСТАРЕВШИЙ (deprecated)** — не реализуется.  
+> **Актуальная альтернатива:** [`freight-calculation-gemini-scenarios.md`](./freight-calculation-gemini-scenarios.md) — расчёт фрахта через ИИ Gemini и текстовые сценарии правил.  
+> Документ сохранён для истории и сравнения подходов.
+
 ## Правила языка документа
 - Основной язык: **RU** (термины API/кода: английский по принятому в проекте стилю).
 - Связанные документы: `docs/specs/routes-server-workflow-and-freight-quoting.md`, `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md`, `docs/specs/route-point-operations-rules.md`, `docs/specs/auth-authentication-authorization.md`, `docs/system.md`.
@@ -142,4 +146,4 @@
 4. Валюта суточных фиксирована в USD — конвертация по НБУ на дату расчёта?
 
 ---
-*Версия документа: 0.5. Сценарии — только сервер; **ADMIN** и **MANAGER** — CRUD сценариев и выбор для расчёта (§8.1). Гружёный расход **37 / 40** — §5, §5.1. §3.1: явно исключён расчёт пробега по странам при `POST /api/v1/route-requests` (см. `docs/specs/route-immutability-list-filters-deferred-country-breakdown.md`). При согласовании ответов по §11 обновить формулы и оставшуюся матрицу RBAC (quote send).*
+*Версия документа: 0.6. **Устаревший (deprecated).** Не реализуется; см. `freight-calculation-gemini-scenarios.md`.*
