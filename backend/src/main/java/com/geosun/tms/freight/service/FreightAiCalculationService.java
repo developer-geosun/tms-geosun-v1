@@ -6,7 +6,6 @@ import com.geosun.tms.auth.domain.user.User;
 import com.geosun.tms.auth.exception.ApiException;
 import com.geosun.tms.auth.repository.UserRepository;
 import com.geosun.tms.freight.client.VertexAiClient;
-import com.geosun.tms.freight.config.VertexAiProperties;
 import com.geosun.tms.freight.domain.AiCalculationStatus;
 import com.geosun.tms.freight.domain.FreightAiCalculation;
 import com.geosun.tms.freight.domain.FreightCalculationScenario;
@@ -35,7 +34,6 @@ public class FreightAiCalculationService {
   private final FreightAiCalculationRepository calculationRepository;
   private final UserRepository userRepository;
   private final VertexAiClient vertexAiClient;
-  private final VertexAiProperties vertexAiProperties;
   private final FreightAiPromptBuilder promptBuilder;
   private final FreightAiResponseParser responseParser;
   private final AiRateLimitService rateLimitService;
@@ -47,7 +45,6 @@ public class FreightAiCalculationService {
       FreightAiCalculationRepository calculationRepository,
       UserRepository userRepository,
       VertexAiClient vertexAiClient,
-      VertexAiProperties vertexAiProperties,
       FreightAiPromptBuilder promptBuilder,
       FreightAiResponseParser responseParser,
       AiRateLimitService rateLimitService,
@@ -57,7 +54,6 @@ public class FreightAiCalculationService {
     this.calculationRepository = calculationRepository;
     this.userRepository = userRepository;
     this.vertexAiClient = vertexAiClient;
-    this.vertexAiProperties = vertexAiProperties;
     this.promptBuilder = promptBuilder;
     this.responseParser = responseParser;
     this.rateLimitService = rateLimitService;
