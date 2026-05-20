@@ -1,13 +1,15 @@
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import {
   CreateScenarioContractRequest,
@@ -27,9 +29,11 @@ import { AdminFreightScenarioConfirmDialogComponent } from './admin-freight-scen
     ReactiveFormsModule,
     MatButtonModule,
     MatTableModule,
+    MatPaginatorModule,
     MatFormFieldModule,
     MatInputModule,
     MatCheckboxModule,
+    MatTooltipModule,
     MatDialogModule
   ],
   templateUrl: './admin-freight-calculation-scenarios.component.html',
@@ -50,6 +54,17 @@ export class AdminFreightCalculationScenariosComponent {
   readonly scenarios = signal<ScenarioContractDto[]>([]);
   readonly editingId = signal<string | null>(null);
 
+  /** Клієнтська пагінація таблиці */
+  readonly pageIndex = signal(0);
+  readonly pageSize = signal(10);
+  readonly pageSizeOptions = [5, 10, 25, 50];
+
+  readonly pagedScenarios = computed(() => {
+    const all = this.scenarios();
+    const start = this.pageIndex() * this.pageSize();
+    return all.slice(start, start + this.pageSize());
+  });
+
   readonly scenarioForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
     description: [''],
@@ -67,11 +82,29 @@ export class AdminFreightCalculationScenariosComponent {
     this.loadError.set('');
     try {
       this.scenarios.set(await this.scenariosApi.list(false));
+      this.clampPageIndex();
     } catch {
       this.scenarios.set([]);
+      this.pageIndex.set(0);
       this.loadError.set('pages.adminFreightScenarios.loadFailed');
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  onScenariosPageChange(event: PageEvent): void {
+    this.pageIndex.set(event.pageIndex);
+    this.pageSize.set(event.pageSize);
+    this.clampPageIndex();
+  }
+
+  /** Після зміни списку або pageSize — не залишаємось на порожній сторінці */
+  private clampPageIndex(): void {
+    const total = this.scenarios().length;
+    const size = this.pageSize();
+    const maxIndex = Math.max(0, Math.ceil(total / size) - 1);
+    if (this.pageIndex() > maxIndex) {
+      this.pageIndex.set(maxIndex);
     }
   }
 
