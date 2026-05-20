@@ -19,7 +19,26 @@
     <properties>
         <java.version>21</java.version>
         <spotless.version>2.44.5</spotless.version>
+        <!-- Вирівнювання grpc-context: opencensus-api тягне 1.27.2, google-http-client — 1.70.0 -->
+        <grpc.version>1.70.0</grpc.version>
+        <!-- Серверний JVM: єдиний guava-jre замість android-варіантів з Google Auth / OpenCensus -->
+        <guava.version>33.4.0-jre</guava.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-context</artifactId>
+                <version>${grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -90,6 +109,22 @@
             <groupId>com.google.auth</groupId>
             <artifactId>google-auth-library-oauth2-http</artifactId>
             <version>1.33.1</version>
+            <exclusions>
+                <!-- google-auth-library оголошує guava-*-android; для Spring Boot потрібен jre -->
+                <exclusion>
+                    <groupId>com.google.guava</groupId>
+                    <artifactId>guava</artifactId>
+                </exclusion>
+                <!-- opencensus-contrib-http-util тягне guava:29.0-android -->
+                <exclusion>
+                    <groupId>io.opencensus</groupId>
+                    <artifactId>opencensus-contrib-http-util</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
 
         <dependency>
