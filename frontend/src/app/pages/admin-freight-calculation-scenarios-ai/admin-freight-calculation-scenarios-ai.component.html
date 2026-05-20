@@ -1,0 +1,119 @@
+<section class="admin-freight-scenarios-ai">
+  <header class="admin-freight-scenarios-ai__header">
+    <h1>{{ 'pages.adminFreightScenariosAi.title' | translate }}</h1>
+    <div class="admin-freight-scenarios-ai__actions">
+      <button mat-stroked-button type="button" (click)="loadScenarios()">
+        {{ 'pages.adminFreightScenariosAi.refresh' | translate }}
+      </button>
+      <button mat-stroked-button type="button" (click)="backToRouteRequests()">
+        {{ 'pages.adminFreightScenariosAi.backToRequests' | translate }}
+      </button>
+    </div>
+  </header>
+
+  @if (isLoading() || loadError() || actionError() || actionSuccess()) {
+    <div class="admin-freight-scenarios-ai__messages">
+      @if (isLoading()) {
+        <p>{{ 'pages.adminFreightScenariosAi.loading' | translate }}</p>
+      } @else if (loadError()) {
+        <p class="admin-freight-scenarios-ai__error">{{ loadError() | translate }}</p>
+      }
+
+      @if (actionError()) {
+        <p class="admin-freight-scenarios-ai__error">{{ actionError() | translate }}</p>
+      }
+      @if (actionSuccess()) {
+        <p class="admin-freight-scenarios-ai__success">{{ actionSuccess() | translate }}</p>
+      }
+    </div>
+  }
+
+  <div class="admin-freight-scenarios-ai__layout">
+    <div class="admin-freight-scenarios-ai__table-panel">
+      <div class="admin-freight-scenarios-ai__table-scroll">
+        <table mat-table [dataSource]="pagedScenarios()" class="admin-freight-scenarios-ai__table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminFreightScenariosAi.name' | translate }}</th>
+            <td mat-cell *matCellDef="let row" class="admin-freight-scenarios-ai__cell-ellipsis" [matTooltip]="row.name">
+              {{ row.name }}
+            </td>
+          </ng-container>
+          <ng-container matColumnDef="isActive">
+            <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminFreightScenariosAi.isActive' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.isActive }}</td>
+          </ng-container>
+          <ng-container matColumnDef="updatedAt">
+            <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminFreightScenariosAi.updatedAt' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.updatedAt | date: 'short' }}</td>
+          </ng-container>
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let row">
+              <div class="admin-freight-scenarios-ai__cell-actions">
+                <button mat-button type="button" (click)="startEdit(row)">{{ 'pages.adminFreightScenariosAi.edit' | translate }}</button>
+                <button mat-button color="warn" type="button" (click)="deleteScenario(row)">
+                  {{ 'pages.adminFreightScenariosAi.delete' | translate }}
+                </button>
+              </div>
+            </td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+      </div>
+      <mat-paginator
+        class="admin-freight-scenarios-ai__paginator"
+        [length]="scenarios().length"
+        [pageIndex]="pageIndex()"
+        [pageSize]="pageSize()"
+        [pageSizeOptions]="pageSizeOptions"
+        [showFirstLastButtons]="true"
+        (page)="onScenariosPageChange($event)" />
+    </div>
+
+    <div class="admin-freight-scenarios-ai__form-panel">
+      <h2>
+        {{
+          (editingId() ? 'pages.adminFreightScenariosAi.editTitle' : 'pages.adminFreightScenariosAi.createTitle')
+            | translate
+        }}
+      </h2>
+      <form [formGroup]="scenarioForm" (ngSubmit)="saveScenario()">
+        <mat-form-field appearance="outline" class="admin-freight-scenarios-ai__field">
+          <mat-label>{{ 'pages.adminFreightScenariosAi.name' | translate }}</mat-label>
+          <input matInput formControlName="name" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="admin-freight-scenarios-ai__field">
+          <mat-label>{{ 'pages.adminFreightScenariosAi.description' | translate }}</mat-label>
+          <input matInput formControlName="description" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="admin-freight-scenarios-ai__field">
+          <mat-label>{{ 'pages.adminFreightScenariosAi.outputFormatHint' | translate }}</mat-label>
+          <input matInput formControlName="outputFormatHint" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="admin-freight-scenarios-ai__field admin-freight-scenarios-ai__field--wide">
+          <mat-label>{{ 'pages.adminFreightScenariosAi.rulesText' | translate }}</mat-label>
+          <textarea matInput formControlName="rulesText" rows="12"></textarea>
+        </mat-form-field>
+        <mat-checkbox formControlName="isActive">{{ 'pages.adminFreightScenariosAi.isActive' | translate }}</mat-checkbox>
+        <div class="admin-freight-scenarios-ai__form-actions">
+          <button mat-flat-button color="primary" type="submit">
+            {{ 'pages.adminFreightScenariosAi.save' | translate }}
+          </button>
+          <button mat-stroked-button type="button" (click)="startCreate()">
+            {{ 'pages.adminFreightScenariosAi.resetForm' | translate }}
+          </button>
+          <button mat-stroked-button type="button" (click)="importInput.click()">
+            {{ 'pages.adminFreightScenariosAi.import' | translate }}
+          </button>
+          <input
+            #importInput
+            type="file"
+            accept=".txt,.md,.json"
+            hidden
+            (change)="onImportFileSelected($event)" />
+        </div>
+      </form>
+    </div>
+  </div>
+</section>

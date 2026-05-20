@@ -106,6 +106,11 @@ export class ToolbarComponent {
       route: '/admin/freight-calculation-scenarios',
       labelKey: 'navigation.adminFreightScenarios',
       roles: ['admin', 'manager'] as const
+    },
+    {
+      route: '/admin/freight-calculation-scenarios-ai',
+      labelKey: 'navigation.adminFreightScenariosAi',
+      roles: ['admin', 'manager'] as const
     }
   ];
   

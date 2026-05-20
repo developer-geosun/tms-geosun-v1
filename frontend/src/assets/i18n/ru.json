@@ -402,6 +402,38 @@
       "deleteConfirm": "Удалить или деактивировать сценарий?",
       "cancel": "Отмена",
       "confirm": "Подтвердить"
+    },
+    "adminFreightScenariosAi": {
+      "title": "Сценарии расчёта фрахта (ИИ)",
+      "refresh": "Обновить",
+      "backToRequests": "К очереди заявок",
+      "loading": "Загрузка...",
+      "loadFailed": "Не удалось загрузить сценарии",
+      "createTitle": "Новый сценарий",
+      "editTitle": "Редактирование сценария",
+      "name": "Название",
+      "description": "Описание",
+      "rulesText": "Правила расчёта",
+      "outputFormatHint": "Формат ответа",
+      "isActive": "Активный",
+      "updatedAt": "Обновлено",
+      "save": "Сохранить",
+      "resetForm": "Очистить форму",
+      "import": "Импорт файла",
+      "edit": "Редактировать",
+      "delete": "Удалить",
+      "validationError": "Проверьте обязательные поля",
+      "created": "Сценарий создан",
+      "updated": "Сценарий обновлён",
+      "deleted": "Сценарий удалён или деактивирован",
+      "saveFailed": "Не удалось сохранить сценарий",
+      "deleteFailed": "Не удалось удалить сценарий",
+      "imported": "Сценарий импортирован",
+      "importFailed": "Не удалось импортировать файл",
+      "confirmTitle": "Подтверждение",
+      "deleteConfirm": "Удалить или деактивировать сценарий?",
+      "cancel": "Отмена",
+      "confirm": "Подтвердить"
     }
   },
   "theme": {
@@ -430,7 +462,8 @@
     "myFreightRequests": "Запросы на фрахт",
     "freightCalculationHere": "Расчет HERE",
     "adminRouteRequests": "Очередь запросов",
-    "adminFreightScenarios": "Сценарии фрахта"
+    "adminFreightScenarios": "Сценарии фрахта",
+    "adminFreightScenariosAi": "Сценарии фрахта (ИИ)"
   },
   "auth": {
     "register": "Регистрация",

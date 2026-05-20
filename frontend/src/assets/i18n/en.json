@@ -402,6 +402,38 @@
       "deleteConfirm": "Delete or deactivate this scenario?",
       "cancel": "Cancel",
       "confirm": "Confirm"
+    },
+    "adminFreightScenariosAi": {
+      "title": "Freight calculation scenarios (AI)",
+      "refresh": "Refresh",
+      "backToRequests": "Back to requests",
+      "loading": "Loading...",
+      "loadFailed": "Failed to load scenarios",
+      "createTitle": "New scenario",
+      "editTitle": "Edit scenario",
+      "name": "Name",
+      "description": "Description",
+      "rulesText": "Calculation rules",
+      "outputFormatHint": "Output format",
+      "isActive": "Active",
+      "updatedAt": "Updated",
+      "save": "Save",
+      "resetForm": "Clear form",
+      "import": "Import file",
+      "edit": "Edit",
+      "delete": "Delete",
+      "validationError": "Check required fields",
+      "created": "Scenario created",
+      "updated": "Scenario updated",
+      "deleted": "Scenario deleted or deactivated",
+      "saveFailed": "Failed to save scenario",
+      "deleteFailed": "Failed to delete scenario",
+      "imported": "Scenario imported",
+      "importFailed": "Failed to import file",
+      "confirmTitle": "Confirm",
+      "deleteConfirm": "Delete or deactivate this scenario?",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
     }
   },
   "theme": {
@@ -430,7 +462,8 @@
     "myFreightRequests": "Freight requests",
     "freightCalculationHere": "HERE freight",
     "adminRouteRequests": "Requests queue",
-    "adminFreightScenarios": "Freight scenarios"
+    "adminFreightScenarios": "Freight scenarios",
+    "adminFreightScenariosAi": "Freight scenarios (AI)"
   },
   "auth": {
     "register": "Sign up",
