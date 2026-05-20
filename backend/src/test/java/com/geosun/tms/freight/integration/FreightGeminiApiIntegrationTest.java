@@ -125,7 +125,10 @@ class FreightGeminiApiIntegrationTest {
                                 Map.of("type", "food", "weightKg", 1000.0, "volumeM3", 10.0)))))
             .andExpect(status().isCreated())
             .andReturn();
-    return objectMapper.readTree(requestResult.getResponse().getContentAsString()).get("id").asLong();
+    return objectMapper
+        .readTree(requestResult.getResponse().getContentAsString())
+        .get("id")
+        .asLong();
   }
 
   private String createRoute(String access, String title) throws Exception {
@@ -161,7 +164,10 @@ class FreightGeminiApiIntegrationTest {
                     .content(toJson(new LoginRequest(email, password))))
             .andExpect(status().isOk())
             .andReturn();
-    return objectMapper.readTree(loginResult.getResponse().getContentAsString()).get("accessToken").asText();
+    return objectMapper
+        .readTree(loginResult.getResponse().getContentAsString())
+        .get("accessToken")
+        .asText();
   }
 
   private static String bearer(String access) {

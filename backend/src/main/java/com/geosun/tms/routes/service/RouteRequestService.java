@@ -118,7 +118,11 @@ public class RouteRequestService {
     List<RouteRequestDto> content =
         result.getContent().stream().map((request) -> toDto(request, false)).toList();
     return new PageResponse<>(
-        content, result.getTotalElements(), result.getTotalPages(), result.getNumber(), result.getSize());
+        content,
+        result.getTotalElements(),
+        result.getTotalPages(),
+        result.getNumber(),
+        result.getSize());
   }
 
   @Transactional(readOnly = true)

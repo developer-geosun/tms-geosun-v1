@@ -61,7 +61,8 @@ public class FreightAiCalculationService {
   }
 
   @Transactional
-  public FreightAiCalculationDto run(String userId, Long requestId, RunAiCalculationRequest request) {
+  public FreightAiCalculationDto run(
+      String userId, Long requestId, RunAiCalculationRequest request) {
     rateLimitService.checkAndRecord(userId);
     RouteRequest routeRequest = loadRouteRequest(requestId);
     FreightCalculationScenario scenario = loadActiveScenario(request.scenarioId());
@@ -83,8 +84,7 @@ public class FreightAiCalculationService {
     long started = System.currentTimeMillis();
     log.info("ai_calculation_started requestId={} scenarioId={}", requestId, scenario.getId());
     try {
-      String responseText =
-          vertexAiClient.generate(promptBuilder.systemInstruction(), userContent);
+      String responseText = vertexAiClient.generate(promptBuilder.systemInstruction(), userContent);
       FreightAiResponseParser.ParseResult parsed = responseParser.parse(responseText);
       entity.setStatus(parsed.status());
       entity.setResponseText(parsed.responseText());
@@ -139,8 +139,7 @@ public class FreightAiCalculationService {
     FreightCalculationScenario scenario =
         scenarioRepository
             .findById(Objects.requireNonNull(scenarioId, "scenarioId"))
-            .orElseThrow(
-                () -> ApiException.badRequest("SCENARIO_NOT_FOUND", "Scenario not found"));
+            .orElseThrow(() -> ApiException.badRequest("SCENARIO_NOT_FOUND", "Scenario not found"));
     if (!scenario.isActive()) {
       throw ApiException.badRequest("SCENARIO_NOT_FOUND", "Scenario is not active");
     }
@@ -173,8 +172,7 @@ public class FreightAiCalculationService {
         structured = null;
       }
     }
-    String scenarioName =
-        entity.getScenario() == null ? null : entity.getScenario().getName();
+    String scenarioName = entity.getScenario() == null ? null : entity.getScenario().getName();
     String scenarioId = entity.getScenario() == null ? null : entity.getScenario().getId();
     return new FreightAiCalculationDto(
         entity.getId(),
@@ -190,8 +188,7 @@ public class FreightAiCalculationService {
   }
 
   private FreightAiCalculationSummaryDto toSummaryDto(FreightAiCalculation entity) {
-    String scenarioName =
-        entity.getScenario() == null ? null : entity.getScenario().getName();
+    String scenarioName = entity.getScenario() == null ? null : entity.getScenario().getName();
     String scenarioId = entity.getScenario() == null ? null : entity.getScenario().getId();
     return new FreightAiCalculationSummaryDto(
         entity.getId(),

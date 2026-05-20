@@ -49,7 +49,8 @@ public class VertexAiClient {
     validateConfiguration();
 
     URI uri = buildGenerateContentUri();
-    HttpEntity<String> entity = new HttpEntity<>(buildRequestBody(systemInstruction, userContent), authHeaders());
+    HttpEntity<String> entity =
+        new HttpEntity<>(buildRequestBody(systemInstruction, userContent), authHeaders());
 
     try {
       ResponseEntity<String> response = restTemplate.postForEntity(uri, entity, String.class);
@@ -134,12 +135,12 @@ public class VertexAiClient {
 
   private String retryOnce(@NonNull URI uri, HttpEntity<String> entity) {
     try {
-      HttpEntity<String> retryEntity =
-          new HttpEntity<>(entity.getBody(), authHeaders());
+      HttpEntity<String> retryEntity = new HttpEntity<>(entity.getBody(), authHeaders());
       ResponseEntity<String> response = restTemplate.postForEntity(uri, retryEntity, String.class);
       return extractText(Objects.requireNonNull(response.getBody(), "empty Vertex AI response"));
     } catch (Exception ex) {
-      throw ApiException.serviceUnavailable("GEMINI_UNAVAILABLE", "Vertex AI unavailable after retry");
+      throw ApiException.serviceUnavailable(
+          "GEMINI_UNAVAILABLE", "Vertex AI unavailable after retry");
     }
   }
 

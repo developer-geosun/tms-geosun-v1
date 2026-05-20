@@ -21,8 +21,7 @@ public class AiRateLimitService {
   public void checkAndRecord(String userId) {
     Instant now = Instant.now();
     Instant windowStart = now.minusSeconds(3600);
-    Deque<Instant> deque =
-        buckets.computeIfAbsent(userId, ignored -> new ArrayDeque<>());
+    Deque<Instant> deque = buckets.computeIfAbsent(userId, ignored -> new ArrayDeque<>());
     synchronized (deque) {
       while (!deque.isEmpty() && deque.peekFirst().isBefore(windowStart)) {
         deque.pollFirst();

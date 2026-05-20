@@ -66,6 +66,5 @@ public class FreightAiResponseParser {
     return Optional.empty();
   }
 
-  public record ParseResult(
-      AiCalculationStatus status, String responseText, JsonNode structured) {}
+  public record ParseResult(AiCalculationStatus status, String responseText, JsonNode structured) {}
 }

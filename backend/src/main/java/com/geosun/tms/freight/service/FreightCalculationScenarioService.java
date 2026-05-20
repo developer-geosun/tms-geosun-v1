@@ -56,7 +56,7 @@ public class FreightCalculationScenarioService {
 
   @Transactional
   public ScenarioDto create(String userId, CreateScenarioRequest request) {
-  User user = loadUser(userId);
+    User user = loadUser(userId);
     validateUniqueActiveName(request.name(), null);
     FreightCalculationScenario scenario = new FreightCalculationScenario();
     scenario.setName(request.name().trim());
@@ -125,14 +125,11 @@ public class FreightCalculationScenarioService {
         String hint = textOrNull(json, "outputFormatHint");
         boolean active = !json.has("isActive") || json.get("isActive").asBoolean(true);
         return create(
-            userId,
-            new CreateScenarioRequest(name, description, rulesText, hint, active));
+            userId, new CreateScenarioRequest(name, description, rulesText, hint, active));
       }
-      String name =
-          firstNonBlank(nameOverride, stripExtension(sanitizeFilename(originalName)));
+      String name = firstNonBlank(nameOverride, stripExtension(sanitizeFilename(originalName)));
       String description = descriptionOverride;
-      return create(
-          userId, new CreateScenarioRequest(name, description, content, "JSON", true));
+      return create(userId, new CreateScenarioRequest(name, description, content, "JSON", true));
     } catch (ApiException ex) {
       throw ex;
     } catch (Exception ex) {
