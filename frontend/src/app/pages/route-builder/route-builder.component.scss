@@ -561,10 +561,40 @@
   opacity: 1;
   pointer-events: auto;
 }
+
+/* Пульс FAB «карта / список точок» у компактному макеті */
+@keyframes route-builder-panel-toggle-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.06);
+  }
+}
+
 .route-builder-panel-toggle {
   position: fixed;
   z-index: 1100;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+}
+
+.route-builder-panel-toggle.mat-mdc-fab {
+  --mat-fab-container-color: var(--mat-sys-primary-container);
+  --mat-fab-foreground-color: var(--mat-sys-on-primary-container);
+  --mat-fab-state-layer-color: var(--mat-sys-on-primary-container);
+  --mat-fab-ripple-color: color-mix(
+    in srgb,
+    var(--mat-sys-on-primary-container) calc(var(--mat-sys-pressed-state-layer-opacity) * 100%),
+    transparent
+  );
+  animation: route-builder-panel-toggle-pulse 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-builder-panel-toggle.mat-mdc-fab {
+    animation: none;
+  }
 }
 /* Обидві кнопки в одному місці — внизу справа (над системним футером / safe area) */
 .route-builder-panel-toggle--open-map,
