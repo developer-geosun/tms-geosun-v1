@@ -2,31 +2,25 @@
   <header class="admin-currencies__header">
     <h1>{{ 'pages.adminCurrencies.title' | translate }}</h1>
     <div class="admin-currencies__actions">
-      <button mat-stroked-button type="button" (click)="reload()" [disabled]="isLoading() || isSyncing()">
+      <button
+        mat-stroked-button
+        type="button"
+        class="admin-currencies__action-btn"
+        (click)="reload()"
+        [disabled]="isLoading() || isSyncing()">
         {{ 'pages.adminCurrencies.refresh' | translate }}
       </button>
-      <button mat-flat-button color="primary" type="button" (click)="syncNbuRates()" [disabled]="isLoading() || isSyncing()">
+      <button
+        mat-flat-button
+        color="primary"
+        type="button"
+        class="admin-currencies__action-btn"
+        (click)="syncNbuRates()"
+        [disabled]="isLoading() || isSyncing()">
         {{ (isSyncing() ? 'pages.adminCurrencies.syncing' : 'pages.adminCurrencies.syncNbu') | translate }}
       </button>
     </div>
   </header>
-
-  @if (nbuSnapshot(); as snapshot) {
-    <p class="admin-currencies__nbu-info">
-      {{
-        'pages.adminCurrencies.nbuSnapshot'
-          | translate
-            : {
-                rateDate: snapshot.rateDate,
-                fetchedAt: (snapshot.fetchedAt | date: 'short')
-              }
-      }}
-    </p>
-  } @else if (!isLoading()) {
-    <p class="admin-currencies__nbu-info admin-currencies__nbu-info--muted">
-      {{ 'pages.adminCurrencies.nbuNotSynced' | translate }}
-    </p>
-  }
 
   @if (isLoading() || loadError() || actionError() || actionSuccess()) {
     <div class="admin-currencies__messages">
@@ -44,21 +38,19 @@
     </div>
   }
 
-  <div class="admin-currencies__filters">
-    <mat-checkbox [checked]="showActiveOnly()" (change)="onActiveOnlyChange($event.checked)">
-      {{ 'pages.adminCurrencies.activeOnly' | translate }}
-    </mat-checkbox>
-  </div>
-
   <div class="admin-currencies__table-panel">
     <div class="admin-currencies__table-scroll">
-      <table mat-table [dataSource]="pagedCurrencies()" class="admin-currencies__table">
+      <table mat-table [dataSource]="dataSource" matSort class="admin-currencies__table">
         <ng-container matColumnDef="code">
-          <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.code' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="code">
+            {{ 'pages.adminCurrencies.code' | translate }}
+          </th>
           <td mat-cell *matCellDef="let row">{{ row.code }}</td>
         </ng-container>
         <ng-container matColumnDef="nameUk">
-          <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.name' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="nameUk">
+            {{ 'pages.adminCurrencies.name' | translate }}
+          </th>
           <td mat-cell *matCellDef="let row" [matTooltip]="row.nameUk">{{ row.nameUk }}</td>
         </ng-container>
         <ng-container matColumnDef="nbuUnits">
@@ -66,7 +58,9 @@
           <td mat-cell *matCellDef="let row">{{ row.nbuUnits }}</td>
         </ng-container>
         <ng-container matColumnDef="ratePerUnit">
-          <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.ratePerUnit' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="ratePerUnit">
+            {{ 'pages.adminCurrencies.ratePerUnit' | translate }}
+          </th>
           <td mat-cell *matCellDef="let row">{{ formatRate(row.latestNbuRatePerUnit) }}</td>
         </ng-container>
         <ng-container matColumnDef="rateDate">
@@ -74,7 +68,9 @@
           <td mat-cell *matCellDef="let row">{{ row.latestRateDate ?? '—' }}</td>
         </ng-container>
         <ng-container matColumnDef="isActive">
-          <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.isActive' | translate }}</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header="isActive">
+            {{ 'pages.adminCurrencies.isActive' | translate }}
+          </th>
           <td mat-cell *matCellDef="let row">
             <mat-slide-toggle
               [checked]="row.isActive"
@@ -88,11 +84,8 @@
     </div>
     <mat-paginator
       class="admin-currencies__paginator"
-      [length]="filteredCurrencies().length"
-      [pageIndex]="pageIndex()"
-      [pageSize]="pageSize()"
+      [pageSize]="defaultPageSize"
       [pageSizeOptions]="pageSizeOptions"
-      [showFirstLastButtons]="true"
-      (page)="onPageChange($event)" />
+      [showFirstLastButtons]="true" />
   </div>
 </section>

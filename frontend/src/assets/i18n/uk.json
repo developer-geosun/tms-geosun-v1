@@ -3,7 +3,16 @@
     "geosun": "ТОВ Геосан",
     "allRightsReserved": "Всі права захищені",
     "returnToHome": "Повернутися на головну",
-    "designedBy": "Розроблено Максимом Горєліковим (Ферматс)"
+    "designedBy": "Розроблено Максимом Горєліковим (Ферматс)",
+    "paginator": {
+      "itemsPerPage": "Записів на сторінку:",
+      "nextPage": "Наступна сторінка",
+      "previousPage": "Попередня сторінка",
+      "firstPage": "Перша сторінка",
+      "lastPage": "Остання сторінка",
+      "range": "{{start}} – {{end}} з {{length}}",
+      "rangeEmpty": "0 з {{length}}"
+    }
   },
   "pages": {
     "main": {

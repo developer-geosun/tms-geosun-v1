@@ -1,4 +1,5 @@
 import { APP_INITIALIZER, ApplicationConfig, LOCALE_ID, importProvidersFrom, inject } from '@angular/core';
+import { MatPaginatorIntl } from '@angular/material/paginator';
 import { provideRouter } from '@angular/router';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -7,7 +8,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors';
-import { AuthAvailabilityService } from './core/services';
+import { AuthAvailabilityService, TranslatedMatPaginatorIntl } from './core/services';
 
 // Фабрика для завантаження перекладів з assets
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
@@ -24,6 +25,7 @@ function authAvailabilityInitializerFactory(): () => Promise<void> {
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: LOCALE_ID, useValue: 'uk' },
+    { provide: MatPaginatorIntl, useClass: TranslatedMatPaginatorIntl },
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
