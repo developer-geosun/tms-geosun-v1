@@ -2,10 +2,12 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
+  DestroyRef,
   inject,
   signal,
   ViewChild
 } from '@angular/core';
+import { MediaMatcher } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
@@ -34,7 +36,13 @@ import { CurrenciesApiService, CurrencyContractDto } from '../../core/api';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminCurrenciesComponent implements AfterViewInit {
+  private static readonly MOBILE_MAX_WIDTH_PX = 600;
+  private static readonly DESKTOP_DEFAULT_PAGE_SIZE = 10;
+  private static readonly MOBILE_DEFAULT_PAGE_SIZE = 5;
+
   private readonly currenciesApi = inject(CurrenciesApiService);
+  private readonly mediaMatcher = inject(MediaMatcher);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly displayedColumns = [
     'code',
@@ -46,7 +54,7 @@ export class AdminCurrenciesComponent implements AfterViewInit {
   ];
   readonly dataSource = new MatTableDataSource<CurrencyContractDto>([]);
   readonly pageSizeOptions = [5, 10, 15, 25, 50];
-  readonly defaultPageSize = 10;
+  readonly pageSize = signal(AdminCurrenciesComponent.DESKTOP_DEFAULT_PAGE_SIZE);
 
   readonly isLoading = signal(false);
   readonly isSyncing = signal(false);
@@ -61,6 +69,7 @@ export class AdminCurrenciesComponent implements AfterViewInit {
 
   constructor() {
     this.dataSource.sortData = this.sortCurrencies.bind(this);
+    this.bindViewportPageSizeListener();
     void this.reload();
   }
 
@@ -71,6 +80,7 @@ export class AdminCurrenciesComponent implements AfterViewInit {
     if (this.sort) {
       this.dataSource.sort = this.sort;
     }
+    this.applyDefaultPageSizeForViewport();
     this.refreshTableData();
   }
 
@@ -135,6 +145,33 @@ export class AdminCurrenciesComponent implements AfterViewInit {
       return '—';
     }
     return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+  }
+
+  private bindViewportPageSizeListener(): void {
+    const mql = this.mediaMatcher.matchMedia(
+      `(max-width: ${AdminCurrenciesComponent.MOBILE_MAX_WIDTH_PX}px)`
+    );
+    const onChange = (): void => this.applyDefaultPageSizeForViewport();
+    onChange();
+    mql.addEventListener('change', onChange);
+    this.destroyRef.onDestroy(() => mql.removeEventListener('change', onChange));
+  }
+
+  private applyDefaultPageSizeForViewport(): void {
+    const size = this.isMobileViewport()
+      ? AdminCurrenciesComponent.MOBILE_DEFAULT_PAGE_SIZE
+      : AdminCurrenciesComponent.DESKTOP_DEFAULT_PAGE_SIZE;
+    this.pageSize.set(size);
+    if (this.paginator) {
+      this.paginator.pageSize = size;
+      this.paginator.pageIndex = 0;
+    }
+  }
+
+  private isMobileViewport(): boolean {
+    return this.mediaMatcher.matchMedia(
+      `(max-width: ${AdminCurrenciesComponent.MOBILE_MAX_WIDTH_PX}px)`
+    ).matches;
   }
 
   private refreshTableData(): void {
