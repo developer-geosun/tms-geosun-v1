@@ -44,6 +44,10 @@ export class BackendApiService {
     return this.build('/admin/ai-calculations');
   }
 
+  get adminCurrencies(): string {
+    return this.build('/admin/currencies');
+  }
+
   private build(path: string): string {
     return `${this.baseUrl}${this.basePath}${path}`;
   }

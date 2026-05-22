@@ -1,0 +1,138 @@
+package com.geosun.tms.reference.service;
+
+import com.geosun.tms.auth.exception.ApiException;
+import com.geosun.tms.reference.client.NbuRateRow;
+import com.geosun.tms.reference.domain.Currency;
+import com.geosun.tms.reference.domain.CurrencyNbuRate;
+import com.geosun.tms.reference.dto.response.NbuRateDto;
+import com.geosun.tms.reference.dto.response.NbuRatesSnapshotDto;
+import com.geosun.tms.reference.dto.response.SyncNbuRatesResponse;
+import com.geosun.tms.reference.repository.CurrencyNbuRateRepository;
+import com.geosun.tms.reference.repository.CurrencyRepository;
+import com.geosun.tms.reference.service.NbuBusinessDayResolver.ResolvedNbuSnapshot;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+public class NbuExchangeRateService {
+  private static final String BASE_CURRENCY = "UAH";
+
+  private final CurrencyRepository currencyRepository;
+  private final CurrencyNbuRateRepository nbuRateRepository;
+  private final NbuBusinessDayResolver businessDayResolver;
+
+  public NbuExchangeRateService(
+      CurrencyRepository currencyRepository,
+      CurrencyNbuRateRepository nbuRateRepository,
+      NbuBusinessDayResolver businessDayResolver) {
+    this.currencyRepository = currencyRepository;
+    this.nbuRateRepository = nbuRateRepository;
+    this.businessDayResolver = businessDayResolver;
+  }
+
+  @Transactional
+  public SyncNbuRatesResponse syncActiveCurrencies() {
+    List<Currency> activeCurrencies = currencyRepository.findActiveOrdered();
+    if (activeCurrencies.isEmpty()) {
+      throw ApiException.badRequest(
+          "NO_ACTIVE_CURRENCIES", "Немає активних валют для синхронізації курсів НБУ");
+    }
+
+    Set<String> activeCodes =
+        activeCurrencies.stream().map(Currency::getCode).collect(Collectors.toSet());
+    ResolvedNbuSnapshot snapshot = businessDayResolver.resolveLastBusinessDayRates(activeCodes);
+    Instant fetchedAt = Instant.now();
+    LocalDate rateDate = snapshot.rateDate();
+
+    List<NbuRateDto> saved = new ArrayList<>();
+    for (Currency currency : activeCurrencies) {
+      NbuRateDto dto = upsertRate(currency, snapshot, rateDate, fetchedAt);
+      saved.add(dto);
+    }
+    saved.sort(Comparator.comparing(NbuRateDto::currencyCode));
+    return new SyncNbuRatesResponse(rateDate, fetchedAt, saved.size(), saved);
+  }
+
+  @Transactional(readOnly = true)
+  public NbuRatesSnapshotDto getLatestRates() {
+    LocalDate latestDate =
+        nbuRateRepository
+            .findLatestRateDate()
+            .orElseThrow(
+                () ->
+                    ApiException.notFound(
+                        "Курси НБУ ще не синхронізовані. Натисніть «Оновити курси НБУ»."));
+
+    List<Currency> activeCurrencies = currencyRepository.findActiveOrdered();
+    Set<String> activeCodes =
+        activeCurrencies.stream().map(Currency::getCode).collect(Collectors.toSet());
+
+    List<CurrencyNbuRate> stored =
+        nbuRateRepository.findByRateDateAndCurrencyCodeIn(latestDate, activeCodes);
+    Instant fetchedAt =
+        stored.stream()
+            .map(CurrencyNbuRate::getFetchedAt)
+            .max(Instant::compareTo)
+            .orElse(Instant.now());
+
+    List<NbuRateDto> rates =
+        stored.stream()
+            .map(this::toDto)
+            .sorted(Comparator.comparing(NbuRateDto::currencyCode))
+            .toList();
+    return new NbuRatesSnapshotDto(latestDate, fetchedAt, rates);
+  }
+
+  private NbuRateDto upsertRate(
+      Currency currency, ResolvedNbuSnapshot snapshot, LocalDate rateDate, Instant fetchedAt) {
+    String code = currency.getCode();
+    BigDecimal rate;
+    String special = null;
+    int units = currency.getNbuUnits();
+
+    if (BASE_CURRENCY.equals(code)) {
+      rate = BigDecimal.ONE;
+    } else {
+      NbuRateRow row =
+          Objects.requireNonNull(
+              snapshot.ratesByCode().get(code), "Курс НБУ відсутній для активної валюти: " + code);
+      rate = row.rate();
+      special = row.special();
+    }
+
+    BigDecimal ratePerUnit = rate.divide(BigDecimal.valueOf(units), 6, RoundingMode.HALF_UP);
+
+    CurrencyNbuRate entity =
+        nbuRateRepository
+            .findById(new com.geosun.tms.reference.domain.CurrencyNbuRateId(code, rateDate))
+            .orElseGet(CurrencyNbuRate::new);
+    entity.setCurrencyCode(code);
+    entity.setRateDate(rateDate);
+    entity.setRate(rate);
+    entity.setNbuUnits(units);
+    entity.setRatePerUnit(ratePerUnit);
+    entity.setSpecial(special);
+    entity.setFetchedAt(fetchedAt);
+    nbuRateRepository.save(entity);
+    return new NbuRateDto(code, rate, ratePerUnit, units, special);
+  }
+
+  private NbuRateDto toDto(CurrencyNbuRate entity) {
+    return new NbuRateDto(
+        entity.getCurrencyCode(),
+        entity.getRate(),
+        entity.getRatePerUnit(),
+        entity.getNbuUnits(),
+        entity.getSpecial());
+  }
+}

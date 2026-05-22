@@ -78,6 +78,13 @@ export const routes: Routes = [
       )
   },
   {
+    path: 'admin/currencies',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['admin', 'manager'] },
+    loadComponent: () =>
+      import('./pages/admin-currencies/admin-currencies.component').then((m) => m.AdminCurrenciesComponent)
+  },
+  {
     path: '404',
     loadComponent: () => import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent)
   },
