@@ -22,18 +22,26 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatIconModule } from '@angular/material/icon';
+import { RouterLink } from '@angular/router';
 import {
   AdminRouteRequestListParams,
+  CostPreviewContractResponse,
   CreateQuoteContractRequest,
   FreightAiCalculationContractDto,
   FreightAiCalculationSummaryContractDto,
   FreightAiCalculationsApiService,
+  FreightCostCalculationContractDto,
+  FreightNumericScenarioContractDto,
+  FreightNumericScenariosApiService,
   FreightScenariosApiService,
   QuoteContractDto,
   RouteRequestContractDto,
   RouteRequestsApiService,
   ScenarioContractDto
 } from '../../core/api';
+import { extractApiError } from '../../core/utils/api-error';
+import { isNbuRateError } from '../../core/utils/nbu-rate-error';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
 import {
   AiCalculationErrorDisplay,
@@ -56,7 +64,9 @@ import * as L from 'leaflet';
     MatSelectModule,
     MatPaginatorModule,
     MatCardModule,
-    MatExpansionModule
+    MatExpansionModule,
+    MatIconModule,
+    RouterLink
   ],
   templateUrl: './admin-route-requests.component.html',
   styleUrl: './admin-route-requests.component.scss',
@@ -69,6 +79,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   private readonly router = inject(Router);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly scenariosApi = inject(FreightScenariosApiService);
+  private readonly numericScenariosApi = inject(FreightNumericScenariosApiService);
   private readonly aiCalculationsApi = inject(FreightAiCalculationsApiService);
   private map: L.Map | null = null;
   private mapRouteLayer: L.Polyline | null = null;
@@ -86,10 +97,19 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly isCreatingQuote = signal(false);
   readonly isSendingQuote = signal(false);
   readonly isCountryBreakdownLoading = signal(false);
+  readonly isNbuPreviewLoading = signal(false);
   readonly quoteActionError = signal('');
   readonly quoteActionSuccess = signal('');
+  readonly nbuActionError = signal('');
+  readonly nbuActionErrorDetail = signal('');
+  readonly nbuActionSuccess = signal('');
+  readonly showNbuRatesLink = signal(false);
+  readonly nbuCostSummary = signal('');
+  readonly nbuCostHistory = signal<FreightCostCalculationContractDto[]>([]);
+  readonly lastNbuPreview = signal<CostPreviewContractResponse | null>(null);
 
   readonly scenarios = signal<ScenarioContractDto[]>([]);
+  readonly numericScenarios = signal<FreightNumericScenarioContractDto[]>([]);
   readonly aiHistory = signal<FreightAiCalculationSummaryContractDto[]>([]);
   readonly aiResult = signal<FreightAiCalculationContractDto | null>(null);
   readonly isAiCalculating = signal(false);
@@ -127,10 +147,16 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     calculationDate: [new Date().toISOString().slice(0, 10)]
   });
 
+  readonly nbuForm = this.formBuilder.nonNullable.group({
+    scenarioId: [''],
+    calculationDate: [new Date().toISOString().slice(0, 10)]
+  });
+
   readonly statusOptions = ['new', 'in_review', 'quoted', 'accepted', 'rejected', 'cancelled', 'expired'];
 
   constructor() {
     void this.loadScenarios();
+    void this.loadNumericScenarios();
     void this.loadRequests();
     effect(() => {
       const request = this.selectedRequest();
@@ -138,6 +164,9 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
         this.quoteHistory.set([]);
         this.aiHistory.set([]);
         this.aiResult.set(null);
+        this.nbuCostHistory.set([]);
+        this.nbuCostSummary.set('');
+        this.lastNbuPreview.set(null);
         return;
       }
       queueMicrotask(() => {
@@ -145,6 +174,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       });
       void this.loadQuoteHistory(request.id);
       void this.loadAiHistory(request.id);
+      void this.loadNbuCostHistory(request.id);
     });
   }
 
@@ -221,6 +251,12 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.selectedRequestId.set(requestId);
     this.quoteActionError.set('');
     this.quoteActionSuccess.set('');
+    this.nbuActionError.set('');
+    this.nbuActionErrorDetail.set('');
+    this.nbuActionSuccess.set('');
+    this.showNbuRatesLink.set(false);
+    this.nbuCostSummary.set('');
+    this.lastNbuPreview.set(null);
     this.clearAiError();
     this.aiResult.set(null);
   }
@@ -335,20 +371,128 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
 
   async recalculateCountryBreakdown(): Promise<void> {
     const selected = this.selectedRequest();
+    const scenarioId = this.nbuForm.controls.scenarioId.value.trim();
     if (!selected) {
       return;
     }
+    if (!scenarioId) {
+      this.nbuActionError.set('pages.adminRouteRequests.nbuScenarioRequired');
+      this.nbuActionErrorDetail.set('');
+      return;
+    }
+    this.nbuActionError.set('');
+    this.nbuActionErrorDetail.set('');
+    this.nbuActionSuccess.set('');
+    this.showNbuRatesLink.set(false);
     this.quoteActionError.set('');
     this.quoteActionSuccess.set('');
     this.isCountryBreakdownLoading.set(true);
     try {
-      const updated = await this.routeRequestsApi.postAdminCountryBreakdown(selected.id);
+      const updated = await this.routeRequestsApi.postAdminCountryBreakdown(selected.id, { scenarioId });
       this.requests.update((list) => list.map((item) => (item.id === updated.id ? updated : item)));
-      this.quoteActionSuccess.set('pages.adminRouteRequests.countryBreakdownSuccess');
-    } catch {
-      this.quoteActionError.set('pages.adminRouteRequests.countryBreakdownFailed');
+      this.nbuActionSuccess.set('pages.adminRouteRequests.countryBreakdownSuccess');
+    } catch (error) {
+      this.handleNbuActionError(error, 'pages.adminRouteRequests.countryBreakdownFailed');
     } finally {
       this.isCountryBreakdownLoading.set(false);
+    }
+  }
+
+  async runNbuCostPreview(): Promise<void> {
+    const selected = this.selectedRequest();
+    const scenarioId = this.nbuForm.controls.scenarioId.value.trim();
+    const calculationDate = this.nbuForm.controls.calculationDate.value;
+    if (!selected || !scenarioId) {
+      this.nbuActionError.set('pages.adminRouteRequests.nbuScenarioRequired');
+      this.nbuActionErrorDetail.set('');
+      return;
+    }
+    this.nbuActionError.set('');
+    this.nbuActionErrorDetail.set('');
+    this.nbuActionSuccess.set('');
+    this.showNbuRatesLink.set(false);
+    this.isNbuPreviewLoading.set(true);
+    try {
+      const preview = await this.routeRequestsApi.postCostPreview(selected.id, {
+        scenarioId,
+        calculationDate
+      });
+      this.applyCostPreview(preview);
+      await this.loadNbuCostHistory(selected.id);
+      this.nbuActionSuccess.set('pages.adminRouteRequests.nbuPreviewSuccess');
+    } catch (error) {
+      this.handleNbuActionError(error, 'pages.adminRouteRequests.nbuPreviewFailed');
+    } finally {
+      this.isNbuPreviewLoading.set(false);
+    }
+  }
+
+  async viewNbuCalculation(calculationId: string): Promise<void> {
+    const selected = this.selectedRequest();
+    if (!selected) {
+      return;
+    }
+    this.nbuActionError.set('');
+    this.nbuActionErrorDetail.set('');
+    this.showNbuRatesLink.set(false);
+    try {
+      const detail = await this.routeRequestsApi.getCostCalculationById(selected.id, calculationId);
+      this.nbuCostSummary.set(detail.calculationSummary ?? '');
+    } catch (error) {
+      this.handleNbuActionError(error, 'pages.adminRouteRequests.nbuHistoryLoadFailed');
+    }
+  }
+
+  applyNbuToQuoteDraft(): void {
+    const preview = this.lastNbuPreview();
+    if (!preview) {
+      this.quoteActionError.set('pages.adminRouteRequests.nbuPreviewRequiredForQuote');
+      return;
+    }
+    this.quoteActionError.set('');
+    this.quoteDraftForm.patchValue({
+      currency: preview.proposalCurrency.trim().toUpperCase(),
+      totalAmount: String(preview.totalProposalAmount),
+      internalNote: preview.calculationSummary ?? ''
+    });
+    this.quoteActionSuccess.set('pages.adminRouteRequests.nbuAppliedToQuote');
+  }
+
+  async createQuoteFromNbu(): Promise<void> {
+    const selected = this.selectedRequest();
+    const preview = this.lastNbuPreview();
+    if (!selected || !preview?.calculationId) {
+      this.quoteActionError.set('pages.adminRouteRequests.nbuPreviewRequiredForQuote');
+      return;
+    }
+    this.quoteActionError.set('');
+    this.quoteActionSuccess.set('');
+    this.isCreatingQuote.set(true);
+    try {
+      await this.routeRequestsApi.createAdminQuote(
+        selected.id,
+        { fromCostCalculationId: preview.calculationId },
+        this.nextIdempotencyKey('create')
+      );
+      await this.loadQuoteHistory(selected.id);
+      this.quoteActionSuccess.set('pages.adminRouteRequests.quoteDraftCreatedFromNbu');
+    } catch {
+      this.quoteActionError.set('pages.adminRouteRequests.quoteCreateFailed');
+    } finally {
+      this.isCreatingQuote.set(false);
+    }
+  }
+
+  async copyNbuSummary(): Promise<void> {
+    const text = this.nbuCostSummary().trim();
+    if (!text) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      this.nbuActionSuccess.set('pages.adminRouteRequests.nbuSummaryCopied');
+    } catch {
+      this.nbuActionError.set('pages.adminRouteRequests.nbuSummaryCopyFailed');
     }
   }
 
@@ -371,6 +515,39 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     } catch {
       this.scenarios.set([]);
     }
+  }
+
+  private async loadNumericScenarios(): Promise<void> {
+    try {
+      this.numericScenarios.set(await this.numericScenariosApi.list(true));
+    } catch {
+      this.numericScenarios.set([]);
+    }
+  }
+
+  private async loadNbuCostHistory(requestId: number): Promise<void> {
+    try {
+      this.nbuCostHistory.set(await this.routeRequestsApi.listCostCalculations(requestId));
+    } catch {
+      this.nbuCostHistory.set([]);
+    }
+  }
+
+  private applyCostPreview(preview: CostPreviewContractResponse): void {
+    this.lastNbuPreview.set(preview);
+    this.nbuCostSummary.set(preview.calculationSummary ?? '');
+  }
+
+  private handleNbuActionError(error: unknown, fallbackKey: string): void {
+    if (isNbuRateError(error)) {
+      this.nbuActionError.set('pages.adminRouteRequests.nbuRatesMissing');
+      this.nbuActionErrorDetail.set('');
+      this.showNbuRatesLink.set(true);
+      return;
+    }
+    const apiError = extractApiError(error);
+    this.nbuActionError.set(fallbackKey);
+    this.nbuActionErrorDetail.set(apiError.message ?? '');
   }
 
   private async loadQuoteHistory(requestId: number): Promise<void> {

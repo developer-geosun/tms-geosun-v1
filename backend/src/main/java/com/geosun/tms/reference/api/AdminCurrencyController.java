@@ -11,7 +11,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
@@ -65,7 +67,13 @@ public class AdminCurrencyController {
   @Operation(summary = "Get latest stored NBU rates snapshot")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @GetMapping("/nbu-rates")
-  public NbuRatesSnapshotDto getLatestNbuRates() {
-    return nbuExchangeRateService.getLatestRates();
+  public NbuRatesSnapshotDto getNbuRates(
+      @RequestParam(name = "rateDate", required = false)
+          @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+          LocalDate rateDate) {
+    if (rateDate == null) {
+      return nbuExchangeRateService.getLatestRates();
+    }
+    return nbuExchangeRateService.getRatesForDate(rateDate);
   }
 }

@@ -42,6 +42,30 @@
     align-items: center;
   }
 
+  &__rate-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  &__rate-field {
+    min-width: 12rem;
+  }
+
+  &__snapshot {
+    flex-shrink: 0;
+    margin-bottom: 0.75rem;
+
+    h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+    }
+  }
+
   &__messages {
     flex-shrink: 0;
     margin-bottom: 0.5rem;

@@ -54,4 +54,8 @@ public class ApiException extends RuntimeException {
   public static ApiException notFound(String message) {
     return new ApiException(404, "NOT_FOUND", message);
   }
+
+  public static ApiException unprocessableEntity(String code, String message) {
+    return new ApiException(422, code, message);
+  }
 }

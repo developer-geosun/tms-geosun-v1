@@ -64,6 +64,27 @@ public class NbuExchangeRateService {
   }
 
   @Transactional(readOnly = true)
+  public NbuRatesSnapshotDto getRatesForDate(LocalDate calculationDate) {
+    Objects.requireNonNull(calculationDate, "calculationDate");
+    List<Currency> activeCurrencies = currencyRepository.findActiveOrdered();
+    if (activeCurrencies.isEmpty()) {
+      throw ApiException.badRequest(
+          "NO_ACTIVE_CURRENCIES", "Немає активних валют для отримання курсів НБУ");
+    }
+    Set<String> activeCodes =
+        activeCurrencies.stream().map(Currency::getCode).collect(Collectors.toSet());
+    LocalDate rateDate =
+        nbuRateRepository
+            .findLatestCompleteRateDateOnOrBefore(calculationDate, activeCodes.size())
+            .orElseThrow(
+                () ->
+                    ApiException.unprocessableEntity(
+                        "NBU_RATES_NOT_AVAILABLE_FOR_DATE",
+                        "Курси НБУ недоступні на дату " + calculationDate));
+    return buildSnapshot(rateDate, activeCodes);
+  }
+
+  @Transactional(readOnly = true)
   public NbuRatesSnapshotDto getLatestRates() {
     LocalDate latestDate =
         nbuRateRepository
@@ -76,21 +97,27 @@ public class NbuExchangeRateService {
     List<Currency> activeCurrencies = currencyRepository.findActiveOrdered();
     Set<String> activeCodes =
         activeCurrencies.stream().map(Currency::getCode).collect(Collectors.toSet());
+    return buildSnapshot(latestDate, activeCodes);
+  }
 
+  private NbuRatesSnapshotDto buildSnapshot(LocalDate rateDate, Set<String> activeCodes) {
     List<CurrencyNbuRate> stored =
-        nbuRateRepository.findByRateDateAndCurrencyCodeIn(latestDate, activeCodes);
+        nbuRateRepository.findByRateDateAndCurrencyCodeIn(rateDate, activeCodes);
+    if (stored.size() < activeCodes.size()) {
+      throw ApiException.unprocessableEntity(
+          "NBU_RATES_NOT_AVAILABLE_FOR_DATE", "Неповний знімок курсів НБУ на дату " + rateDate);
+    }
     Instant fetchedAt =
         stored.stream()
             .map(CurrencyNbuRate::getFetchedAt)
             .max(Instant::compareTo)
             .orElse(Instant.now());
-
     List<NbuRateDto> rates =
         stored.stream()
             .map(this::toDto)
             .sorted(Comparator.comparing(NbuRateDto::currencyCode))
             .toList();
-    return new NbuRatesSnapshotDto(latestDate, fetchedAt, rates);
+    return new NbuRatesSnapshotDto(rateDate, fetchedAt, rates);
   }
 
   private NbuRateDto upsertRate(

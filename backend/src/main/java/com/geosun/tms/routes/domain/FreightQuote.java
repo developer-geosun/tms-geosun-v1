@@ -1,6 +1,7 @@
 package com.geosun.tms.routes.domain;
 
 import com.geosun.tms.auth.domain.user.User;
+import com.geosun.tms.freight.cost.domain.FreightCostCalculation;
 import com.geosun.tms.routes.dto.QuoteStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -58,6 +59,10 @@ public class FreightQuote {
 
   @Column(name = "internal_note", columnDefinition = "text")
   private String internalNote;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "freight_cost_calculation_id")
+  private FreightCostCalculation freightCostCalculation;
 
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
@@ -159,6 +164,14 @@ public class FreightQuote {
 
   public void setInternalNote(String internalNote) {
     this.internalNote = internalNote;
+  }
+
+  public FreightCostCalculation getFreightCostCalculation() {
+    return freightCostCalculation;
+  }
+
+  public void setFreightCostCalculation(FreightCostCalculation freightCostCalculation) {
+    this.freightCostCalculation = freightCostCalculation;
   }
 
   public Instant getCreatedAt() {

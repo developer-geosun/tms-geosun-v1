@@ -5,6 +5,12 @@ import { BackendApiService } from './backend-api.service';
 import { CreateRouteRequestContractRequest, RouteRequestContractDto } from './route-requests-contracts.model';
 import { CreateQuoteContractRequest, QuoteContractDto } from './quotes-contracts.model';
 import { PageResponse } from './page-response.model';
+import {
+  CostPreviewContractRequest,
+  CostPreviewContractResponse,
+  CountryBreakdownContractRequest,
+  FreightCostCalculationContractDto
+} from './freight-cost-calculations-contracts.model';
 
 export interface AdminRouteRequestListParams {
   status?: string;
@@ -103,11 +109,42 @@ export class RouteRequestsApiService {
     );
   }
 
-  async postAdminCountryBreakdown(requestId: number): Promise<RouteRequestContractDto> {
+  async postAdminCountryBreakdown(
+    requestId: number,
+    body?: CountryBreakdownContractRequest
+  ): Promise<RouteRequestContractDto> {
     return firstValueFrom(
       this.http.post<RouteRequestContractDto>(
         `${this.backendApi.adminRouteRequests}/${encodeURIComponent(String(requestId))}/country-breakdown`,
-        null
+        body ?? null
+      )
+    );
+  }
+
+  async postCostPreview(
+    requestId: number,
+    payload: CostPreviewContractRequest
+  ): Promise<CostPreviewContractResponse> {
+    return firstValueFrom(
+      this.http.post<CostPreviewContractResponse>(this.backendApi.adminRouteRequestCostPreview(requestId), payload)
+    );
+  }
+
+  async listCostCalculations(requestId: number): Promise<FreightCostCalculationContractDto[]> {
+    return firstValueFrom(
+      this.http.get<FreightCostCalculationContractDto[]>(
+        this.backendApi.adminRouteRequestCostCalculations(requestId)
+      )
+    );
+  }
+
+  async getCostCalculationById(
+    requestId: number,
+    calculationId: string
+  ): Promise<FreightCostCalculationContractDto> {
+    return firstValueFrom(
+      this.http.get<FreightCostCalculationContractDto>(
+        `${this.backendApi.adminRouteRequestCostCalculations(requestId)}/${encodeURIComponent(calculationId)}`
       )
     );
   }

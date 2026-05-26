@@ -54,6 +54,12 @@ public class RouteRequest {
   @Column(name = "comment", columnDefinition = "text")
   private String comment;
 
+  @Column(name = "nbu_breakdown_scenario_id", length = 36)
+  private String nbuBreakdownScenarioId;
+
+  @Column(name = "nbu_breakdown_at")
+  private Instant nbuBreakdownAt;
+
   @CreationTimestamp
   @Column(name = "created_at", nullable = false, updatable = false)
   private Instant createdAt;
@@ -132,6 +138,22 @@ public class RouteRequest {
 
   public void setComment(String comment) {
     this.comment = comment;
+  }
+
+  public String getNbuBreakdownScenarioId() {
+    return nbuBreakdownScenarioId;
+  }
+
+  public void setNbuBreakdownScenarioId(String nbuBreakdownScenarioId) {
+    this.nbuBreakdownScenarioId = nbuBreakdownScenarioId;
+  }
+
+  public Instant getNbuBreakdownAt() {
+    return nbuBreakdownAt;
+  }
+
+  public void setNbuBreakdownAt(Instant nbuBreakdownAt) {
+    this.nbuBreakdownAt = nbuBreakdownAt;
   }
 
   public Instant getCreatedAt() {

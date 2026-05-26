@@ -60,10 +60,10 @@ PerDiem_EUR = days × 10
 
 ## Дороги (EU)
 
-По км из country breakdown; справочник `CountryTollRule` (или захардкоженные ставки v1):
+По км из country breakdown; справочник `CountryTollRule` **набора**, привязанного к сценарию (`tollTariffSetId`; см. ТЗ §5.1):
 
 
-| countryCode | тип      | ставка                    |
+| countryCode (UPPERCASE) | тип      | ставка                    |
 | ----------- | -------- | ------------------------- |
 | PL          | EUR/km   | 0,12                      |
 | DE          | EUR/km   | 0,15                      |
@@ -121,3 +121,5 @@ T = 1,30 × C / (1 − 1,30 × p)
 ## Аудит (breakdown)
 
 Сохранять: `scenario_id`, снимок параметров, `calculationDate`, `season_used`, `L_empty_km`, `L_loaded_km`, `L_total_km`, курсы НБУ, суммы по статьям, `DirectCost`, `DriverCost`, `costBeforeMargin`, `Margin`, `total`, `driverSalaryBasis`, число итераций (если были).
+
+**Текстовое описание:** поле `calculationSummary` — человекочитаемый отчёт по блокам (см. [`freight-cost-scenario-nbu-pricing.md`](./freight-cost-scenario-nbu-pricing.md) §7.1); числа в тексте должны совпадать с JSON breakdown.

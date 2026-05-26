@@ -1,6 +1,7 @@
 package com.geosun.tms.routes.service;
 
 import com.geosun.tms.auth.exception.ApiException;
+import com.geosun.tms.freight.cost.service.FreightNumericScenarioService;
 import com.geosun.tms.routes.domain.Route;
 import com.geosun.tms.routes.domain.RoutePoint;
 import com.geosun.tms.routes.domain.RouteRequest;
@@ -9,6 +10,7 @@ import com.geosun.tms.routes.dto.RoutePointType;
 import com.geosun.tms.routes.dto.RouteRequestStatus;
 import com.geosun.tms.routes.dto.request.AdminRouteRequestListQuery;
 import com.geosun.tms.routes.dto.request.CargoDetailsRequest;
+import com.geosun.tms.routes.dto.request.CountryBreakdownRequest;
 import com.geosun.tms.routes.dto.request.CreateRouteRequestRequest;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import com.geosun.tms.routes.dto.response.PageResponse;
@@ -16,6 +18,7 @@ import com.geosun.tms.routes.dto.response.QuoteDto;
 import com.geosun.tms.routes.dto.response.RoutePointDto;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.dto.response.RouteSnapshotDto;
+import com.geosun.tms.routes.repository.RouteCountryDistanceRepository;
 import com.geosun.tms.routes.repository.RouteRepository;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
 import com.geosun.tms.routes.repository.RouteRequestSpecifications;
@@ -43,18 +46,24 @@ public class RouteRequestService {
   private final RouteRequestStatusHistoryRepository historyRepository;
   private final CountryBreakdownService countryBreakdownService;
   private final FreightQuoteService freightQuoteService;
+  private final RouteCountryDistanceRepository routeCountryDistanceRepository;
+  private final FreightNumericScenarioService freightNumericScenarioService;
 
   public RouteRequestService(
       RouteRepository routeRepository,
       RouteRequestRepository routeRequestRepository,
       RouteRequestStatusHistoryRepository historyRepository,
       CountryBreakdownService countryBreakdownService,
-      FreightQuoteService freightQuoteService) {
+      FreightQuoteService freightQuoteService,
+      RouteCountryDistanceRepository routeCountryDistanceRepository,
+      FreightNumericScenarioService freightNumericScenarioService) {
     this.routeRepository = routeRepository;
     this.routeRequestRepository = routeRequestRepository;
     this.historyRepository = historyRepository;
     this.countryBreakdownService = countryBreakdownService;
     this.freightQuoteService = freightQuoteService;
+    this.routeCountryDistanceRepository = routeCountryDistanceRepository;
+    this.freightNumericScenarioService = freightNumericScenarioService;
   }
 
   @Transactional
@@ -137,12 +146,26 @@ public class RouteRequestService {
 
   /** Явний перерахунок пробігу по країнах (HERE) для адмінки; ТЗ §3.3. */
   @Transactional
-  public RouteRequestDto recalculateCountryBreakdownForAdmin(Long requestId) {
+  public RouteRequestDto recalculateCountryBreakdownForAdmin(
+      Long requestId, CountryBreakdownRequest body) {
     Long nonNullRequestId = Objects.requireNonNull(requestId, "requestId must not be null");
     RouteRequest request =
         routeRequestRepository
             .findById(nonNullRequestId)
             .orElseThrow(() -> ApiException.notFound("Route request not found"));
+
+    if (body != null && StringUtils.hasText(body.scenarioId())) {
+      String scenarioId = body.scenarioId().trim();
+      freightNumericScenarioService.loadScenario(scenarioId);
+      String previousScenarioId = request.getNbuBreakdownScenarioId();
+      if (previousScenarioId != null && !previousScenarioId.equals(scenarioId)) {
+        routeCountryDistanceRepository.deleteByRouteId(request.getRoute().getId());
+      }
+      request.setNbuBreakdownScenarioId(scenarioId);
+      request.setNbuBreakdownAt(Instant.now());
+      routeRequestRepository.save(request);
+    }
+
     countryBreakdownService.getOrCalculate(request.getRoute());
     return toDto(request, true);
   }

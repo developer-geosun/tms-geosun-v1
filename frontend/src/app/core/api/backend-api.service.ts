@@ -48,6 +48,31 @@ export class BackendApiService {
     return this.build('/admin/currencies');
   }
 
+  get adminCountryReference(): string {
+    return this.build('/admin/country-reference');
+  }
+
+  get adminFreightNumericScenarios(): string {
+    return this.build('/admin/freight-numeric-scenarios');
+  }
+
+  get adminTollTariffSets(): string {
+    return this.build('/admin/toll-tariff-sets');
+  }
+
+  /** Cost preview/calculations — вкладені під admin route requests. */
+  get adminFreightCostCalculations(): string {
+    return this.adminRouteRequests;
+  }
+
+  adminRouteRequestCostPreview(requestId: number | string): string {
+    return `${this.adminRouteRequests}/${encodeURIComponent(String(requestId))}/cost-preview`;
+  }
+
+  adminRouteRequestCostCalculations(requestId: number | string): string {
+    return `${this.adminRouteRequests}/${encodeURIComponent(String(requestId))}/cost-calculations`;
+  }
+
   private build(path: string): string {
     return `${this.baseUrl}${this.basePath}${path}`;
   }

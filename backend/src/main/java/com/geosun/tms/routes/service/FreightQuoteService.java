@@ -3,6 +3,8 @@ package com.geosun.tms.routes.service;
 import com.geosun.tms.auth.domain.user.User;
 import com.geosun.tms.auth.exception.ApiException;
 import com.geosun.tms.auth.repository.UserRepository;
+import com.geosun.tms.freight.cost.domain.FreightCostCalculation;
+import com.geosun.tms.freight.cost.repository.FreightCostCalculationRepository;
 import com.geosun.tms.routes.domain.FreightQuote;
 import com.geosun.tms.routes.domain.QuoteIdempotencyKey;
 import com.geosun.tms.routes.domain.RouteRequest;
@@ -36,18 +38,21 @@ public class FreightQuoteService {
   private final QuoteIdempotencyKeyRepository quoteIdempotencyKeyRepository;
   private final RouteRequestStatusHistoryRepository routeRequestStatusHistoryRepository;
   private final UserRepository userRepository;
+  private final FreightCostCalculationRepository freightCostCalculationRepository;
 
   public FreightQuoteService(
       RouteRequestRepository routeRequestRepository,
       FreightQuoteRepository freightQuoteRepository,
       QuoteIdempotencyKeyRepository quoteIdempotencyKeyRepository,
       RouteRequestStatusHistoryRepository routeRequestStatusHistoryRepository,
-      UserRepository userRepository) {
+      UserRepository userRepository,
+      FreightCostCalculationRepository freightCostCalculationRepository) {
     this.routeRequestRepository = routeRequestRepository;
     this.freightQuoteRepository = freightQuoteRepository;
     this.quoteIdempotencyKeyRepository = quoteIdempotencyKeyRepository;
     this.routeRequestStatusHistoryRepository = routeRequestStatusHistoryRepository;
     this.userRepository = userRepository;
+    this.freightCostCalculationRepository = freightCostCalculationRepository;
   }
 
   @Transactional
@@ -71,16 +76,21 @@ public class FreightQuoteService {
             .findById(requestId)
             .orElseThrow(() -> ApiException.notFound("Route request not found"));
 
+    ResolvedQuoteFields fields = resolveQuoteFields(requestId, request);
+
     FreightQuote quote = new FreightQuote();
     quote.setRequest(routeRequest);
     quote.setAdminUser(adminUser);
-    quote.setCurrency(request.currency().trim().toUpperCase());
-    quote.setTotalAmount(BigDecimal.valueOf(request.totalAmount()));
+    quote.setCurrency(fields.currency());
+    quote.setTotalAmount(fields.totalAmount());
     quote.setTransitDaysMin(request.transitDaysMin());
     quote.setTransitDaysMax(request.transitDaysMax());
     quote.setValidUntil(parseDateOrNull(request.validUntil()));
     quote.setPublicNote(request.publicNote());
-    quote.setInternalNote(request.internalNote());
+    quote.setInternalNote(fields.internalNote());
+    if (fields.costCalculation() != null) {
+      quote.setFreightCostCalculation(fields.costCalculation());
+    }
     quote.setStatus(QuoteStatus.DRAFT);
     FreightQuote saved = freightQuoteRepository.save(quote);
 
@@ -226,7 +236,62 @@ public class FreightQuoteService {
     }
   }
 
+  private ResolvedQuoteFields resolveQuoteFields(Long requestId, CreateQuoteRequest request) {
+    FreightCostCalculation calculation = null;
+    if (StringUtils.hasText(request.fromCostCalculationId())) {
+      calculation =
+          freightCostCalculationRepository
+              .findByIdAndRouteRequest_Id(request.fromCostCalculationId().trim(), requestId)
+              .orElseThrow(
+                  () -> ApiException.notFound("Cost calculation not found for this request"));
+    }
+
+    String currency =
+        StringUtils.hasText(request.currency())
+            ? request.currency().trim().toUpperCase()
+            : calculation == null ? null : calculation.getProposalCurrency().toUpperCase();
+
+    BigDecimal totalAmount = null;
+    if (request.totalAmount() != null) {
+      if (request.totalAmount() < 0.01) {
+        throw ApiException.badRequest("VALIDATION_ERROR", "totalAmount must be at least 0.01");
+      }
+      totalAmount =
+          BigDecimal.valueOf(request.totalAmount()).setScale(2, java.math.RoundingMode.HALF_UP);
+    } else if (calculation != null) {
+      totalAmount = calculation.getTotalProposalAmount();
+    }
+
+    if (!StringUtils.hasText(currency) || totalAmount == null) {
+      throw ApiException.badRequest(
+          "VALIDATION_ERROR",
+          "currency and totalAmount are required without fromCostCalculationId");
+    }
+
+    String internalNote = request.internalNote();
+    boolean copySummary =
+        Boolean.TRUE.equals(request.copyCalculationSummaryToInternalNote())
+            || (calculation != null
+                && !StringUtils.hasText(internalNote)
+                && request.copyCalculationSummaryToInternalNote() == null);
+    if (copySummary && calculation != null) {
+      internalNote = calculation.getCalculationSummary();
+    }
+
+    return new ResolvedQuoteFields(currency, totalAmount, internalNote, calculation);
+  }
+
+  private record ResolvedQuoteFields(
+      String currency,
+      BigDecimal totalAmount,
+      String internalNote,
+      FreightCostCalculation costCalculation) {}
+
   private QuoteDto toDto(FreightQuote quote) {
+    String calculationId =
+        quote.getFreightCostCalculation() == null
+            ? null
+            : quote.getFreightCostCalculation().getId();
     return new QuoteDto(
         quote.getId(),
         quote.getRequest().getId(),
@@ -237,6 +302,7 @@ public class FreightQuoteService {
         quote.getValidUntil() == null ? null : quote.getValidUntil().toString(),
         quote.getStatus(),
         quote.getPublicNote(),
+        calculationId,
         quote.getCreatedAt() == null ? null : quote.getCreatedAt().toString(),
         quote.getSentAt() == null ? null : quote.getSentAt().toString());
   }

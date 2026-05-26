@@ -1,0 +1,295 @@
+package com.geosun.tms.freight.cost.service;
+
+import com.geosun.tms.auth.exception.ApiException;
+import com.geosun.tms.freight.cost.domain.CountryTollRule;
+import com.geosun.tms.freight.cost.domain.FreightNumericScenario;
+import com.geosun.tms.freight.cost.domain.MarginType;
+import com.geosun.tms.freight.cost.domain.SeasonMode;
+import com.geosun.tms.freight.cost.domain.TollType;
+import com.geosun.tms.freight.cost.dto.response.FreightCostCalculationSummaryDto;
+import com.geosun.tms.freight.cost.dto.response.TollCountryLineDto;
+import com.geosun.tms.freight.cost.repository.CountryTollRuleRepository;
+import com.geosun.tms.reference.dto.response.NbuRateDto;
+import com.geosun.tms.reference.dto.response.NbuRatesSnapshotDto;
+import com.geosun.tms.routes.dto.response.CountryDistanceDto;
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import org.springframework.stereotype.Service;
+
+@Service
+public class FreightCostCalculatorService {
+  private static final MathContext MC = MathContext.DECIMAL64;
+  private static final int MONEY_SCALE = 2;
+  private static final int LITER_SCALE = 3;
+  private static final BigDecimal HUNDRED = new BigDecimal("100");
+  private static final BigDecimal ONE_POINT_THIRTY = new BigDecimal("1.30");
+
+  private final CountryTollRuleRepository countryTollRuleRepository;
+
+  public FreightCostCalculatorService(CountryTollRuleRepository countryTollRuleRepository) {
+    this.countryTollRuleRepository = countryTollRuleRepository;
+  }
+
+  public FreightCostCalculationSummaryDto calculate(
+      FreightNumericScenario scenario,
+      RouteLengths lengths,
+      List<CountryDistanceDto> countryDistances,
+      NbuRatesSnapshotDto nbuRates,
+      LocalDate calculationDate,
+      LocalDate preferredStartDate,
+      SeasonMode seasonOverride) {
+    if (scenario.getMarginType() == MarginType.FIXED_PER_TRIP) {
+      throw ApiException.unprocessableEntity(
+          "NOT_SUPPORTED", "FIXED_PER_TRIP margin is not supported in v1 calculator");
+    }
+
+    boolean winter = resolveWinter(scenario.getSeasonMode(), seasonOverride, preferredStartDate);
+    BigDecimal loadedConsumption =
+        winter
+            ? scenario.getFuelConsumptionLoadedWinterLPer100km()
+            : scenario.getFuelConsumptionLoadedNonWinterLPer100km();
+
+    BigDecimal fuelLitersEmpty =
+        lengths
+            .emptyKm()
+            .multiply(scenario.getFuelConsumptionEmptyLPer100km())
+            .divide(HUNDRED, LITER_SCALE, RoundingMode.HALF_UP);
+    BigDecimal fuelLitersLoaded =
+        lengths
+            .loadedKm()
+            .multiply(loadedConsumption)
+            .divide(HUNDRED, LITER_SCALE, RoundingMode.HALF_UP);
+    BigDecimal fuelCostUah =
+        fuelLitersEmpty
+            .add(fuelLitersLoaded)
+            .multiply(scenario.getFuelPricePerLiter())
+            .setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+
+    int perDiemDays = computePerDiemDays(lengths.totalKm(), scenario);
+    BigDecimal perDiemEur =
+        scenario
+            .getPerDiemAmountPerDay()
+            .multiply(BigDecimal.valueOf(perDiemDays))
+            .setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+
+    Map<String, NbuRateDto> ratesByCode = indexRates(nbuRates);
+    BigDecimal eurRate = requireRate(ratesByCode, "EUR");
+    BigDecimal usdRate = requireRate(ratesByCode, "USD");
+    String proposalCurrency = scenario.getProposalCurrency().toUpperCase();
+    BigDecimal proposalRate = requireRate(ratesByCode, proposalCurrency);
+
+    BigDecimal perDiemUah = convertEurToUah(perDiemEur, eurRate);
+
+    Map<String, CountryTollRule> rulesByCountry = loadRules(scenario.getTollTariffSet().getId());
+    List<TollCountryLineDto> tollLines = new ArrayList<>();
+    BigDecimal tollsUah = BigDecimal.ZERO.setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    for (CountryDistanceDto distance : countryDistances) {
+      if (distance.distanceMeters() <= 0) {
+        continue;
+      }
+      String countryCode = distance.countryCode().toUpperCase();
+      BigDecimal km =
+          BigDecimal.valueOf(distance.distanceMeters())
+              .divide(new BigDecimal("1000"), 3, RoundingMode.HALF_UP);
+      TollCountryLineDto line = computeTollLine(countryCode, km, rulesByCountry, eurRate);
+      tollLines.add(line);
+      tollsUah = tollsUah.add(line.amountUah());
+    }
+
+    BigDecimal directCostUah = money(fuelCostUah.add(perDiemUah).add(tollsUah));
+
+    BigDecimal driverPercent =
+        scenario.getDriverSalaryPercentOfFreight().divide(HUNDRED, 6, RoundingMode.HALF_UP);
+    BigDecimal marginPercent =
+        Objects.requireNonNull(scenario.getMarginPercent(), "marginPercent")
+            .divide(HUNDRED, 6, RoundingMode.HALF_UP);
+
+    BigDecimal denominator =
+        BigDecimal.ONE.subtract(ONE_POINT_THIRTY.multiply(driverPercent, MC), MC);
+    if (denominator.signum() <= 0) {
+      throw ApiException.unprocessableEntity(
+          "CALCULATION_NOT_POSSIBLE", "Invalid driver salary percent for closed-form formula");
+    }
+    BigDecimal totalUah =
+        money(
+            directCostUah
+                .multiply(ONE_POINT_THIRTY, MC)
+                .divide(denominator, MC)
+                .setScale(MONEY_SCALE, RoundingMode.HALF_UP));
+    BigDecimal driverCostUah = money(totalUah.multiply(driverPercent, MC));
+    BigDecimal costBeforeMarginUah = money(directCostUah.add(driverCostUah));
+    BigDecimal marginUah = money(costBeforeMarginUah.multiply(marginPercent, MC));
+
+    BigDecimal totalProposalAmount = convertUahToCurrency(totalUah, proposalRate);
+
+    return new FreightCostCalculationSummaryDto(
+        calculationDate,
+        scenario.getName(),
+        proposalCurrency,
+        winter ? "WINTER" : "NON_WINTER",
+        lengths.totalKm(),
+        lengths.emptyKm(),
+        lengths.loadedKm(),
+        lengths.fallbackUsed(),
+        nbuRates.rateDate(),
+        eurRate,
+        usdRate,
+        proposalRate,
+        fuelLitersEmpty,
+        fuelLitersLoaded,
+        fuelCostUah,
+        perDiemDays,
+        perDiemEur,
+        perDiemUah,
+        tollLines,
+        tollsUah,
+        directCostUah,
+        scenario.getDriverSalaryPercentOfFreight(),
+        driverCostUah,
+        costBeforeMarginUah,
+        scenario.getMarginPercent(),
+        marginUah,
+        totalUah,
+        totalProposalAmount);
+  }
+
+  private TollCountryLineDto computeTollLine(
+      String countryCode,
+      BigDecimal km,
+      Map<String, CountryTollRule> rulesByCountry,
+      BigDecimal eurRate) {
+    CountryTollRule rule = rulesByCountry.get(countryCode);
+    if (rule != null) {
+      return applyRule(countryCode, km, rule, eurRate, false);
+    }
+    if (EuCountryCodes.isEuMember(countryCode)) {
+      BigDecimal amountEur =
+          km.multiply(EuCountryCodes.defaultEuTollEurPerKm())
+              .setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+      return new TollCountryLineDto(
+          countryCode,
+          km,
+          TollType.EUR_PER_KM,
+          EuCountryCodes.defaultEuTollEurPerKm(),
+          null,
+          amountEur,
+          convertEurToUah(amountEur, eurRate),
+          true);
+    }
+    return new TollCountryLineDto(
+        countryCode, km, null, BigDecimal.ZERO, null, BigDecimal.ZERO, BigDecimal.ZERO, false);
+  }
+
+  private TollCountryLineDto applyRule(
+      String countryCode,
+      BigDecimal km,
+      CountryTollRule rule,
+      BigDecimal eurRate,
+      boolean defaultFallback) {
+    BigDecimal amountEur;
+    if (rule.getTollType() == TollType.EUR_PER_DAY) {
+      int days = rule.getFixedDays() == null ? 2 : rule.getFixedDays();
+      amountEur =
+          rule.getRate()
+              .multiply(BigDecimal.valueOf(days))
+              .setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+      return new TollCountryLineDto(
+          countryCode,
+          km,
+          rule.getTollType(),
+          rule.getRate(),
+          days,
+          amountEur,
+          convertEurToUah(amountEur, eurRate),
+          defaultFallback);
+    }
+    amountEur = km.multiply(rule.getRate()).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    return new TollCountryLineDto(
+        countryCode,
+        km,
+        rule.getTollType(),
+        rule.getRate(),
+        null,
+        amountEur,
+        convertEurToUah(amountEur, eurRate),
+        defaultFallback);
+  }
+
+  private Map<String, CountryTollRule> loadRules(String tollSetId) {
+    Map<String, CountryTollRule> map = new HashMap<>();
+    for (CountryTollRule rule :
+        countryTollRuleRepository.findByTollTariffSet_IdAndActiveTrueOrderByCountryCodeAsc(
+            tollSetId)) {
+      map.put(rule.getCountryCode().toUpperCase(), rule);
+    }
+    return map;
+  }
+
+  private static int computePerDiemDays(BigDecimal totalKm, FreightNumericScenario scenario) {
+    int divisor = Math.max(1, scenario.getPerDiemRouteDivisorKm());
+    int routeDays = totalKm.divide(BigDecimal.valueOf(divisor), 0, RoundingMode.CEILING).intValue();
+    return routeDays + scenario.getPerDiemFixedExtraDays();
+  }
+
+  private static boolean resolveWinter(
+      SeasonMode seasonMode, SeasonMode seasonOverride, LocalDate preferredStartDate) {
+    if (seasonOverride == SeasonMode.WINTER) {
+      return true;
+    }
+    if (seasonOverride == SeasonMode.NON_WINTER) {
+      return false;
+    }
+    if (seasonMode == SeasonMode.WINTER) {
+      return true;
+    }
+    if (seasonMode == SeasonMode.NON_WINTER) {
+      return false;
+    }
+    if (preferredStartDate == null) {
+      return false;
+    }
+    int month = preferredStartDate.getMonthValue();
+    return month == 12 || month == 1 || month == 2;
+  }
+
+  private static Map<String, NbuRateDto> indexRates(NbuRatesSnapshotDto snapshot) {
+    Map<String, NbuRateDto> map = new HashMap<>();
+    for (NbuRateDto rate : snapshot.rates()) {
+      map.put(rate.currencyCode().toUpperCase(), rate);
+    }
+    return map;
+  }
+
+  private static BigDecimal requireRate(Map<String, NbuRateDto> rates, String code) {
+    NbuRateDto rate = rates.get(code.toUpperCase());
+    if (rate == null || rate.ratePerUnit() == null) {
+      throw ApiException.unprocessableEntity(
+          "NBU_RATES_NOT_AVAILABLE_FOR_DATE", "Missing NBU rate for currency: " + code);
+    }
+    return rate.ratePerUnit();
+  }
+
+  private static BigDecimal convertEurToUah(BigDecimal amountEur, BigDecimal eurRatePerUnit) {
+    return money(amountEur.multiply(eurRatePerUnit));
+  }
+
+  private static BigDecimal convertUahToCurrency(
+      BigDecimal amountUah, BigDecimal targetRatePerUnit) {
+    if (targetRatePerUnit.signum() == 0) {
+      throw ApiException.unprocessableEntity(
+          "NBU_RATES_NOT_AVAILABLE_FOR_DATE", "Invalid proposal currency rate");
+    }
+    return money(amountUah.divide(targetRatePerUnit, MC));
+  }
+
+  private static BigDecimal money(BigDecimal value) {
+    return value.setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+  }
+}

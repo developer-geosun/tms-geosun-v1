@@ -169,6 +169,96 @@
             </ul>
           }
 
+          <h3>{{ 'pages.adminRouteRequests.nbuCalculation' | translate }}</h3>
+          <form class="nbu-form" [formGroup]="nbuForm" (ngSubmit)="runNbuCostPreview()">
+            <mat-form-field appearance="outline" class="nbu-form__field">
+              <mat-label>{{ 'pages.adminRouteRequests.nbuScenario' | translate }}</mat-label>
+              <mat-select formControlName="scenarioId">
+                @for (scenario of numericScenarios(); track scenario.id) {
+                  <mat-option [value]="scenario.id">{{ scenario.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="nbu-form__field">
+              <mat-label>{{ 'pages.adminRouteRequests.nbuCalculationDate' | translate }}</mat-label>
+              <input matInput type="date" formControlName="calculationDate" />
+            </mat-form-field>
+            <div class="nbu-form__actions">
+              <button
+                mat-stroked-button
+                type="button"
+                (click)="recalculateCountryBreakdown()"
+                [disabled]="isCountryBreakdownLoading() || !numericScenarios().length">
+                @if (isCountryBreakdownLoading()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                }
+                {{ 'pages.adminRouteRequests.nbuBreakdownButton' | translate }}
+              </button>
+              <button
+                mat-flat-button
+                color="primary"
+                type="submit"
+                [disabled]="isNbuPreviewLoading() || !numericScenarios().length">
+                @if (isNbuPreviewLoading()) {
+                  <mat-spinner diameter="20"></mat-spinner>
+                }
+                {{ 'pages.adminRouteRequests.nbuPreviewButton' | translate }}
+              </button>
+            </div>
+          </form>
+          @if (nbuActionError()) {
+            <p class="admin-route-requests__error">{{ nbuActionError() | translate }}</p>
+            @if (nbuActionErrorDetail()) {
+              <p class="admin-route-requests__error-detail">{{ nbuActionErrorDetail() }}</p>
+            }
+            @if (showNbuRatesLink()) {
+              <a mat-stroked-button routerLink="/admin/currencies">
+                {{ 'pages.adminRouteRequests.nbuOpenCurrencies' | translate }}
+              </a>
+            }
+          }
+          @if (nbuActionSuccess()) {
+            <p class="admin-route-requests__success">{{ nbuActionSuccess() | translate }}</p>
+          }
+          @if (nbuCostSummary()) {
+            <mat-card class="admin-route-requests__nbu-summary">
+              <mat-card-title>{{ 'pages.adminRouteRequests.nbuSummaryTitle' | translate }}</mat-card-title>
+              <mat-card-content>
+                <pre class="admin-route-requests__nbu-summary-text">{{ nbuCostSummary() }}</pre>
+              </mat-card-content>
+              <mat-card-actions>
+                <button mat-stroked-button type="button" (click)="copyNbuSummary()">
+                  <mat-icon aria-hidden="true">content_copy</mat-icon>
+                  {{ 'pages.adminRouteRequests.nbuCopySummary' | translate }}
+                </button>
+                <button mat-stroked-button type="button" (click)="applyNbuToQuoteDraft()" [disabled]="!lastNbuPreview()">
+                  {{ 'pages.adminRouteRequests.nbuApplyToQuote' | translate }}
+                </button>
+                <button
+                  mat-flat-button
+                  color="primary"
+                  type="button"
+                  (click)="createQuoteFromNbu()"
+                  [disabled]="isCreatingQuote() || !lastNbuPreview()">
+                  {{ 'pages.adminRouteRequests.nbuCreateQuote' | translate }}
+                </button>
+              </mat-card-actions>
+            </mat-card>
+          }
+          @if (nbuCostHistory().length) {
+            <h4>{{ 'pages.adminRouteRequests.nbuHistory' | translate }}</h4>
+            <ul class="admin-route-requests__nbu-history">
+              @for (item of nbuCostHistory(); track item.id) {
+                <li>
+                  <button type="button" mat-button (click)="viewNbuCalculation(item.id)">
+                    {{ item.createdAt | date: 'short' }} — {{ item.scenarioName || '-' }}
+                    ({{ item.totalProposalAmount }} {{ item.proposalCurrency }})
+                  </button>
+                </li>
+              }
+            </ul>
+          }
+
           <h3>{{ 'pages.adminRouteRequests.quoteEditor' | translate }}</h3>
           <form class="quote-form" [formGroup]="quoteDraftForm" (ngSubmit)="createDraftQuote()">
             <label>
@@ -252,23 +342,6 @@
           }
 
           <h3>{{ 'pages.adminRouteRequests.countryDistances' | translate }}</h3>
-          <div class="admin-route-requests__country-actions">
-            <button
-              mat-flat-button
-              color="primary"
-              type="button"
-              (click)="recalculateCountryBreakdown()"
-              [disabled]="isCountryBreakdownLoading()">
-              @if (isCountryBreakdownLoading()) {
-                <span class="admin-route-requests__btn-loading">
-                  <mat-spinner diameter="20"></mat-spinner>
-                  {{ 'pages.adminRouteRequests.countryBreakdownButton' | translate }}
-                </span>
-              } @else {
-                {{ 'pages.adminRouteRequests.countryBreakdownButton' | translate }}
-              }
-            </button>
-          </div>
           @if (!selected.countryDistances.length) {
             <p>{{ 'pages.adminRouteRequests.countryDistancesEmpty' | translate }}</p>
           } @else {

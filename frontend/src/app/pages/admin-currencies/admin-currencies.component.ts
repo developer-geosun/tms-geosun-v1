@@ -9,6 +9,7 @@ import {
 } from '@angular/core';
 import { MediaMatcher } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableDataSource, MatTableModule } from '@angular/material/table';
@@ -16,20 +17,29 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { CurrenciesApiService, CurrencyContractDto } from '../../core/api';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import {
+  CurrenciesApiService,
+  CurrencyContractDto,
+  NbuRatesSnapshotContractDto
+} from '../../core/api';
 
 @Component({
   selector: 'app-admin-currencies',
   standalone: true,
   imports: [
     CommonModule,
+    ReactiveFormsModule,
     TranslateModule,
     MatButtonModule,
     MatTableModule,
     MatPaginatorModule,
     MatSortModule,
     MatSlideToggleModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatFormFieldModule,
+    MatInputModule
   ],
   templateUrl: './admin-currencies.component.html',
   styleUrl: './admin-currencies.component.scss',
@@ -43,6 +53,7 @@ export class AdminCurrenciesComponent implements AfterViewInit {
   private readonly currenciesApi = inject(CurrenciesApiService);
   private readonly mediaMatcher = inject(MediaMatcher);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly formBuilder = inject(FormBuilder);
 
   readonly displayedColumns = [
     'code',
@@ -52,17 +63,26 @@ export class AdminCurrenciesComponent implements AfterViewInit {
     'rateDate',
     'isActive'
   ];
+  readonly nbuSnapshotColumns = ['currencyCode', 'nbuUnits', 'ratePerUnit'];
   readonly dataSource = new MatTableDataSource<CurrencyContractDto>([]);
+  readonly nbuSnapshotSource = new MatTableDataSource<NbuRatesSnapshotContractDto['rates'][number]>([]);
   readonly pageSizeOptions = [5, 10, 15, 25, 50];
   readonly pageSize = signal(AdminCurrenciesComponent.DESKTOP_DEFAULT_PAGE_SIZE);
 
   readonly isLoading = signal(false);
   readonly isSyncing = signal(false);
+  readonly isLoadingNbuSnapshot = signal(false);
   readonly loadError = signal('');
   readonly actionError = signal('');
   readonly actionSuccess = signal('');
+  readonly nbuSnapshotError = signal('');
   readonly currencies = signal<CurrencyContractDto[]>([]);
+  readonly nbuSnapshot = signal<NbuRatesSnapshotContractDto | null>(null);
   readonly updatingCodes = signal<Set<string>>(new Set());
+
+  readonly rateDateForm = this.formBuilder.nonNullable.group({
+    rateDate: [new Date().toISOString().slice(0, 10)]
+  });
 
   @ViewChild(MatPaginator) private paginator?: MatPaginator;
   @ViewChild(MatSort) private sort?: MatSort;
@@ -97,6 +117,26 @@ export class AdminCurrenciesComponent implements AfterViewInit {
       this.refreshTableData();
     } finally {
       this.isLoading.set(false);
+    }
+  }
+
+  async loadNbuRatesByDate(): Promise<void> {
+    const rateDate = this.rateDateForm.controls.rateDate.value.trim();
+    if (!rateDate) {
+      return;
+    }
+    this.isLoadingNbuSnapshot.set(true);
+    this.nbuSnapshotError.set('');
+    this.nbuSnapshot.set(null);
+    try {
+      const snapshot = await this.currenciesApi.getNbuRates(rateDate);
+      this.nbuSnapshot.set(snapshot);
+      this.nbuSnapshotSource.data = snapshot.rates;
+    } catch {
+      this.nbuSnapshotError.set('pages.adminCurrencies.nbuRatesLoadFailed');
+      this.nbuSnapshotSource.data = [];
+    } finally {
+      this.isLoadingNbuSnapshot.set(false);
     }
   }
 
@@ -145,6 +185,17 @@ export class AdminCurrenciesComponent implements AfterViewInit {
       return '—';
     }
     return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+  }
+
+  formatFetchedAt(iso: string | undefined): string {
+    if (!iso) {
+      return '—';
+    }
+    const parsed = Date.parse(iso);
+    if (Number.isNaN(parsed)) {
+      return iso;
+    }
+    return new Date(parsed).toLocaleString();
   }
 
   private bindViewportPageSizeListener(): void {

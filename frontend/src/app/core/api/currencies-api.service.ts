@@ -40,8 +40,16 @@ export class CurrenciesApiService {
   }
 
   async getLatestNbuRates(): Promise<NbuRatesSnapshotContractDto> {
+    return this.getNbuRates();
+  }
+
+  async getNbuRates(rateDate?: string): Promise<NbuRatesSnapshotContractDto> {
+    let params = new HttpParams();
+    if (rateDate?.trim()) {
+      params = params.set('rateDate', rateDate.trim());
+    }
     return firstValueFrom(
-      this.http.get<NbuRatesSnapshotContractDto>(`${this.backendApi.adminCurrencies}/nbu-rates`)
+      this.http.get<NbuRatesSnapshotContractDto>(`${this.backendApi.adminCurrencies}/nbu-rates`, { params })
     );
   }
 }

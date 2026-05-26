@@ -22,6 +22,48 @@
     </div>
   </header>
 
+  <form class="admin-currencies__rate-form" [formGroup]="rateDateForm" (ngSubmit)="loadNbuRatesByDate()">
+    <mat-form-field appearance="outline" class="admin-currencies__rate-field">
+      <mat-label>{{ 'pages.adminCurrencies.nbuRatesByDate' | translate }}</mat-label>
+      <input matInput type="date" formControlName="rateDate" />
+    </mat-form-field>
+    <button mat-stroked-button type="submit" [disabled]="isLoadingNbuSnapshot()">
+      {{ 'pages.adminCurrencies.loadNbuRates' | translate }}
+    </button>
+  </form>
+
+  @if (nbuSnapshotError()) {
+    <p class="admin-currencies__error">{{ nbuSnapshotError() | translate }}</p>
+  }
+  @if (nbuSnapshot(); as snapshot) {
+    <section class="admin-currencies__snapshot">
+      <h2>
+        {{
+          'pages.adminCurrencies.nbuSnapshot'
+            | translate: { rateDate: snapshot.rateDate, fetchedAt: formatFetchedAt(snapshot.fetchedAt) }
+        }}
+      </h2>
+      <div class="admin-currencies__table-scroll">
+        <table mat-table [dataSource]="nbuSnapshotSource" class="admin-currencies__table">
+          <ng-container matColumnDef="currencyCode">
+            <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.code' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.currencyCode }}</td>
+          </ng-container>
+          <ng-container matColumnDef="nbuUnits">
+            <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.nbuUnits' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ row.nbuUnits }}</td>
+          </ng-container>
+          <ng-container matColumnDef="ratePerUnit">
+            <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.ratePerUnit' | translate }}</th>
+            <td mat-cell *matCellDef="let row">{{ formatRate(row.ratePerUnit) }}</td>
+          </ng-container>
+          <tr mat-header-row *matHeaderRowDef="nbuSnapshotColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: nbuSnapshotColumns"></tr>
+        </table>
+      </div>
+    </section>
+  }
+
   @if (isLoading() || loadError() || actionError() || actionSuccess()) {
     <div class="admin-currencies__messages">
       @if (isLoading()) {

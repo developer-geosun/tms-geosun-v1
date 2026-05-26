@@ -116,6 +116,21 @@ export class ToolbarComponent {
       route: '/admin/currencies',
       labelKey: 'navigation.adminCurrencies',
       roles: ['admin', 'manager'] as const
+    },
+    {
+      route: '/admin/country-reference',
+      labelKey: 'navigation.adminCountryReference',
+      roles: ['admin', 'manager'] as const
+    },
+    {
+      route: '/admin/freight-numeric-scenarios',
+      labelKey: 'navigation.adminFreightNumericScenarios',
+      roles: ['admin', 'manager'] as const
+    },
+    {
+      route: '/admin/toll-tariff-sets',
+      labelKey: 'navigation.adminTollTariffSets',
+      roles: ['admin', 'manager'] as const
     }
   ];
   

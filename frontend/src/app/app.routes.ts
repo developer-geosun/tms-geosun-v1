@@ -85,6 +85,33 @@ export const routes: Routes = [
       import('./pages/admin-currencies/admin-currencies.component').then((m) => m.AdminCurrenciesComponent)
   },
   {
+    path: 'admin/country-reference',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['admin', 'manager'] },
+    loadComponent: () =>
+      import('./pages/admin-country-reference/admin-country-reference.component').then(
+        (m) => m.AdminCountryReferenceComponent
+      )
+  },
+  {
+    path: 'admin/freight-numeric-scenarios',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['admin', 'manager'] },
+    loadComponent: () =>
+      import('./pages/admin-freight-numeric-scenarios/admin-freight-numeric-scenarios.component').then(
+        (m) => m.AdminFreightNumericScenariosComponent
+      )
+  },
+  {
+    path: 'admin/toll-tariff-sets',
+    canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
+    data: { roles: ['admin', 'manager'] },
+    loadComponent: () =>
+      import('./pages/admin-toll-tariff-sets/admin-toll-tariff-sets.component').then(
+        (m) => m.AdminTollTariffSetsComponent
+      )
+  },
+  {
     path: '404',
     loadComponent: () => import('./pages/not-found/not-found.component').then((m) => m.NotFoundComponent)
   },

@@ -15,5 +15,6 @@ public record QuoteDto(
     String validUntil,
     QuoteStatus status,
     String publicNote,
+    String freightCostCalculationId,
     String createdAt,
     String sentAt) {}

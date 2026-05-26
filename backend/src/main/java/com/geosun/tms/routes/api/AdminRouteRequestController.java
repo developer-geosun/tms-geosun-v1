@@ -3,6 +3,7 @@ package com.geosun.tms.routes.api;
 import com.geosun.tms.auth.config.OpenApiConfig;
 import com.geosun.tms.routes.dto.RouteRequestStatus;
 import com.geosun.tms.routes.dto.request.AdminRouteRequestListQuery;
+import com.geosun.tms.routes.dto.request.CountryBreakdownRequest;
 import com.geosun.tms.routes.dto.response.PageResponse;
 import com.geosun.tms.routes.dto.response.RouteRequestDto;
 import com.geosun.tms.routes.service.RouteRequestService;
@@ -13,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -56,7 +58,8 @@ public class AdminRouteRequestController {
   @Operation(summary = "Recalculate country distance breakdown (HERE) for route request")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @PostMapping("/{requestId}/country-breakdown")
-  public RouteRequestDto recalculateCountryBreakdown(@PathVariable Long requestId) {
-    return routeRequestService.recalculateCountryBreakdownForAdmin(requestId);
+  public RouteRequestDto recalculateCountryBreakdown(
+      @PathVariable Long requestId, @RequestBody(required = false) CountryBreakdownRequest body) {
+    return routeRequestService.recalculateCountryBreakdownForAdmin(requestId, body);
   }
 }
