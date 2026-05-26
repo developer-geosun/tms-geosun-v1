@@ -116,6 +116,15 @@ Do not invent distances or prices not present in the input context.
     if (scenario.getOutputFormatHint() != null && !scenario.getOutputFormatHint().isBlank()) {
       sb.append("\nOutput format hint: ").append(scenario.getOutputFormatHint());
     }
+    if ("TEXT_RU".equalsIgnoreCase(scenario.getOutputFormatHint())) {
+      sb.append(
+          """
+
+          CRITICAL (section 1): Print costs ONLY as a bordered ASCII table with + - |.
+          Four columns in order: Article | UAH | USD | EUR. One physical line per row.
+          Never write inline amounts like "40975 UAH" or "906 EUR" outside table cells.
+          """);
+    }
     return sb.toString();
   }
 

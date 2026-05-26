@@ -49,8 +49,10 @@
 }
 
 .admin-route-requests__ai-text {
-  white-space: pre-wrap;
+  white-space: pre;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
   font-size: 13px;
+  line-height: 1.35;
   max-height: 320px;
   overflow: auto;
 }
