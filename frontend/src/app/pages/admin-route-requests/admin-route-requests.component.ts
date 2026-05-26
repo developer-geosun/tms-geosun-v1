@@ -23,6 +23,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import {
   AdminRouteRequestListParams,
@@ -43,6 +44,10 @@ import {
 import { extractApiError } from '../../core/utils/api-error';
 import { isNbuRateError } from '../../core/utils/nbu-rate-error';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
+import {
+  buildNbuCostPreviewDisplay,
+  NbuCostPreviewSource
+} from '../../core/utils/freight-cost-preview-display.util';
 import {
   AiCalculationErrorDisplay,
   resolveAiCalculationError,
@@ -66,6 +71,7 @@ import * as L from 'leaflet';
     MatCardModule,
     MatExpansionModule,
     MatIconModule,
+    MatTableModule,
     RouterLink
   ],
   templateUrl: './admin-route-requests.component.html',
@@ -106,7 +112,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly showNbuRatesLink = signal(false);
   readonly nbuCostSummary = signal('');
   readonly nbuCostHistory = signal<FreightCostCalculationContractDto[]>([]);
-  readonly lastNbuPreview = signal<CostPreviewContractResponse | null>(null);
+  readonly lastNbuPreview = signal<NbuCostPreviewSource | null>(null);
 
   readonly scenarios = signal<ScenarioContractDto[]>([]);
   readonly numericScenarios = signal<FreightNumericScenarioContractDto[]>([]);
@@ -118,6 +124,13 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly selectedRequest = computed(() =>
     this.requests().find((request) => request.id === this.selectedRequestId()) ?? null
   );
+
+  readonly nbuCostDisplay = computed(() => {
+    const preview = this.lastNbuPreview();
+    return preview ? buildNbuCostPreviewDisplay(preview) : null;
+  });
+
+  readonly nbuCostTableColumns = ['article', 'uah', 'proposal'];
   readonly selectedDraftQuote = computed(
     () => this.quoteHistory().find((quote) => quote.status === 'draft') ?? null
   );
@@ -437,7 +450,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.showNbuRatesLink.set(false);
     try {
       const detail = await this.routeRequestsApi.getCostCalculationById(selected.id, calculationId);
-      this.nbuCostSummary.set(detail.calculationSummary ?? '');
+      this.applyCostPreview(detail);
     } catch (error) {
       this.handleNbuActionError(error, 'pages.adminRouteRequests.nbuHistoryLoadFailed');
     }
@@ -461,7 +474,8 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   async createQuoteFromNbu(): Promise<void> {
     const selected = this.selectedRequest();
     const preview = this.lastNbuPreview();
-    if (!selected || !preview?.calculationId) {
+    const calculationId = this.nbuCalculationId(preview);
+    if (!selected || !calculationId) {
       this.quoteActionError.set('pages.adminRouteRequests.nbuPreviewRequiredForQuote');
       return;
     }
@@ -471,7 +485,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     try {
       await this.routeRequestsApi.createAdminQuote(
         selected.id,
-        { fromCostCalculationId: preview.calculationId },
+        { fromCostCalculationId: calculationId },
         this.nextIdempotencyKey('create')
       );
       await this.loadQuoteHistory(selected.id);
@@ -533,9 +547,29 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  private applyCostPreview(preview: CostPreviewContractResponse): void {
+  private applyCostPreview(preview: NbuCostPreviewSource): void {
     this.lastNbuPreview.set(preview);
     this.nbuCostSummary.set(preview.calculationSummary ?? '');
+  }
+
+  private nbuCalculationId(preview: NbuCostPreviewSource | null): string | null {
+    if (!preview) {
+      return null;
+    }
+    if ('calculationId' in preview && preview.calculationId) {
+      return preview.calculationId;
+    }
+    if ('id' in preview && preview.id) {
+      return preview.id;
+    }
+    return null;
+  }
+
+  formatNbuMoney(value: number | null, currency: string): string {
+    if (value == null) {
+      return '—';
+    }
+    return `${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
   }
 
   private handleNbuActionError(error: unknown, fallbackKey: string): void {

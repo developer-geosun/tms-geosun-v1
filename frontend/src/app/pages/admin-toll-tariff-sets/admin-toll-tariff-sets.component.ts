@@ -1,12 +1,26 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  effect,
+  inject,
+  signal,
+  ViewChild
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatAutocompleteModule, MatAutocompleteSelectedEvent } from '@angular/material/autocomplete';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -14,6 +28,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { firstValueFrom } from 'rxjs';
 import {
   CountryReferenceApiService,
+  CountryReferenceContractDto,
   CountryTollRuleContractDto,
   CreateCountryTollRuleContractRequest,
   CreateTollTariffSetContractRequest,
@@ -23,6 +38,11 @@ import {
   UpdateCountryTollRuleContractRequest,
   UpdateTollTariffSetContractRequest
 } from '../../core/api';
+import {
+  countryReferenceLocalizedName,
+  countryReferenceSelectLabel
+} from '../../core/utils/country-reference-localized-name';
+import { LanguageService } from '../../core/services/language.service';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
 import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-calculation-scenarios/admin-freight-scenario-confirm-dialog.component';
 
@@ -35,8 +55,11 @@ import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-cal
     ReactiveFormsModule,
     MatButtonModule,
     MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
     MatFormFieldModule,
     MatInputModule,
+    MatAutocompleteModule,
     MatSelectModule,
     MatCheckboxModule,
     MatTooltipModule,
@@ -46,17 +69,59 @@ import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-cal
   styleUrl: './admin-toll-tariff-sets.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AdminTollTariffSetsComponent {
+export class AdminTollTariffSetsComponent implements AfterViewInit {
+  private static readonly RULES_DEFAULT_PAGE_SIZE = 10;
+
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly tollApi = inject(TollTariffSetsApiService);
   private readonly countryReferenceApi = inject(CountryReferenceApiService);
+  private readonly languageService = inject(LanguageService);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = inject(MatDialog);
 
   readonly tollTypeOptions: TollTypeContract[] = ['EUR_PER_KM', 'EUR_PER_DAY'];
   readonly setColumns = ['name', 'isActive', 'actions'];
   readonly ruleColumns = ['countryCode', 'countryName', 'tollType', 'rate', 'fixedDays', 'isActive', 'actions'];
-  private readonly countryNamesByCode = signal<Record<string, string>>({});
+  readonly rulesDataSource = new MatTableDataSource<CountryTollRuleContractDto>([]);
+  readonly rulesPageSizeOptions = [5, 10, 25, 50];
+  readonly rulesPageSize = AdminTollTariffSetsComponent.RULES_DEFAULT_PAGE_SIZE;
+  private readonly countries = signal<CountryReferenceContractDto[]>([]);
+
+  @ViewChild('rulesPaginator') private rulesPaginator?: MatPaginator;
+  @ViewChild('rulesSort') private rulesSort?: MatSort;
+
+  readonly countrySelectOptions = computed(() => {
+    const language = this.languageService.language();
+    const locale = language === 'en' ? 'en' : language === 'ru' ? 'ru' : 'uk';
+    return this.countries()
+      .map((country) => ({
+        code: country.codeAlpha2.toUpperCase(),
+        label: countryReferenceSelectLabel(country, language)
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label, locale));
+  });
+
+  readonly countrySearchControl = this.formBuilder.nonNullable.control('');
+  private readonly countrySearchQuery = signal('');
+
+  readonly filteredCountryOptions = computed(() => {
+    const query = this.countrySearchQuery().trim().toLowerCase();
+    const options = this.countrySelectOptions();
+    if (!query) {
+      return options;
+    }
+    return options.filter((option) => this.matchesCountrySearch(option, query));
+  });
+
+  private readonly countryNamesByCode = computed(() => {
+    const language = this.languageService.language();
+    const map: Record<string, string> = {};
+    for (const country of this.countries()) {
+      map[country.codeAlpha2.toUpperCase()] = countryReferenceLocalizedName(country, language);
+    }
+    return map;
+  });
 
   readonly isLoadingSets = signal(false);
   readonly isLoadingRules = signal(false);
@@ -80,7 +145,7 @@ export class AdminTollTariffSetsComponent {
   });
 
   readonly ruleForm = this.formBuilder.nonNullable.group({
-    countryCode: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(2)]],
+    countryCode: ['', Validators.required],
     tollType: ['EUR_PER_KM' as TollTypeContract, Validators.required],
     rate: ['', Validators.required],
     fixedDays: [''],
@@ -88,8 +153,54 @@ export class AdminTollTariffSetsComponent {
   });
 
   constructor() {
-    void this.loadCountryNames();
+    this.rulesDataSource.sortData = this.sortRules.bind(this);
+
+    this.countrySearchControl.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((value) => {
+        const query = value ?? '';
+        this.countrySearchQuery.set(query);
+        const resolvedCode = this.resolveCountryCodeFromSearch(query);
+        this.ruleForm.controls.countryCode.setValue(resolvedCode ?? '', { emitEvent: false });
+      });
+
+    effect(() => {
+      this.languageService.language();
+      this.countrySelectOptions();
+      if (this.ruleForm.controls.countryCode.value) {
+        this.syncCountrySearchFromCode();
+      }
+    });
+
+    void this.loadCountries();
     void this.loadSets();
+  }
+
+  ngAfterViewInit(): void {
+    this.syncRulesTableControls();
+    this.refreshRulesTableData();
+  }
+
+  onCountryOptionSelected(event: MatAutocompleteSelectedEvent): void {
+    const code = String(event.option.value ?? '').trim().toUpperCase();
+    if (!code) {
+      return;
+    }
+    this.ruleForm.controls.countryCode.setValue(code);
+    this.syncCountrySearchFromCode();
+  }
+
+  onCountrySearchBlur(): void {
+    const query = this.countrySearchControl.value.trim();
+    if (!query) {
+      this.ruleForm.controls.countryCode.setValue('');
+      return;
+    }
+    const resolvedCode = this.resolveCountryCodeFromSearch(query);
+    if (resolvedCode) {
+      this.ruleForm.controls.countryCode.setValue(resolvedCode);
+      this.syncCountrySearchFromCode();
+    }
   }
 
   countryName(code: string): string {
@@ -97,16 +208,11 @@ export class AdminTollTariffSetsComponent {
     return this.countryNamesByCode()[normalized] ?? '—';
   }
 
-  private async loadCountryNames(): Promise<void> {
+  private async loadCountries(): Promise<void> {
     try {
-      const countries = await this.countryReferenceApi.list();
-      const map: Record<string, string> = {};
-      for (const country of countries) {
-        map[country.codeAlpha2.toUpperCase()] = country.nameUk;
-      }
-      this.countryNamesByCode.set(map);
+      this.countries.set(await this.countryReferenceApi.list());
     } catch {
-      this.countryNamesByCode.set({});
+      this.countries.set([]);
     }
   }
 
@@ -124,7 +230,7 @@ export class AdminTollTariffSetsComponent {
     } catch {
       this.sets.set([]);
       this.selectedSetId.set(null);
-      this.rules.set([]);
+      this.setRules([]);
       this.loadError.set('pages.adminTollTariffSets.loadFailed');
     } finally {
       this.isLoadingSets.set(false);
@@ -197,7 +303,7 @@ export class AdminTollTariffSetsComponent {
       await this.tollApi.deleteSet(set.id);
       if (this.selectedSetId() === set.id) {
         this.selectedSetId.set(null);
-        this.rules.set([]);
+        this.setRules([]);
       }
       await this.loadSets();
       this.actionSuccess.set('pages.adminTollTariffSets.setDeleted');
@@ -214,12 +320,13 @@ export class AdminTollTariffSetsComponent {
   startEditRule(rule: CountryTollRuleContractDto): void {
     this.editingRuleId.set(rule.id);
     this.ruleForm.patchValue({
-      countryCode: rule.countryCode,
+      countryCode: rule.countryCode.trim().toUpperCase(),
       tollType: rule.tollType,
       rate: String(rule.rate),
       fixedDays: rule.fixedDays != null ? String(rule.fixedDays) : '',
       isActive: rule.isActive
     });
+    this.syncCountrySearchFromCode();
   }
 
   async saveRule(): Promise<void> {
@@ -283,18 +390,80 @@ export class AdminTollTariffSetsComponent {
   private async loadRulesForSelected(): Promise<void> {
     const setId = this.selectedSetId();
     if (!setId) {
-      this.rules.set([]);
+      this.setRules([]);
       return;
     }
     this.isLoadingRules.set(true);
     try {
-      this.rules.set(await this.tollApi.listRules(setId));
+      this.setRules(await this.tollApi.listRules(setId));
     } catch {
-      this.rules.set([]);
+      this.setRules([]);
       this.actionError.set('pages.adminTollTariffSets.rulesLoadFailed');
     } finally {
       this.isLoadingRules.set(false);
     }
+  }
+
+  private setRules(rules: CountryTollRuleContractDto[]): void {
+    this.rules.set(rules);
+    this.refreshRulesTableData();
+  }
+
+  private refreshRulesTableData(): void {
+    this.rulesDataSource.data = this.rules();
+    queueMicrotask(() => {
+      this.syncRulesTableControls();
+      this.rulesPaginator?.firstPage();
+    });
+  }
+
+  private syncRulesTableControls(): void {
+    if (this.rulesPaginator) {
+      this.rulesDataSource.paginator = this.rulesPaginator;
+    }
+    if (this.rulesSort) {
+      this.rulesDataSource.sort = this.rulesSort;
+    }
+  }
+
+  private sortRules(data: CountryTollRuleContractDto[], sort: Sort): CountryTollRuleContractDto[] {
+    if (!sort.active || sort.direction === '') {
+      return data;
+    }
+    const direction = sort.direction === 'asc' ? 1 : -1;
+    return [...data].sort((a, b) => direction * this.compareRuleSortValues(a, b, sort.active));
+  }
+
+  private compareRuleSortValues(
+    a: CountryTollRuleContractDto,
+    b: CountryTollRuleContractDto,
+    column: string
+  ): number {
+    const locale = this.sortLocale();
+    switch (column) {
+      case 'countryCode':
+        return a.countryCode.localeCompare(b.countryCode);
+      case 'countryName':
+        return this.countryName(a.countryCode).localeCompare(this.countryName(b.countryCode), locale);
+      case 'tollType':
+        return a.tollType.localeCompare(b.tollType);
+      case 'rate':
+        return a.rate - b.rate;
+      case 'fixedDays': {
+        const aDays = a.fixedDays ?? Number.NEGATIVE_INFINITY;
+        const bDays = b.fixedDays ?? Number.NEGATIVE_INFINITY;
+        return aDays - bDays;
+      }
+      case 'isActive':
+        return Number(a.isActive) - Number(b.isActive);
+      default:
+        return 0;
+    }
+  }
+
+  private sortLocale(): string {
+    const language = this.languageService.language();
+    return language === 'en' ? 'en' : language === 'ru' ? 'ru' : 'uk';
   }
 
   private resetRuleForm(): void {
@@ -305,6 +474,52 @@ export class AdminTollTariffSetsComponent {
       fixedDays: '',
       isActive: true
     });
+    this.countrySearchControl.setValue('', { emitEvent: false });
+    this.countrySearchQuery.set('');
+  }
+
+  private syncCountrySearchFromCode(): void {
+    const code = this.ruleForm.controls.countryCode.value.trim().toUpperCase();
+    const label = this.countrySelectOptions().find((option) => option.code === code)?.label ?? '';
+    this.countrySearchControl.setValue(label, { emitEvent: false });
+    this.countrySearchQuery.set(label);
+  }
+
+  private matchesCountrySearch(
+    option: { code: string; label: string },
+    query: string
+  ): boolean {
+    if (option.code.toLowerCase().startsWith(query)) {
+      return true;
+    }
+    const namePart = option.label.slice(option.code.length).trim().toLowerCase();
+    return namePart.startsWith(query) || option.label.toLowerCase().includes(query);
+  }
+
+  private resolveCountryCodeFromSearch(query: string): string | null {
+    const normalized = query.trim();
+    if (!normalized) {
+      return null;
+    }
+    const options = this.countrySelectOptions();
+    const upper = normalized.toUpperCase();
+    const exactByCode = options.find((option) => option.code === upper);
+    if (exactByCode) {
+      return exactByCode.code;
+    }
+    const exactByLabel = options.find(
+      (option) => option.label.toLowerCase() === normalized.toLowerCase()
+    );
+    if (exactByLabel) {
+      return exactByLabel.code;
+    }
+    const filtered = options.filter((option) =>
+      this.matchesCountrySearch(option, normalized.toLowerCase())
+    );
+    if (filtered.length === 1) {
+      return filtered[0].code;
+    }
+    return null;
   }
 
   private toRulePayload():
