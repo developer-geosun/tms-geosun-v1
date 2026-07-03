@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,7 +19,9 @@ public class FreightRouteLengthService {
   public RouteLengths compute(Route route) {
     BigDecimal totalKm = resolveTotalKm(route);
     List<RoutePoint> points =
-        route.getPoints().stream().sorted(Comparator.comparing(RoutePoint::getPointOrder)).toList();
+        route.getPoints().stream()
+            .sorted(Comparator.comparing((@NonNull RoutePoint point) -> point.getPointOrder()))
+            .toList();
 
     Integer firstLoadingOrder = findFirstLoadingOrder(points);
     if (firstLoadingOrder == null) {

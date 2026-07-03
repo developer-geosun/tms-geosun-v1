@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -86,7 +87,9 @@ public class CountryBreakdownService {
 
   private List<CountryDistanceDto> toDto(List<RouteCountryDistance> items) {
     return items.stream()
-        .sorted(Comparator.comparingInt(RouteCountryDistance::getAlongRouteOrder))
+        .sorted(
+            Comparator.comparingInt(
+                (@NonNull RouteCountryDistance item) -> item.getAlongRouteOrder()))
         .map(
             item ->
                 new CountryDistanceDto(
@@ -166,7 +169,7 @@ public class CountryBreakdownService {
     }
     long distinctCountries =
         route.getPoints().stream()
-            .map(RoutePoint::getCountry)
+            .map((@NonNull RoutePoint point) -> point.getCountry())
             .filter(StringUtils::hasText)
             .map(c -> c.toUpperCase())
             .distinct()
@@ -177,7 +180,9 @@ public class CountryBreakdownService {
   private static List<HereRoutingClient.CountryBreakdownRow> fallbackFromRoute(Route route) {
     Map<String, long[]> grouped = new LinkedHashMap<>();
     List<RoutePoint> points =
-        route.getPoints().stream().sorted(Comparator.comparing(RoutePoint::getPointOrder)).toList();
+        route.getPoints().stream()
+            .sorted(Comparator.comparing((@NonNull RoutePoint point) -> point.getPointOrder()))
+            .toList();
     for (int i = 0; i < points.size(); i++) {
       RoutePoint from = points.get(i);
       if (from.getSegmentDistanceKmToNext() == null) {
@@ -261,7 +266,7 @@ public class CountryBreakdownService {
             + route.getRoutingMode()
             + "|"
             + route.getPoints().stream()
-                .sorted(Comparator.comparing(RoutePoint::getPointOrder))
+                .sorted(Comparator.comparing((@NonNull RoutePoint point) -> point.getPointOrder()))
                 .map(point -> point.getLat() + "," + point.getLng())
                 .reduce((left, right) -> left + ";" + right)
                 .orElse("");

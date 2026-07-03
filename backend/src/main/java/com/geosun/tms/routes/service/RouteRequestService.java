@@ -215,7 +215,7 @@ public class RouteRequestService {
         route.getPoints() == null
             ? List.of()
             : route.getPoints().stream()
-                .sorted(Comparator.comparing(RoutePoint::getPointOrder))
+                .sorted(Comparator.comparing((@NonNull RoutePoint point) -> point.getPointOrder()))
                 .map(
                     point ->
                         new RoutePointDto(

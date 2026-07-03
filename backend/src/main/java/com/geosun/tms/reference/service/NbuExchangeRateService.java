@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,8 +49,7 @@ public class NbuExchangeRateService {
           "NO_ACTIVE_CURRENCIES", "Немає активних валют для синхронізації курсів НБУ");
     }
 
-    Set<String> activeCodes =
-        activeCurrencies.stream().map(Currency::getCode).collect(Collectors.toSet());
+    Set<String> activeCodes = activeCurrencyCodes(activeCurrencies);
     ResolvedNbuSnapshot snapshot = businessDayResolver.resolveLastBusinessDayRates(activeCodes);
     Instant fetchedAt = Instant.now();
     LocalDate rateDate = snapshot.rateDate();
@@ -59,7 +59,7 @@ public class NbuExchangeRateService {
       NbuRateDto dto = upsertRate(currency, snapshot, rateDate, fetchedAt);
       saved.add(dto);
     }
-    saved.sort(Comparator.comparing(NbuRateDto::currencyCode));
+    saved.sort(Comparator.comparing(NbuExchangeRateService::nbuRateDtoCurrencyCode));
     return new SyncNbuRatesResponse(rateDate, fetchedAt, saved.size(), saved);
   }
 
@@ -71,8 +71,7 @@ public class NbuExchangeRateService {
       throw ApiException.badRequest(
           "NO_ACTIVE_CURRENCIES", "Немає активних валют для отримання курсів НБУ");
     }
-    Set<String> activeCodes =
-        activeCurrencies.stream().map(Currency::getCode).collect(Collectors.toSet());
+    Set<String> activeCodes = activeCurrencyCodes(activeCurrencies);
     LocalDate rateDate =
         nbuRateRepository
             .findLatestCompleteRateDateOnOrBefore(calculationDate, activeCodes.size())
@@ -95,8 +94,7 @@ public class NbuExchangeRateService {
                         "Курси НБУ ще не синхронізовані. Натисніть «Оновити курси НБУ»."));
 
     List<Currency> activeCurrencies = currencyRepository.findActiveOrdered();
-    Set<String> activeCodes =
-        activeCurrencies.stream().map(Currency::getCode).collect(Collectors.toSet());
+    Set<String> activeCodes = activeCurrencyCodes(activeCurrencies);
     return buildSnapshot(latestDate, activeCodes);
   }
 
@@ -109,13 +107,13 @@ public class NbuExchangeRateService {
     }
     Instant fetchedAt =
         stored.stream()
-            .map(CurrencyNbuRate::getFetchedAt)
-            .max(Instant::compareTo)
+            .map(NbuExchangeRateService::nbuRateFetchedAt)
+            .max(Comparator.naturalOrder())
             .orElse(Instant.now());
     List<NbuRateDto> rates =
         stored.stream()
             .map(this::toDto)
-            .sorted(Comparator.comparing(NbuRateDto::currencyCode))
+            .sorted(Comparator.comparing(NbuExchangeRateService::nbuRateDtoCurrencyCode))
             .toList();
     return new NbuRatesSnapshotDto(rateDate, fetchedAt, rates);
   }
@@ -154,7 +152,26 @@ public class NbuExchangeRateService {
     return new NbuRateDto(code, rate, ratePerUnit, units, special);
   }
 
-  private NbuRateDto toDto(CurrencyNbuRate entity) {
+  private static Set<String> activeCurrencyCodes(List<Currency> currencies) {
+    return currencies.stream().map(NbuExchangeRateService::currencyCode).collect(Collectors.toSet());
+  }
+
+  @NonNull
+  private static String currencyCode(@NonNull Currency currency) {
+    return currency.getCode();
+  }
+
+  @NonNull
+  private static String nbuRateDtoCurrencyCode(@NonNull NbuRateDto dto) {
+    return dto.currencyCode();
+  }
+
+  @NonNull
+  private static Instant nbuRateFetchedAt(@NonNull CurrencyNbuRate rate) {
+    return rate.getFetchedAt();
+  }
+
+  private NbuRateDto toDto(@NonNull CurrencyNbuRate entity) {
     return new NbuRateDto(
         entity.getCurrencyCode(),
         entity.getRate(),

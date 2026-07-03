@@ -54,7 +54,11 @@ public class CorsProperties {
     if (!StringUtils.hasText(csv)) {
       return List.of();
     }
-    return Arrays.stream(csv.split(",")).map(String::trim).filter(StringUtils::hasText).toList();
+    return Arrays.stream(csv.split(","))
+        .filter(part -> part != null)
+        .map(part -> part.trim())
+        .filter(StringUtils::hasText)
+        .toList();
   }
 
   private static String normalizeToOriginPattern(String value) {

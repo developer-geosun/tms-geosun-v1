@@ -5,13 +5,13 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.geosun.tms.freight.domain.FreightCalculationScenario;
 import com.geosun.tms.routes.domain.Route;
-import com.geosun.tms.routes.domain.RoutePoint;
 import com.geosun.tms.routes.domain.RouteRequest;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import com.geosun.tms.routes.service.CountryBreakdownService;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -80,7 +80,8 @@ Do not invent distances or prices not present in the input context.
     ArrayNode points = objectMapper.createArrayNode();
     if (route.getPoints() != null) {
       route.getPoints().stream()
-          .sorted(Comparator.comparing(RoutePoint::getPointOrder))
+          .filter(Objects::nonNull)
+          .sorted(Comparator.comparingInt(point -> point.getPointOrder()))
           .forEach(
               point -> {
                 ObjectNode p = objectMapper.createObjectNode();

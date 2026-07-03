@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.lang.NonNull;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -105,7 +106,7 @@ public class HereRoutingClient {
 
   private static List<RoutePoint> sortedPoints(Route route) {
     return route.getPoints().stream()
-        .sorted(Comparator.comparing(RoutePoint::getPointOrder))
+        .sorted(Comparator.comparing((@NonNull RoutePoint point) -> point.getPointOrder()))
         .toList();
   }
 
