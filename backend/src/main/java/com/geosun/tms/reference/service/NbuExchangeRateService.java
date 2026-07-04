@@ -153,7 +153,9 @@ public class NbuExchangeRateService {
   }
 
   private static Set<String> activeCurrencyCodes(List<Currency> currencies) {
-    return currencies.stream().map(NbuExchangeRateService::currencyCode).collect(Collectors.toSet());
+    return currencies.stream()
+        .map(NbuExchangeRateService::currencyCode)
+        .collect(Collectors.toSet());
   }
 
   @NonNull

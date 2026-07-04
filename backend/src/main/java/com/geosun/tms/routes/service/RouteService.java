@@ -348,7 +348,9 @@ public class RouteService implements RouteContractsFacade {
 
   private static void validateOperations(List<RoutePointRequest> points) {
     List<RoutePointRequest> orderedRequests =
-        points.stream().sorted(Comparator.comparing((@NonNull RoutePointRequest point) -> point.order())).toList();
+        points.stream()
+            .sorted(Comparator.comparing((@NonNull RoutePointRequest point) -> point.order()))
+            .toList();
     List<RoutePointWithOperations> ordered =
         orderedRequests.stream().map(RouteService::toValidationPoint).toList();
     ValidationError error = RoutePointOperationsRules.validateRoute(ordered);
