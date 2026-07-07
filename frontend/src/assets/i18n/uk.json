@@ -379,7 +379,7 @@
       "applyAiToQuote": "Підставити суму в пропозицію",
       "aiHistory": "Історія розрахунків ІІ",
       "aiHistoryLoadFailed": "Не вдалося завантажити деталі розрахунку",
-      "nbuCalculation": "Розрахунок (НБУ)",
+      "nbuCalculation": "Розрахунок",
       "nbuScenario": "Числовий сценарій",
       "nbuCalculationDate": "Дата розрахунку",
       "nbuBreakdownButton": "Country breakdown",
@@ -406,7 +406,7 @@
       "nbuCopySummary": "Копіювати звіт",
       "nbuSummaryCopied": "Звіт скопійовано",
       "nbuSummaryCopyFailed": "Не вдалося скопіювати звіт",
-      "nbuHistory": "Історія розрахунків (НБУ)",
+      "nbuHistory": "Історія розрахунків",
       "nbuHistoryLoadFailed": "Не вдалося завантажити розрахунок",
       "nbuApplyToQuote": "Підставити в пропозицію",
       "nbuCreateQuote": "Створити чернетку з розрахунку",
@@ -634,7 +634,7 @@
     "adminFreightScenariosAi": "Сценарії фрахту (ІІ)",
     "adminCurrencies": "Валюти",
     "adminCountryReference": "Країни",
-    "adminFreightNumericScenarios": "Сценарії (НБУ)",
+    "adminFreightNumericScenarios": "Сценарії",
     "adminTollTariffSets": "Платні дороги"
   },
   "auth": {

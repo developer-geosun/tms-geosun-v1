@@ -379,7 +379,7 @@
       "applyAiToQuote": "Apply total to quote",
       "aiHistory": "AI calculation history",
       "aiHistoryLoadFailed": "Failed to load calculation details",
-      "nbuCalculation": "Calculation (NBU)",
+      "nbuCalculation": "Calculation",
       "nbuScenario": "Numeric scenario",
       "nbuCalculationDate": "Calculation date",
       "nbuBreakdownButton": "Country breakdown",
@@ -406,7 +406,7 @@
       "nbuCopySummary": "Copy report",
       "nbuSummaryCopied": "Report copied",
       "nbuSummaryCopyFailed": "Failed to copy report",
-      "nbuHistory": "NBU calculation history",
+      "nbuHistory": "Calculation history",
       "nbuHistoryLoadFailed": "Failed to load calculation",
       "nbuApplyToQuote": "Apply to quote form",
       "nbuCreateQuote": "Create draft from calculation",
@@ -634,7 +634,7 @@
     "adminFreightScenariosAi": "Freight scenarios (AI)",
     "adminCurrencies": "Currencies",
     "adminCountryReference": "Countries",
-    "adminFreightNumericScenarios": "NBU scenarios",
+    "adminFreightNumericScenarios": "Scenarios",
     "adminTollTariffSets": "Toll tariffs"
   },
   "auth": {
