@@ -2,22 +2,23 @@ import { Routes } from '@angular/router';
 import { serviceStopGuard } from './core/guards/service-stop.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { authAvailabilityGuard } from './core/guards/auth-availability.guard';
+import { guestGuard } from './core/guards/guest.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: '/login', pathMatch: 'full' },
   {
     path: 'login',
-    canActivate: [authAvailabilityGuard],
+    canActivate: [authAvailabilityGuard, guestGuard],
     loadComponent: () => import('./pages/login/login.component').then((m) => m.LoginComponent)
   },
   {
     path: 'register',
-    canActivate: [authAvailabilityGuard],
+    canActivate: [authAvailabilityGuard, guestGuard],
     loadComponent: () => import('./pages/register/register.component').then((m) => m.RegisterComponent)
   },
   {
     path: 'verify-email',
-    canActivate: [authAvailabilityGuard],
+    canActivate: [authAvailabilityGuard, guestGuard],
     loadComponent: () =>
       import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent)
   },
