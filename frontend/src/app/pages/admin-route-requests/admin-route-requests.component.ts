@@ -29,17 +29,12 @@ import {
   AdminRouteRequestListParams,
   CostPreviewContractResponse,
   CreateQuoteContractRequest,
-  FreightAiCalculationContractDto,
-  FreightAiCalculationSummaryContractDto,
-  FreightAiCalculationsApiService,
   FreightCostCalculationContractDto,
   FreightNumericScenarioContractDto,
   FreightNumericScenariosApiService,
-  FreightScenariosApiService,
   QuoteContractDto,
   RouteRequestContractDto,
-  RouteRequestsApiService,
-  ScenarioContractDto
+  RouteRequestsApiService
 } from '../../core/api';
 import { extractApiError } from '../../core/utils/api-error';
 import { isNbuRateError } from '../../core/utils/nbu-rate-error';
@@ -48,11 +43,6 @@ import {
   buildNbuCostPreviewDisplay,
   NbuCostPreviewSource
 } from '../../core/utils/freight-cost-preview-display.util';
-import {
-  AiCalculationErrorDisplay,
-  resolveAiCalculationError,
-  resolveAiCalculationFailure
-} from '../../core/utils/resolve-ai-calculation-error';
 import * as L from 'leaflet';
 
 @Component({
@@ -84,9 +74,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
-  private readonly scenariosApi = inject(FreightScenariosApiService);
   private readonly numericScenariosApi = inject(FreightNumericScenariosApiService);
-  private readonly aiCalculationsApi = inject(FreightAiCalculationsApiService);
   private map: L.Map | null = null;
   private mapRouteLayer: L.Polyline | null = null;
   private mapMarkers: L.Marker[] = [];
@@ -114,12 +102,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly nbuCostHistory = signal<FreightCostCalculationContractDto[]>([]);
   readonly lastNbuPreview = signal<NbuCostPreviewSource | null>(null);
 
-  readonly scenarios = signal<ScenarioContractDto[]>([]);
   readonly numericScenarios = signal<FreightNumericScenarioContractDto[]>([]);
-  readonly aiHistory = signal<FreightAiCalculationSummaryContractDto[]>([]);
-  readonly aiResult = signal<FreightAiCalculationContractDto | null>(null);
-  readonly isAiCalculating = signal(false);
-  readonly aiErrorDisplay = signal<AiCalculationErrorDisplay | null>(null);
 
   readonly selectedRequest = computed(() =>
     this.requests().find((request) => request.id === this.selectedRequestId()) ?? null
@@ -155,11 +138,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     internalNote: ['']
   });
 
-  readonly aiForm = this.formBuilder.nonNullable.group({
-    scenarioId: [''],
-    calculationDate: [new Date().toISOString().slice(0, 10)]
-  });
-
   readonly nbuForm = this.formBuilder.nonNullable.group({
     scenarioId: [''],
     calculationDate: [new Date().toISOString().slice(0, 10)]
@@ -168,15 +146,12 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly statusOptions = ['new', 'in_review', 'quoted', 'accepted', 'rejected', 'cancelled', 'expired'];
 
   constructor() {
-    void this.loadScenarios();
     void this.loadNumericScenarios();
     void this.loadRequests();
     effect(() => {
       const request = this.selectedRequest();
       if (!request) {
         this.quoteHistory.set([]);
-        this.aiHistory.set([]);
-        this.aiResult.set(null);
         this.nbuCostHistory.set([]);
         this.nbuCostSummary.set('');
         this.lastNbuPreview.set(null);
@@ -186,7 +161,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
         this.renderMapForRequest(request);
       });
       void this.loadQuoteHistory(request.id);
-      void this.loadAiHistory(request.id);
       void this.loadNbuCostHistory(request.id);
     });
   }
@@ -270,8 +244,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.showNbuRatesLink.set(false);
     this.nbuCostSummary.set('');
     this.lastNbuPreview.set(null);
-    this.clearAiError();
-    this.aiResult.set(null);
   }
 
   async createDraftQuote(): Promise<void> {
@@ -316,70 +288,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     } finally {
       this.isSendingQuote.set(false);
     }
-  }
-
-  applyAiTotalToQuote(): void {
-    const structured = this.aiResult()?.responseStructured;
-    if (!structured) {
-      return;
-    }
-    const total = structured['total'];
-    const currency = structured['currency'];
-    if (typeof total === 'number' && Number.isFinite(total)) {
-      this.quoteDraftForm.patchValue({ totalAmount: String(total) });
-    }
-    if (typeof currency === 'string' && currency.trim()) {
-      this.quoteDraftForm.patchValue({ currency: currency.trim().toUpperCase() });
-    }
-  }
-
-  async runAiCalculation(): Promise<void> {
-    const selected = this.selectedRequest();
-    const scenarioId = this.aiForm.controls.scenarioId.value.trim();
-    if (!selected || !scenarioId) {
-      this.aiErrorDisplay.set({ messageKey: 'pages.adminRouteRequests.aiScenarioRequired' });
-      return;
-    }
-    this.clearAiError();
-    this.isAiCalculating.set(true);
-    try {
-      const result = await this.aiCalculationsApi.run(selected.id, {
-        scenarioId,
-        calculationDate: this.aiForm.controls.calculationDate.value || undefined
-      });
-      this.aiResult.set(result);
-      await this.loadAiHistory(selected.id);
-    } catch (error) {
-      this.aiErrorDisplay.set(resolveAiCalculationError(error));
-      await this.loadAiHistory(selected.id);
-    } finally {
-      this.isAiCalculating.set(false);
-    }
-  }
-
-  async viewAiCalculation(calculationId: string): Promise<void> {
-    this.clearAiError();
-    try {
-      const detail = await this.aiCalculationsApi.getById(calculationId);
-      this.aiResult.set(detail);
-    } catch (error) {
-      this.aiErrorDisplay.set({
-        messageKey: 'pages.adminRouteRequests.aiHistoryLoadFailed',
-        detail: resolveAiCalculationError(error).detail
-      });
-    }
-  }
-
-  aiResultFailure(): AiCalculationErrorDisplay | null {
-    const result = this.aiResult();
-    if (!result || result.status !== 'FAILED') {
-      return null;
-    }
-    return resolveAiCalculationFailure(result.errorMessage);
-  }
-
-  private clearAiError(): void {
-    this.aiErrorDisplay.set(null);
   }
 
   async recalculateCountryBreakdown(): Promise<void> {
@@ -518,19 +426,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     await this.router.navigate(['/main']);
   }
 
-  aiStructuredJson(): string {
-    const structured = this.aiResult()?.responseStructured;
-    return structured ? JSON.stringify(structured, null, 2) : '';
-  }
-
-  private async loadScenarios(): Promise<void> {
-    try {
-      this.scenarios.set(await this.scenariosApi.list(true));
-    } catch {
-      this.scenarios.set([]);
-    }
-  }
-
   private async loadNumericScenarios(): Promise<void> {
     try {
       this.numericScenarios.set(await this.numericScenariosApi.list(true));
@@ -592,14 +487,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     } catch {
       this.quoteHistory.set([]);
       this.quoteLoadError.set('pages.adminRouteRequests.quoteHistoryLoadFailed');
-    }
-  }
-
-  private async loadAiHistory(requestId: number): Promise<void> {
-    try {
-      this.aiHistory.set(await this.aiCalculationsApi.listByRequest(requestId));
-    } catch {
-      this.aiHistory.set([]);
     }
   }
 
