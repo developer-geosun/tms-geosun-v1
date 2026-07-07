@@ -77,7 +77,8 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   private readonly numericScenariosApi = inject(FreightNumericScenariosApiService);
   private map: L.Map | null = null;
   private mapRouteLayer: L.Polyline | null = null;
-  private mapMarkers: L.Marker[] = [];
+  private mapMarkers: L.CircleMarker[] = [];
+  private resizeTimers: ReturnType<typeof setTimeout>[] = [];
 
   readonly isLoading = signal(false);
   readonly loadError = signal('');
@@ -150,26 +151,32 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     void this.loadRequests();
     effect(() => {
       const request = this.selectedRequest();
-      if (!request) {
-        this.quoteHistory.set([]);
-        this.nbuCostHistory.set([]);
-        this.nbuCostSummary.set('');
-        this.lastNbuPreview.set(null);
+      const loading = this.isLoading();
+      if (!request || loading) {
+        if (!request) {
+          this.quoteHistory.set([]);
+          this.nbuCostHistory.set([]);
+          this.nbuCostSummary.set('');
+          this.lastNbuPreview.set(null);
+        }
         return;
       }
-      queueMicrotask(() => {
-        this.renderMapForRequest(request);
-      });
+      this.scheduleMapUpdate(request);
       void this.loadQuoteHistory(request.id);
       void this.loadNbuCostHistory(request.id);
     });
   }
 
   ngAfterViewInit(): void {
-    this.initializeMap();
+    const request = this.selectedRequest();
+    if (request && !this.isLoading()) {
+      this.scheduleMapUpdate(request);
+    }
   }
 
   ngOnDestroy(): void {
+    this.resizeTimers.forEach((timer) => clearTimeout(timer));
+    this.resizeTimers = [];
     this.map?.remove();
     this.map = null;
   }
@@ -198,6 +205,10 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       const stillSelected = page.content.some((item) => item.id === this.selectedRequestId());
       if (!stillSelected) {
         this.selectedRequestId.set(page.content[0]?.id ?? null);
+      }
+      const activeId = this.selectedRequestId();
+      if (activeId != null) {
+        void this.loadRequestDetails(activeId);
       }
     } catch {
       this.requests.set([]);
@@ -244,6 +255,18 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.showNbuRatesLink.set(false);
     this.nbuCostSummary.set('');
     this.lastNbuPreview.set(null);
+    void this.loadRequestDetails(requestId);
+  }
+
+  // Список повертає запити без точок маршруту (includeRoutePoints=false),
+  // тому підвантажуємо повну деталь по id, щоб показати точки та карту.
+  private async loadRequestDetails(requestId: number): Promise<void> {
+    try {
+      const detail = await this.routeRequestsApi.getAdminRouteRequestById(requestId);
+      this.requests.update((list) => list.map((item) => (item.id === detail.id ? detail : item)));
+    } catch {
+      // no-op: залишаємо дані зі списку, точки просто не відобразяться
+    }
   }
 
   async createDraftQuote(): Promise<void> {
@@ -511,7 +534,36 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
   }
 
-  private initializeMap(): void {
+  private scheduleMapUpdate(request: RouteRequestContractDto): void {
+    this.resizeTimers.forEach((timer) => clearTimeout(timer));
+    this.resizeTimers = [];
+    this.initializeMapWhenContainerReady(() => this.renderMapForRequest(request));
+  }
+
+  private initializeMapWhenContainerReady(onReady: () => void, attempt = 0): void {
+    if (!this.requestMapElement) {
+      if (attempt >= 30) {
+        return;
+      }
+      const timer = setTimeout(() => this.initializeMapWhenContainerReady(onReady, attempt + 1), 50);
+      this.resizeTimers.push(timer);
+      return;
+    }
+
+    const container = this.requestMapElement.nativeElement;
+    const hasSize = container.clientWidth > 0 && container.clientHeight > 0;
+    if (!hasSize && attempt < 30) {
+      const timer = setTimeout(() => this.initializeMapWhenContainerReady(onReady, attempt + 1), 50);
+      this.resizeTimers.push(timer);
+      return;
+    }
+
+    this.ensureMapInitialized();
+    onReady();
+    this.scheduleMapResizeFix();
+  }
+
+  private ensureMapInitialized(): void {
     if (!this.requestMapElement || this.map) {
       return;
     }
@@ -519,10 +571,20 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; GeoSun'
     }).addTo(this.map);
-    const selected = this.selectedRequest();
-    if (selected) {
-      this.renderMapForRequest(selected);
-    }
+  }
+
+  private scheduleMapResizeFix(): void {
+    const delays = [0, 100, 300];
+    this.resizeTimers.push(
+      ...delays.map((delay) =>
+        setTimeout(() => {
+          this.map?.invalidateSize();
+        }, delay)
+      )
+    );
+    requestAnimationFrame(() => {
+      this.map?.invalidateSize();
+    });
   }
 
   private renderMapForRequest(request: RouteRequestContractDto): void {
@@ -538,8 +600,20 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.mapMarkers = [];
 
     const points = [...request.route.points].sort((a, b) => a.order - b.order);
+    if (!points.length) {
+      return;
+    }
+
     this.mapMarkers = points.map((point) =>
-      L.marker([point.lat, point.lng]).addTo(this.map!).bindPopup(`${point.order}. ${point.address}`)
+      L.circleMarker([point.lat, point.lng], {
+        radius: 7,
+        color: '#1d4ed8',
+        weight: 2,
+        fillColor: '#2563eb',
+        fillOpacity: 0.85
+      })
+        .addTo(this.map!)
+        .bindPopup(`${point.order}. ${point.address}`)
     );
 
     const latLngs = this.parseRoutePolyline(request.route.routePolyline, points);
@@ -549,10 +623,8 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       return;
     }
 
-    if (this.mapMarkers.length) {
-      const group = L.featureGroup(this.mapMarkers);
-      this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
-    }
+    const group = L.featureGroup(this.mapMarkers);
+    this.map.fitBounds(group.getBounds(), { padding: [30, 30] });
   }
 
   private parseRoutePolyline(routePolyline: string, points: { lat: number; lng: number }[]): L.LatLng[] {

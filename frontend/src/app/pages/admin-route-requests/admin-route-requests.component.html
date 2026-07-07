@@ -322,13 +322,13 @@
           <h3>{{ 'pages.adminRouteRequests.routePoints' | translate }}</h3>
           <div #requestMap class="request-map"></div>
           @if (selected.route?.points?.length) {
-            <ol>
+            <ul class="admin-route-requests__points">
               @for (point of selected.route!.points; track point.order) {
                 <li>
                   {{ point.order }}. {{ point.address }} ({{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }})
                 </li>
               }
-            </ol>
+            </ul>
           } @else {
             <p>{{ 'pages.adminRouteRequests.noRoutePoints' | translate }}</p>
           }
