@@ -8,7 +8,7 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors';
-import { AuthAvailabilityService, TranslatedMatPaginatorIntl } from './core/services';
+import { AuthAvailabilityService, AuthService, TranslatedMatPaginatorIntl } from './core/services';
 
 // Фабрика для завантаження перекладів з assets
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
@@ -22,6 +22,13 @@ function authAvailabilityInitializerFactory(): () => Promise<void> {
   };
 }
 
+function sessionVerifyInitializerFactory(): () => Promise<void> {
+  return async () => {
+    const authService = inject(AuthService);
+    await firstValueFrom(authService.verifySessionOnStartup());
+  };
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     { provide: LOCALE_ID, useValue: 'uk' },
@@ -32,6 +39,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: authAvailabilityInitializerFactory,
+      multi: true
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: sessionVerifyInitializerFactory,
       multi: true
     },
     importProvidersFrom(

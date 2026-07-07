@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, finalize, map, of, shareReplay, tap, throwError } from 'rxjs';
+import { Observable, catchError, finalize, map, of, shareReplay, tap, throwError, timeout } from 'rxjs';
 import { ConfigService } from './config.service';
 import {
   AuthState,
@@ -16,6 +16,7 @@ import {
 } from '../../shared/models';
 
 const AUTH_STORAGE_KEY = 'tms_geosun_auth';
+const SESSION_VERIFY_TIMEOUT_MS = 5000;
 
 @Injectable({
   providedIn: 'root'
@@ -77,6 +78,27 @@ export class AuthService {
       map((response) => this.ensureSuccessResponse_(response)),
       map((user) => this.normalizeUser_(user)),
       tap((user) => this.setUser(user))
+    );
+  }
+
+  /**
+   * Перевіряє збережену сесію під час старту застосунку.
+   * Якщо токена немає — нічого не робимо. Якщо токен є, але сервер
+   * повертає помилку (401 після невдалого refresh) — очищаємо сесію,
+   * щоб UI не показував меню за протухлим токеном.
+   */
+  verifySessionOnStartup(): Observable<void> {
+    if (!this.state().accessToken) {
+      return of(void 0);
+    }
+
+    return this.getMe().pipe(
+      timeout(SESSION_VERIFY_TIMEOUT_MS),
+      map(() => void 0),
+      catchError(() => {
+        this.clearSession();
+        return of(void 0);
+      })
     );
   }
 
