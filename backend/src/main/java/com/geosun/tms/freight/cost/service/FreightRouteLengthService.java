@@ -3,7 +3,6 @@ package com.geosun.tms.freight.cost.service;
 import com.geosun.tms.routes.domain.Route;
 import com.geosun.tms.routes.domain.RoutePoint;
 import com.geosun.tms.routes.domain.RoutePointOperation;
-import com.geosun.tms.routes.service.HereRoutingClient;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
@@ -15,12 +14,7 @@ import org.springframework.stereotype.Service;
 public class FreightRouteLengthService {
   private static final BigDecimal FALLBACK_EMPTY_RATIO = new BigDecimal("0.15");
   private static final BigDecimal FALLBACK_LOADED_RATIO = new BigDecimal("0.85");
-  private static final BigDecimal METERS_PER_KM = new BigDecimal("1000");
-  private final HereRoutingClient hereRoutingClient;
-
-  public FreightRouteLengthService(HereRoutingClient hereRoutingClient) {
-    this.hereRoutingClient = hereRoutingClient;
-  }
+  private static final double EARTH_RADIUS_METERS = 6_371_000.0;
 
   /** Обчислює L_total, L_empty (до першої LOADING), L_loaded — з fallback 15%/85%. */
   public RouteLengths compute(Route route) {
@@ -73,19 +67,36 @@ public class FreightRouteLengthService {
         false);
   }
 
+  /** Доїзд рахуємо по прямій (haversine), без HERE. */
   private BigDecimal resolvePreRouteEmptyKm(
       StartPoint startPoint, List<RoutePoint> sortedRoutePoints) {
     if (startPoint == null || sortedRoutePoints.isEmpty()) {
       return BigDecimal.ZERO;
     }
     RoutePoint firstPoint = sortedRoutePoints.get(0);
-    long meters =
-        hereRoutingClient.fetchDistanceMeters(
+    if (firstPoint.getLat() == null || firstPoint.getLng() == null) {
+      return BigDecimal.ZERO;
+    }
+    double meters =
+        haversineMeters(
             startPoint.lat(),
             startPoint.lng(),
             firstPoint.getLat().doubleValue(),
             firstPoint.getLng().doubleValue());
-    return BigDecimal.valueOf(meters).divide(METERS_PER_KM, 3, RoundingMode.HALF_UP);
+    return BigDecimal.valueOf(meters / 1000.0).setScale(3, RoundingMode.HALF_UP);
+  }
+
+  private static double haversineMeters(
+      double originLat, double originLng, double destinationLat, double destinationLng) {
+    double lat1 = Math.toRadians(originLat);
+    double lat2 = Math.toRadians(destinationLat);
+    double dLat = Math.toRadians(destinationLat - originLat);
+    double dLng = Math.toRadians(destinationLng - originLng);
+    double a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return EARTH_RADIUS_METERS * c;
   }
 
   private static BigDecimal resolveTotalKm(Route route) {

@@ -1,44 +1,36 @@
 package com.geosun.tms.freight.cost.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.when;
 
 import com.geosun.tms.routes.domain.Route;
 import com.geosun.tms.routes.domain.RoutePoint;
 import com.geosun.tms.routes.domain.RoutePointKind;
 import com.geosun.tms.routes.domain.RoutePointOperation;
-import com.geosun.tms.routes.service.HereRoutingClient;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-@ExtendWith(MockitoExtension.class)
 class FreightRouteLengthServiceTest {
-  @Mock private HereRoutingClient hereRoutingClient;
-
   private FreightRouteLengthService service;
 
   @BeforeEach
   void setUp() {
-    service = new FreightRouteLengthService(hereRoutingClient);
+    service = new FreightRouteLengthService();
   }
 
   @Test
   void compute_addsPreRouteDistanceToEmptyAndTotal() {
     Route route = sampleRoute();
-    when(hereRoutingClient.fetchDistanceMeters(50.0, 30.0, 49.0, 31.0)).thenReturn(20_000L);
 
     RouteLengths result =
         service.compute(route, new FreightRouteLengthService.StartPoint(50.0, 30.0, "Depot"));
 
-    assertThat(result.preRouteEmptyKm()).isEqualByComparingTo("20.000");
-    assertThat(result.emptyKm()).isEqualByComparingTo("120.000");
+    // Доїзд за haversine ≈ 132.584 км (50,30 → 49,31)
+    assertThat(result.preRouteEmptyKm()).isEqualByComparingTo("132.584");
+    assertThat(result.emptyKm()).isEqualByComparingTo("232.584");
     assertThat(result.loadedKm()).isEqualByComparingTo("50.000");
-    assertThat(result.totalKm()).isEqualByComparingTo("170.000");
+    assertThat(result.totalKm()).isEqualByComparingTo("282.584");
   }
 
   @Test

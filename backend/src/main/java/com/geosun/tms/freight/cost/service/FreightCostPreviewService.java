@@ -87,13 +87,7 @@ public class FreightCostPreviewService {
     }
 
     FreightRouteLengthService.StartPoint startPoint = resolveStartPoint(request.startPoint());
-    RouteLengths lengths;
-    try {
-      lengths = routeLengthService.compute(routeRequest.getRoute(), startPoint);
-    } catch (IllegalStateException ex) {
-      throw ApiException.badRequest(
-          "VALIDATION_ERROR", "Не вдалося розрахувати доїзд до першої точки маршруту");
-    }
+    RouteLengths lengths = routeLengthService.compute(routeRequest.getRoute(), startPoint);
     BigDecimal preRouteEmptyKm = lengths.preRouteEmptyKm();
     NbuRatesSnapshotDto nbuRates =
         nbuExchangeRateService.getRatesForDate(request.calculationDate());
