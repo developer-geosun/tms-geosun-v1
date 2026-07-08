@@ -10,6 +10,7 @@ public record FreightCostCalculationSummaryDto(
     String scenarioName,
     String proposalCurrency,
     String seasonUsed,
+    BigDecimal preRouteEmptyKm,
     BigDecimal lTotalKm,
     BigDecimal lEmptyKm,
     BigDecimal lLoadedKm,

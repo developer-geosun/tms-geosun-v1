@@ -8,6 +8,13 @@ export interface CostPreviewContractRequest {
   scenarioId: string;
   calculationDate: string;
   seasonOverride?: SeasonModeContract;
+  startPoint?: CostPreviewStartPointContract;
+}
+
+export interface CostPreviewStartPointContract {
+  lat: number;
+  lng: number;
+  address?: string | null;
 }
 
 export interface CostPreviewContractResponse {

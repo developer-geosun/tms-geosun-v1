@@ -45,7 +45,7 @@ class FreightCostCalculatorServiceTest {
         .thenReturn(List.of(plRule()));
 
     FreightNumericScenario scenario = sampleScenario();
-    RouteLengths lengths = new RouteLengths(bd("1000"), bd("150"), bd("850"), false);
+    RouteLengths lengths = new RouteLengths(bd("1000"), bd("150"), bd("850"), bd("0"), false);
     List<CountryDistanceDto> countries = List.of(new CountryDistanceDto("PL", 200_000L, 0L, 1));
     NbuRatesSnapshotDto rates =
         new NbuRatesSnapshotDto(
@@ -60,6 +60,7 @@ class FreightCostCalculatorServiceTest {
         calculator.calculate(
             scenario,
             lengths,
+            bd("0"),
             countries,
             rates,
             LocalDate.of(2026, 5, 20),
@@ -88,6 +89,7 @@ class FreightCostCalculatorServiceTest {
             "Test",
             "EUR",
             "NON_WINTER",
+            bd("0"),
             bd("1000"),
             bd("150"),
             bd("850"),

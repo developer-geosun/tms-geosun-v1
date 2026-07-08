@@ -21,6 +21,7 @@ public class FreightCostCalculationSummaryBuilder {
     sb.append("L_total: ").append(km(data.lTotalKm())).append(" км\n");
     sb.append("L_empty: ").append(km(data.lEmptyKm())).append(" км\n");
     sb.append("L_loaded: ").append(km(data.lLoadedKm())).append(" км\n");
+    sb.append("Доїзд до першої точки: ").append(km(data.preRouteEmptyKm())).append(" км\n");
     sb.append("Сезон: ").append(data.seasonUsed()).append('\n');
     if (data.lengthFallbackUsed()) {
       sb.append("Примітка: застосовано fallback 15% порожній / 85% завантажений.\n");

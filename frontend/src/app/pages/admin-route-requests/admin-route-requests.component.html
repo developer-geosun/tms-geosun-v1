@@ -320,10 +320,33 @@
           }
 
           <h3>{{ 'pages.adminRouteRequests.routePoints' | translate }}</h3>
+          <div class="nbu-form nbu-form--start-point" [formGroup]="nbuForm">
+            <mat-slide-toggle formControlName="useStartPoint" (change)="onStartPointToggleChange()">
+              {{ 'pages.adminRouteRequests.useStartPoint' | translate }}
+            </mat-slide-toggle>
+            @if (nbuForm.controls.useStartPoint.value) {
+              <mat-form-field appearance="outline" class="nbu-form__field nbu-form__field--wide">
+                <mat-label>{{ 'pages.adminRouteRequests.startPointAddress' | translate }}</mat-label>
+                <input matInput formControlName="startPointAddress" />
+              </mat-form-field>
+              <div class="nbu-form__actions nbu-form__actions--start-point">
+                <button
+                  mat-stroked-button
+                  type="button"
+                  (click)="setStartPointFromAddress()"
+                  [disabled]="isStartPointGeocoding()">
+                  {{ 'pages.adminRouteRequests.applyStartPointAddress' | translate }}
+                </button>
+                <button mat-stroked-button type="button" (click)="clearStartPoint()">
+                  {{ 'pages.adminRouteRequests.clearStartPoint' | translate }}
+                </button>
+              </div>
+            }
+          </div>
           <div #requestMap class="request-map"></div>
-          @if (selected.route?.points?.length) {
+          @if (displayedRoutePoints().length) {
             <ul class="admin-route-requests__points">
-              @for (point of selected.route!.points; track point.order) {
+              @for (point of displayedRoutePoints(); track point.order + '-' + point.lat + '-' + point.lng) {
                 <li>
                   {{ point.order }}. {{ point.address }} ({{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }})
                 </li>

@@ -412,7 +412,14 @@
       "nbuCreateQuote": "Создать черновик из расчёта",
       "nbuAppliedToQuote": "Сумма и отчёт подставлены в форму предложения",
       "quoteDraftCreatedFromNbu": "Черновик предложения создан из расчёта НБУ",
-      "nbuPreviewRequiredForQuote": "Сначала выполните предварительный расчёт (НБУ)"
+      "nbuPreviewRequiredForQuote": "Сначала выполните предварительный расчёт (НБУ)",
+      "useStartPoint": "Использовать стартовую точку",
+      "startPointAddress": "Адрес стартовой точки",
+      "applyStartPointAddress": "Определить точку по адресу",
+      "clearStartPoint": "Очистить точку",
+      "startPointRequired": "Выберите стартовую точку на карте или укажите адрес",
+      "startPointAddressRequired": "Укажите адрес стартовой точки",
+      "startPointGeocodeFailed": "Не удалось определить координаты стартовой точки"
     },
     "adminFreightScenarios": {
       "title": "Сценарии расчёта фрахта",

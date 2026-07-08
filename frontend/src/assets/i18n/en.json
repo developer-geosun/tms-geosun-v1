@@ -412,7 +412,14 @@
       "nbuCreateQuote": "Create draft from calculation",
       "nbuAppliedToQuote": "Amount and summary applied to quote form",
       "quoteDraftCreatedFromNbu": "Draft quote created from NBU calculation",
-      "nbuPreviewRequiredForQuote": "Run NBU cost preview first"
+      "nbuPreviewRequiredForQuote": "Run NBU cost preview first",
+      "useStartPoint": "Use start point",
+      "startPointAddress": "Start point address",
+      "applyStartPointAddress": "Apply address to map point",
+      "clearStartPoint": "Clear point",
+      "startPointRequired": "Pick a start point on the map or enter an address",
+      "startPointAddressRequired": "Enter a start point address",
+      "startPointGeocodeFailed": "Failed to resolve start point coordinates"
     },
     "adminFreightScenarios": {
       "title": "Freight calculation scenarios",

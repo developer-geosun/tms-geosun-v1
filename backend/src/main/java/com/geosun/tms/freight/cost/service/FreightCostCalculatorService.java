@@ -40,6 +40,7 @@ public class FreightCostCalculatorService {
   public FreightCostCalculationSummaryDto calculate(
       FreightNumericScenario scenario,
       RouteLengths lengths,
+      BigDecimal preRouteEmptyKm,
       List<CountryDistanceDto> countryDistances,
       NbuRatesSnapshotDto nbuRates,
       LocalDate calculationDate,
@@ -134,6 +135,7 @@ public class FreightCostCalculatorService {
         scenario.getName(),
         proposalCurrency,
         winter ? "WINTER" : "NON_WINTER",
+        preRouteEmptyKm,
         lengths.totalKm(),
         lengths.emptyKm(),
         lengths.loadedKm(),

@@ -21,6 +21,7 @@ import com.geosun.tms.routes.domain.RouteRequest;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
 import com.geosun.tms.routes.service.CountryBreakdownService;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -85,7 +86,15 @@ public class FreightCostPreviewService {
           "Спочатку виконайте country-breakdown для заявки з обраним scenarioId");
     }
 
-    RouteLengths lengths = routeLengthService.compute(routeRequest.getRoute());
+    FreightRouteLengthService.StartPoint startPoint = resolveStartPoint(request.startPoint());
+    RouteLengths lengths;
+    try {
+      lengths = routeLengthService.compute(routeRequest.getRoute(), startPoint);
+    } catch (IllegalStateException ex) {
+      throw ApiException.badRequest(
+          "VALIDATION_ERROR", "Не вдалося розрахувати доїзд до першої точки маршруту");
+    }
+    BigDecimal preRouteEmptyKm = lengths.preRouteEmptyKm();
     NbuRatesSnapshotDto nbuRates =
         nbuExchangeRateService.getRatesForDate(request.calculationDate());
 
@@ -93,6 +102,7 @@ public class FreightCostPreviewService {
         calculatorService.calculate(
             scenario,
             lengths,
+            preRouteEmptyKm,
             countryDistances,
             nbuRates,
             request.calculationDate(),
@@ -189,6 +199,7 @@ public class FreightCostPreviewService {
     root.put("calculationDate", calculationDate.toString());
     root.put("driverSalaryBasis", DriverSalaryBasis.PERCENT_OF_FINAL_FREIGHT.name());
     root.put("seasonUsed", summary.seasonUsed());
+    root.put("preRouteEmptyKm", summary.preRouteEmptyKm());
     root.put("lengthFallbackUsed", summary.lengthFallbackUsed());
     root.put("lTotalKm", summary.lTotalKm());
     root.put("lEmptyKm", summary.lEmptyKm());
@@ -292,4 +303,16 @@ public class FreightCostPreviewService {
       throw ApiException.badRequest("VALIDATION_ERROR", "Failed to serialize JSON snapshot");
     }
   }
+
+  private FreightRouteLengthService.StartPoint resolveStartPoint(CostPreviewRequest.StartPointRequest startPoint) {
+    if (startPoint == null) {
+      return null;
+    }
+    if (startPoint.lat() == null || startPoint.lng() == null) {
+      throw ApiException.badRequest(
+          "VALIDATION_ERROR", "startPoint.lat та startPoint.lng обов'язкові, якщо startPoint передано");
+    }
+    return new FreightRouteLengthService.StartPoint(startPoint.lat(), startPoint.lng(), startPoint.address());
+  }
+
 }

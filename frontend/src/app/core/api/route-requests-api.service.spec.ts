@@ -75,4 +75,41 @@ describe('RouteRequestsApiService', () => {
 
     await expectAsync(pending).toBeResolvedTo(jasmine.objectContaining({ id: 'quote/1', status: 'SENT' }));
   });
+
+  it('posts cost preview with optional startPoint', async () => {
+    const pending = service.postCostPreview(42, {
+      scenarioId: 'scenario-1',
+      calculationDate: '2026-07-08',
+      startPoint: {
+        lat: 50.45,
+        lng: 30.52,
+        address: 'Kyiv'
+      }
+    });
+
+    const request = httpMock.expectOne(backendApi.adminRouteRequestCostPreview(42));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body.startPoint).toEqual({
+      lat: 50.45,
+      lng: 30.52,
+      address: 'Kyiv'
+    });
+    request.flush({ calculationId: 'calc-1' });
+
+    await expectAsync(pending).toBeResolvedTo(jasmine.objectContaining({ calculationId: 'calc-1' }));
+  });
+
+  it('posts cost preview without startPoint when not provided', async () => {
+    const pending = service.postCostPreview(42, {
+      scenarioId: 'scenario-1',
+      calculationDate: '2026-07-08'
+    });
+
+    const request = httpMock.expectOne(backendApi.adminRouteRequestCostPreview(42));
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body.startPoint).toBeUndefined();
+    request.flush({ calculationId: 'calc-2' });
+
+    await expectAsync(pending).toBeResolvedTo(jasmine.objectContaining({ calculationId: 'calc-2' }));
+  });
 });

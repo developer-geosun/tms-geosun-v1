@@ -44,11 +44,29 @@
   min-width: 200px;
 }
 
+.nbu-form__field--wide {
+  min-width: 320px;
+  flex: 1 1 320px;
+}
+
 .nbu-form__actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.nbu-form--start-point {
+  align-items: center;
+  gap: 10px;
+}
+
+.nbu-form--start-point .mat-mdc-slide-toggle {
+  margin-right: 8px;
+}
+
+.nbu-form__actions--start-point {
+  margin-bottom: 22px; // вирівнюємо по базовій лінії з mat-form-field
 }
 
 .admin-route-requests__nbu-summary {
