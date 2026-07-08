@@ -14,6 +14,9 @@ import com.geosun.tms.freight.cost.dto.response.FreightCostCalculationSummaryDto
 import com.geosun.tms.freight.cost.repository.CountryTollRuleRepository;
 import com.geosun.tms.reference.dto.response.NbuRateDto;
 import com.geosun.tms.reference.dto.response.NbuRatesSnapshotDto;
+import com.geosun.tms.routes.domain.Route;
+import com.geosun.tms.routes.domain.RoutePoint;
+import com.geosun.tms.routes.domain.RoutePointKind;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -89,7 +92,7 @@ class FreightCostCalculatorServiceTest {
             "Test",
             "EUR",
             "NON_WINTER",
-            bd("0"),
+            bd("45.500"),
             bd("1000"),
             bd("150"),
             bd("850"),
@@ -115,11 +118,32 @@ class FreightCostCalculatorServiceTest {
             bd("25000"),
             bd("25000"));
 
-    String text = new FreightCostCalculationSummaryBuilder().build(data);
+    Route route = new Route();
+    RoutePoint p1 = new RoutePoint();
+    p1.setPointOrder(1);
+    p1.setPointType(RoutePointKind.START);
+    p1.setAddress("Kyiv");
+    p1.setSegmentDistanceKmToNext(bd("120.500"));
+    RoutePoint p2 = new RoutePoint();
+    p2.setPointOrder(2);
+    p2.setPointType(RoutePointKind.FINISH);
+    p2.setAddress("Warsaw");
+    route.setPoints(List.of(p1, p2));
+
+    String text =
+        new FreightCostCalculationSummaryBuilder()
+            .build(
+                data,
+                route,
+                new FreightRouteLengthService.StartPoint(50.4, 30.5, "Depot Kyiv"));
     assertThat(text).contains("30503.25");
     assertThat(text).contains("33063.25");
     assertThat(text).contains("25000.00");
     assertThat(text).contains("EUR");
+    assertThat(text).contains("--- Точки маршруту ---");
+    assertThat(text).contains("0. Точка 0: Depot Kyiv → 45.500 км");
+    assertThat(text).contains("1. START: Kyiv → 120.500 км");
+    assertThat(text).contains("2. FINISH: Warsaw");
   }
 
   private static CountryTollRule plRule() {

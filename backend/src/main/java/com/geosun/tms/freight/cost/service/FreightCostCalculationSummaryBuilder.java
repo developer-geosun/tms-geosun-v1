@@ -3,14 +3,29 @@ package com.geosun.tms.freight.cost.service;
 import com.geosun.tms.freight.cost.domain.DriverSalaryBasis;
 import com.geosun.tms.freight.cost.dto.response.FreightCostCalculationSummaryDto;
 import com.geosun.tms.freight.cost.dto.response.TollCountryLineDto;
+import com.geosun.tms.routes.domain.Route;
+import com.geosun.tms.routes.domain.RoutePoint;
+import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
+import java.util.List;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 @Component
 public class FreightCostCalculationSummaryBuilder {
 
   /** Формує україномовний текстовий звіт згідно ТЗ §7.1. */
   public String build(FreightCostCalculationSummaryDto data) {
+    return build(data, null, null);
+  }
+
+  /** Формує звіт з опційним переліком точок маршруту та доїзду. */
+  public String build(
+      FreightCostCalculationSummaryDto data,
+      Route route,
+      FreightRouteLengthService.StartPoint startPoint) {
     StringBuilder sb = new StringBuilder();
     sb.append("=== Розрахунок собівартості рейсу ===\n");
     sb.append("Дата розрахунку: ").append(data.calculationDate()).append('\n');
@@ -27,6 +42,8 @@ public class FreightCostCalculationSummaryBuilder {
       sb.append("Примітка: застосовано fallback 15% порожній / 85% завантажений.\n");
     }
     sb.append('\n');
+
+    appendRoutePoints(sb, route, startPoint, data.preRouteEmptyKm());
 
     sb.append("--- Курси НБУ (дата знімка ").append(data.nbuRateDate()).append(") ---\n");
     sb.append("EUR/UAH: ").append(money(data.eurRatePerUnit())).append('\n');
@@ -88,6 +105,59 @@ public class FreightCostCalculationSummaryBuilder {
         .append(data.proposalCurrency())
         .append('\n');
     return sb.toString();
+  }
+
+  private static void appendRoutePoints(
+      StringBuilder sb,
+      Route route,
+      FreightRouteLengthService.StartPoint startPoint,
+      BigDecimal preRouteEmptyKm) {
+    if (route == null || route.getPoints() == null || route.getPoints().isEmpty()) {
+      return;
+    }
+    List<RoutePoint> points =
+        route.getPoints().stream()
+            .sorted(Comparator.comparing((@NonNull RoutePoint point) -> point.getPointOrder()))
+            .toList();
+    sb.append("--- Точки маршруту ---\n");
+    if (startPoint != null) {
+      sb.append("0. Точка 0: ")
+          .append(pointLabel(startPoint.address(), startPoint.lat(), startPoint.lng()));
+      sb.append(" → ").append(km(preRouteEmptyKm)).append(" км\n");
+    }
+    for (int i = 0; i < points.size(); i++) {
+      RoutePoint point = points.get(i);
+      int displayOrder = point.getPointOrder() == null ? i + 1 : point.getPointOrder();
+      sb.append(displayOrder)
+          .append(". ")
+          .append(point.getPointType() == null ? "?" : point.getPointType().name())
+          .append(": ")
+          .append(
+              pointLabel(
+                  point.getAddress(),
+                  point.getLat() == null ? null : point.getLat().doubleValue(),
+                  point.getLng() == null ? null : point.getLng().doubleValue()));
+      if (i < points.size() - 1) {
+        BigDecimal segmentKm = point.getSegmentDistanceKmToNext();
+        if (segmentKm != null && segmentKm.signum() > 0) {
+          sb.append(" → ").append(km(segmentKm)).append(" км");
+        } else {
+          sb.append(" → — км");
+        }
+      }
+      sb.append('\n');
+    }
+    sb.append('\n');
+  }
+
+  private static String pointLabel(String address, Double lat, Double lng) {
+    if (StringUtils.hasText(address)) {
+      return address.trim();
+    }
+    if (lat != null && lng != null) {
+      return lat + ", " + lng;
+    }
+    return "без адреси";
   }
 
   private static String km(java.math.BigDecimal value) {
