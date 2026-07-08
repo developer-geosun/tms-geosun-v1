@@ -314,15 +314,17 @@ public class FreightCostPreviewService {
     }
   }
 
-  private FreightRouteLengthService.StartPoint resolveStartPoint(CostPreviewRequest.StartPointRequest startPoint) {
+  private FreightRouteLengthService.StartPoint resolveStartPoint(
+      CostPreviewRequest.StartPointRequest startPoint) {
     if (startPoint == null) {
       return null;
     }
     if (startPoint.lat() == null || startPoint.lng() == null) {
       throw ApiException.badRequest(
-          "VALIDATION_ERROR", "startPoint.lat та startPoint.lng обов'язкові, якщо startPoint передано");
+          "VALIDATION_ERROR",
+          "startPoint.lat та startPoint.lng обов'язкові, якщо startPoint передано");
     }
-    return new FreightRouteLengthService.StartPoint(startPoint.lat(), startPoint.lng(), startPoint.address());
+    return new FreightRouteLengthService.StartPoint(
+        startPoint.lat(), startPoint.lng(), startPoint.address());
   }
-
 }

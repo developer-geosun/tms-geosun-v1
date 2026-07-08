@@ -104,7 +104,8 @@ public class HereRoutingClient {
     }
   }
 
-  public long fetchDistanceMeters(double originLat, double originLng, double destinationLat, double destinationLng) {
+  public long fetchDistanceMeters(
+      double originLat, double originLng, double destinationLat, double destinationLng) {
     if (!StringUtils.hasText(properties.apiKey())) {
       throw new IllegalStateException("HERE api key is not configured");
     }

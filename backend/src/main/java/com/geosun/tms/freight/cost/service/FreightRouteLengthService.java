@@ -39,10 +39,14 @@ public class FreightRouteLengthService {
     Integer firstLoadingOrder = findFirstLoadingOrder(points);
     if (firstLoadingOrder == null) {
       BigDecimal emptyKm =
-          totalKm.multiply(FALLBACK_EMPTY_RATIO).setScale(3, RoundingMode.HALF_UP).add(preRouteEmptyKm);
+          totalKm
+              .multiply(FALLBACK_EMPTY_RATIO)
+              .setScale(3, RoundingMode.HALF_UP)
+              .add(preRouteEmptyKm);
       BigDecimal loadedKm =
           totalKm.multiply(FALLBACK_LOADED_RATIO).setScale(3, RoundingMode.HALF_UP);
-      return new RouteLengths(totalKm.add(preRouteEmptyKm), emptyKm, loadedKm, preRouteEmptyKm, true);
+      return new RouteLengths(
+          totalKm.add(preRouteEmptyKm), emptyKm, loadedKm, preRouteEmptyKm, true);
     }
 
     BigDecimal emptyKm = BigDecimal.ZERO;
@@ -69,7 +73,8 @@ public class FreightRouteLengthService {
         false);
   }
 
-  private BigDecimal resolvePreRouteEmptyKm(StartPoint startPoint, List<RoutePoint> sortedRoutePoints) {
+  private BigDecimal resolvePreRouteEmptyKm(
+      StartPoint startPoint, List<RoutePoint> sortedRoutePoints) {
     if (startPoint == null || sortedRoutePoints.isEmpty()) {
       return BigDecimal.ZERO;
     }
