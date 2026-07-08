@@ -12,16 +12,16 @@ public interface RouteRequestRepository
     extends JpaRepository<RouteRequest, Long>, JpaSpecificationExecutor<RouteRequest> {
   boolean existsByRoute_Id(Long routeId);
 
-  @EntityGraph(attributePaths = {"route"})
+  @EntityGraph(attributePaths = {"route", "user"})
   List<RouteRequest> findByUserIdOrderByCreatedAtDesc(String userId);
 
-  @EntityGraph(attributePaths = {"route", "route.points"})
+  @EntityGraph(attributePaths = {"route", "route.points", "user"})
   Optional<RouteRequest> findByIdAndUserId(Long id, String userId);
 
-  @EntityGraph(attributePaths = {"route"})
+  @EntityGraph(attributePaths = {"route", "user"})
   List<RouteRequest> findAllByOrderByCreatedAtDesc();
 
-  @EntityGraph(attributePaths = {"route", "route.points"})
+  @EntityGraph(attributePaths = {"route", "route.points", "user"})
   @NonNull
   Optional<RouteRequest> findById(@NonNull Long id);
 }

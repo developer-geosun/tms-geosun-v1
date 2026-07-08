@@ -12,6 +12,8 @@ public record RouteRequestDto(
     RouteRequestStatus status,
     String preferredStartDate,
     String comment,
+    /** Email користувача, який створив запит на розрахунок. */
+    String requesterEmail,
     String createdAt,
     String updatedAt,
     RouteSnapshotDto route,

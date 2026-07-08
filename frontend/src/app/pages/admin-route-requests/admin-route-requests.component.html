@@ -231,6 +231,14 @@
                   [disabled]="isCreatingQuote() || !lastNbuPreview()">
                   {{ 'pages.adminRouteRequests.nbuCreateQuote' | translate }}
                 </button>
+                <button
+                  mat-flat-button
+                  color="accent"
+                  type="button"
+                  (click)="openSendProposalDialog()"
+                  [disabled]="isSendingQuote() || isCreatingQuote() || !lastNbuPreview()">
+                  {{ 'pages.adminRouteRequests.sendProposal' | translate }}
+                </button>
               </mat-card-actions>
             </mat-card>
           }

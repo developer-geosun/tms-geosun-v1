@@ -179,12 +179,17 @@ public class RouteRequestService {
     List<CountryDistanceDto> countryDistances =
         countryBreakdownService.listStoredOnly(request.getRoute());
     QuoteDto currentQuote = freightQuoteService.getCurrentQuoteForRequest(requestId);
+    String requesterEmail =
+        request.getUser() == null || !StringUtils.hasText(request.getUser().getEmail())
+            ? null
+            : request.getUser().getEmail().trim();
     return new RouteRequestDto(
         request.getId(),
         String.valueOf(request.getRoute().getId()),
         request.getStatus(),
         request.getPreferredStartDate() == null ? null : request.getPreferredStartDate().toString(),
         request.getComment(),
+        requesterEmail,
         request.getCreatedAt() == null ? null : request.getCreatedAt().toString(),
         request.getUpdatedAt() == null ? null : request.getUpdatedAt().toString(),
         route,

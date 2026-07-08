@@ -3,6 +3,7 @@ package com.geosun.tms.routes.api;
 import com.geosun.tms.auth.config.OpenApiConfig;
 import com.geosun.tms.auth.security.UserPrincipal;
 import com.geosun.tms.routes.dto.request.CreateQuoteRequest;
+import com.geosun.tms.routes.dto.request.SendQuoteRequest;
 import com.geosun.tms.routes.dto.response.QuoteDto;
 import com.geosun.tms.routes.service.FreightQuoteService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,9 +61,11 @@ public class AdminQuoteController {
       @RequestHeader(name = "Idempotency-Key")
           @Parameter(description = "Idempotency key for send operation")
           @NonNull
-          String idempotencyKey) {
+          String idempotencyKey,
+      @RequestBody(required = false) SendQuoteRequest request) {
     String adminUserId = Objects.requireNonNull(principal.getUserId());
-    return freightQuoteService.sendQuote(quoteId, adminUserId, idempotencyKey);
+    String messageBody = request == null ? null : request.messageBody();
+    return freightQuoteService.sendQuote(quoteId, adminUserId, idempotencyKey, messageBody);
   }
 
   @Operation(summary = "List quote history for route request")

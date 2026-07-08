@@ -47,6 +47,10 @@ import {
   NbuCostPreviewSource
 } from '../../core/utils/freight-cost-preview-display.util';
 import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-calculation-scenarios/admin-freight-scenario-confirm-dialog.component';
+import {
+  SendProposalDialogComponent,
+  SendProposalDialogData
+} from './send-proposal-dialog.component';
 import * as L from 'leaflet';
 
 @Component({
@@ -501,6 +505,46 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       this.quoteActionError.set('pages.adminRouteRequests.quoteCreateFailed');
     } finally {
       this.isCreatingQuote.set(false);
+    }
+  }
+
+  async openSendProposalDialog(): Promise<void> {
+    const selected = this.selectedRequest();
+    const preview = this.lastNbuPreview();
+    const calculationId = this.nbuCalculationId(preview);
+    if (!selected || !preview || !calculationId) {
+      this.quoteActionError.set('pages.adminRouteRequests.nbuPreviewRequiredForQuote');
+      return;
+    }
+    const requesterEmail = (selected.requesterEmail ?? '').trim();
+    if (!requesterEmail) {
+      this.quoteActionError.set('pages.adminRouteRequests.sendProposalNoEmail');
+      return;
+    }
+    this.quoteActionError.set('');
+    this.quoteActionSuccess.set('');
+    const data: SendProposalDialogData = {
+      requestId: selected.id,
+      requesterEmail,
+      calculationId,
+      totalProposalAmount: preview.totalProposalAmount,
+      proposalCurrency: preview.proposalCurrency,
+      routePoints: [...(selected.route?.points ?? [])].sort((a, b) => a.order - b.order)
+    };
+    const ref = this.dialog.open(SendProposalDialogComponent, {
+      width: 'min(640px, calc(100vw - 24px))',
+      maxWidth: '100vw',
+      maxHeight: 'min(92vh, 760px)',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      disableClose: true,
+      data
+    });
+    const sent = await firstValueFrom(ref.afterClosed());
+    if (sent) {
+      await this.loadRequests();
+      await this.loadQuoteHistory(selected.id);
+      this.quoteActionSuccess.set('pages.adminRouteRequests.sendProposalSuccess');
     }
   }
 

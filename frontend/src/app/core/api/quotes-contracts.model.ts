@@ -33,3 +33,7 @@ export interface CreateQuoteContractRequest {
   copyCalculationSummaryToInternalNote?: boolean;
 }
 
+export interface SendQuoteContractRequest {
+  messageBody?: string | null;
+}
+

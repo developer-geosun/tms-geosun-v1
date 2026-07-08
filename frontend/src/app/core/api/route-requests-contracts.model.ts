@@ -37,6 +37,8 @@ export interface RouteRequestContractDto {
   status: RouteRequestStatusContract;
   preferredStartDate: string | null;
   comment: string | null;
+  /** Email користувача, який створив запит. */
+  requesterEmail?: string | null;
   createdAt: string;
   updatedAt: string;
   route: RouteSnapshotContractDto | null;

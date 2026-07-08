@@ -3,7 +3,11 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { BackendApiService } from './backend-api.service';
 import { CreateRouteRequestContractRequest, RouteRequestContractDto } from './route-requests-contracts.model';
-import { CreateQuoteContractRequest, QuoteContractDto } from './quotes-contracts.model';
+import {
+  CreateQuoteContractRequest,
+  QuoteContractDto,
+  SendQuoteContractRequest
+} from './quotes-contracts.model';
 import { PageResponse } from './page-response.model';
 import {
   CostPreviewContractRequest,
@@ -91,11 +95,15 @@ export class RouteRequestsApiService {
     );
   }
 
-  async sendAdminQuote(quoteId: string, idempotencyKey: string): Promise<QuoteContractDto> {
+  async sendAdminQuote(
+    quoteId: string,
+    idempotencyKey: string,
+    payload?: SendQuoteContractRequest
+  ): Promise<QuoteContractDto> {
     return firstValueFrom(
       this.http.post<QuoteContractDto>(
         `${this.backendApi.adminQuotes}/${encodeURIComponent(quoteId)}/send`,
-        null,
+        payload ?? null,
         { headers: this.idempotencyHeaders(idempotencyKey) }
       )
     );

@@ -13,6 +13,7 @@ import com.geosun.tms.routes.dto.QuoteStatus;
 import com.geosun.tms.routes.dto.RouteRequestStatus;
 import com.geosun.tms.routes.dto.request.CreateQuoteRequest;
 import com.geosun.tms.routes.dto.response.QuoteDto;
+import com.geosun.tms.routes.mail.QuoteProposalMailSender;
 import com.geosun.tms.routes.repository.FreightQuoteRepository;
 import com.geosun.tms.routes.repository.QuoteIdempotencyKeyRepository;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
@@ -24,6 +25,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import org.springframework.lang.NonNull;
+import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -39,6 +41,7 @@ public class FreightQuoteService {
   private final RouteRequestStatusHistoryRepository routeRequestStatusHistoryRepository;
   private final UserRepository userRepository;
   private final FreightCostCalculationRepository freightCostCalculationRepository;
+  private final QuoteProposalMailSender quoteProposalMailSender;
 
   public FreightQuoteService(
       RouteRequestRepository routeRequestRepository,
@@ -46,13 +49,15 @@ public class FreightQuoteService {
       QuoteIdempotencyKeyRepository quoteIdempotencyKeyRepository,
       RouteRequestStatusHistoryRepository routeRequestStatusHistoryRepository,
       UserRepository userRepository,
-      FreightCostCalculationRepository freightCostCalculationRepository) {
+      FreightCostCalculationRepository freightCostCalculationRepository,
+      QuoteProposalMailSender quoteProposalMailSender) {
     this.routeRequestRepository = routeRequestRepository;
     this.freightQuoteRepository = freightQuoteRepository;
     this.quoteIdempotencyKeyRepository = quoteIdempotencyKeyRepository;
     this.routeRequestStatusHistoryRepository = routeRequestStatusHistoryRepository;
     this.userRepository = userRepository;
     this.freightCostCalculationRepository = freightCostCalculationRepository;
+    this.quoteProposalMailSender = quoteProposalMailSender;
   }
 
   @Transactional
@@ -111,6 +116,15 @@ public class FreightQuoteService {
   @Transactional
   public QuoteDto sendQuote(
       @NonNull String quoteId, @NonNull String adminUserId, @NonNull String idempotencyKey) {
+    return sendQuote(quoteId, adminUserId, idempotencyKey, null);
+  }
+
+  @Transactional
+  public QuoteDto sendQuote(
+      @NonNull String quoteId,
+      @NonNull String adminUserId,
+      @NonNull String idempotencyKey,
+      String messageBody) {
     String normalizedQuoteId = requireQuoteId(quoteId);
     String key = requireIdempotencyKey(idempotencyKey);
     QuoteIdempotencyKey existing = loadIdempotency(OP_SEND, key, adminUserId);
@@ -134,9 +148,32 @@ public class FreightQuoteService {
       throw ApiException.conflict("Only draft quote can be sent");
     }
 
+    RouteRequest routeRequest = quote.getRequest();
+    String recipientEmail =
+        routeRequest.getUser() == null ? null : routeRequest.getUser().getEmail();
+    if (!StringUtils.hasText(recipientEmail)) {
+      throw ApiException.unprocessableEntity(
+          "REQUESTER_EMAIL_MISSING", "У заявки відсутній email отримувача");
+    }
+
+    String body =
+        StringUtils.hasText(messageBody)
+            ? messageBody.trim()
+            : defaultProposalBody(quote);
+    try {
+      quoteProposalMailSender.sendProposalEmail(recipientEmail, body);
+    } catch (MailException ex) {
+      throw ApiException.serviceUnavailable(
+          "EMAIL_SEND_FAILED", "Не вдалося надіслати лист з пропозицією");
+    }
+
+    if (StringUtils.hasText(messageBody)) {
+      quote.setPublicNote(messageBody.trim());
+    }
+
     List<FreightQuote> sentQuotes =
         freightQuoteRepository.findByRequest_IdAndStatus(
-            quote.getRequest().getId(), QuoteStatus.SENT);
+            routeRequest.getId(), QuoteStatus.SENT);
     for (FreightQuote sent : sentQuotes) {
       sent.setStatus(QuoteStatus.SUPERSEDED);
     }
@@ -145,7 +182,6 @@ public class FreightQuoteService {
     quote.setSentAt(Instant.now());
     freightQuoteRepository.save(quote);
 
-    RouteRequest routeRequest = quote.getRequest();
     RouteRequestStatus fromStatus = routeRequest.getStatus();
     routeRequest.setStatus(RouteRequestStatus.QUOTED);
     appendRequestStatusHistory(
@@ -153,6 +189,13 @@ public class FreightQuoteService {
 
     persistIdempotency(OP_SEND, key, adminUser, routeRequest, quote);
     return toDto(quote);
+  }
+
+  private static String defaultProposalBody(FreightQuote quote) {
+    return "Пропозиція фрахту: "
+        + quote.getTotalAmount()
+        + " "
+        + quote.getCurrency();
   }
 
   @Transactional(readOnly = true)
