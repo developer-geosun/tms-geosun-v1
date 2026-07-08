@@ -149,6 +149,14 @@ export class RouteRequestsApiService {
     );
   }
 
+  async deleteCostCalculation(requestId: number, calculationId: string): Promise<void> {
+    await firstValueFrom(
+      this.http.delete<void>(
+        `${this.backendApi.adminRouteRequestCostCalculations(requestId)}/${encodeURIComponent(calculationId)}`
+      )
+    );
+  }
+
   private idempotencyHeaders(idempotencyKey: string): HttpHeaders {
     return new HttpHeaders({ 'Idempotency-Key': idempotencyKey.trim() });
   }

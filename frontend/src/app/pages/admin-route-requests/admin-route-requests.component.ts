@@ -15,6 +15,7 @@ import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -26,6 +27,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import {
   AdminRouteRequestListParams,
   CostPreviewStartPointContract,
@@ -44,6 +46,7 @@ import {
   buildNbuCostPreviewDisplay,
   NbuCostPreviewSource
 } from '../../core/utils/freight-cost-preview-display.util';
+import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-calculation-scenarios/admin-freight-scenario-confirm-dialog.component';
 import * as L from 'leaflet';
 
 @Component({
@@ -54,6 +57,7 @@ import * as L from 'leaflet';
     TranslateModule,
     ReactiveFormsModule,
     MatButtonModule,
+    MatDialogModule,
     MatProgressSpinnerModule,
     MatFormFieldModule,
     MatInputModule,
@@ -75,6 +79,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
+  private readonly dialog = inject(MatDialog);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly numericScenariosApi = inject(FreightNumericScenariosApiService);
   private map: L.Map | null = null;
@@ -98,6 +103,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly isSendingQuote = signal(false);
   readonly isCountryBreakdownLoading = signal(false);
   readonly isNbuPreviewLoading = signal(false);
+  readonly isDeletingNbuCalculation = signal(false);
   readonly quoteActionError = signal('');
   readonly quoteActionSuccess = signal('');
   readonly nbuActionError = signal('');
@@ -426,6 +432,37 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
+  async deleteNbuCalculation(calculationId: string, event: Event): Promise<void> {
+    event.stopPropagation();
+    const selected = this.selectedRequest();
+    if (!selected || this.isDeletingNbuCalculation()) {
+      return;
+    }
+    const confirmed = await this.openConfirmDialog('pages.adminRouteRequests.nbuHistoryDeleteConfirm');
+    if (!confirmed) {
+      return;
+    }
+    this.nbuActionError.set('');
+    this.nbuActionErrorDetail.set('');
+    this.nbuActionSuccess.set('');
+    this.showNbuRatesLink.set(false);
+    this.isDeletingNbuCalculation.set(true);
+    try {
+      await this.routeRequestsApi.deleteCostCalculation(selected.id, calculationId);
+      const preview = this.lastNbuPreview();
+      if (preview && this.nbuCalculationId(preview) === calculationId) {
+        this.lastNbuPreview.set(null);
+        this.nbuCostSummary.set('');
+      }
+      await this.loadNbuCostHistory(selected.id);
+      this.nbuActionSuccess.set('pages.adminRouteRequests.nbuHistoryDeleted');
+    } catch (error) {
+      this.handleNbuActionError(error, 'pages.adminRouteRequests.nbuHistoryDeleteFailed');
+    } finally {
+      this.isDeletingNbuCalculation.set(false);
+    }
+  }
+
   applyNbuToQuoteDraft(): void {
     const preview = this.lastNbuPreview();
     if (!preview) {
@@ -478,10 +515,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     } catch {
       this.nbuActionError.set('pages.adminRouteRequests.nbuSummaryCopyFailed');
     }
-  }
-
-  async openScenariosPage(): Promise<void> {
-    await this.router.navigate(['/admin/freight-calculation-scenarios']);
   }
 
   async backToMain(): Promise<void> {
@@ -539,6 +572,13 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     const apiError = extractApiError(error);
     this.nbuActionError.set(fallbackKey);
     this.nbuActionErrorDetail.set(apiError.message ?? '');
+  }
+
+  private openConfirmDialog(messageKey: string): Promise<boolean> {
+    const ref = this.dialog.open(AdminFreightScenarioConfirmDialogComponent, {
+      data: { messageKey }
+    });
+    return firstValueFrom(ref.afterClosed()).then((result) => Boolean(result));
   }
 
   private async loadQuoteHistory(requestId: number): Promise<void> {

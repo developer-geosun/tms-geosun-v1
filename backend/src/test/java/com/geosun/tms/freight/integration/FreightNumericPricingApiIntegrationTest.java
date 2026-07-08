@@ -1,5 +1,6 @@
 package com.geosun.tms.freight.integration;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -123,6 +124,23 @@ class FreightNumericPricingApiIntegrationTest {
                 .header("Authorization", bearer(adminAccess)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value(calculationId));
+
+    mockMvc
+        .perform(
+            delete(
+                    "/api/v1/admin/route-requests/"
+                        + requestId
+                        + "/cost-calculations/"
+                        + calculationId)
+                .header("Authorization", bearer(adminAccess)))
+        .andExpect(status().isNoContent());
+
+    mockMvc
+        .perform(
+            get("/api/v1/admin/route-requests/" + requestId + "/cost-calculations")
+                .header("Authorization", bearer(adminAccess)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isEmpty());
   }
 
   private String createTollSet(String adminAccess) throws Exception {

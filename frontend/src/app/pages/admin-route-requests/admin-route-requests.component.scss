@@ -22,22 +22,38 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  align-items: flex-end;
+  align-items: flex-start;
   margin-bottom: 8px;
+
+  // без помилок у фільтрах: прибираємо порожній subscript, щоб ряд був однієї висоти
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
 }
 
 .admin-route-requests__filter-actions {
   display: flex;
   gap: 8px;
-  margin-bottom: 8px;
+  align-items: stretch;
+  // висота як у mat-form-field outline без subscript
+  height: 56px;
+
+  button {
+    height: 100%;
+  }
 }
 
 .nbu-form {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  align-items: flex-end;
+  align-items: flex-start;
   margin-bottom: 12px;
+
+  // без помилок у цьому рядку: прибираємо порожній subscript для спільної висоти з кнопками
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
 }
 
 .nbu-form__field {
@@ -53,7 +69,12 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
+  height: 56px;
+
+  button {
+    height: 100%;
+  }
 }
 
 .nbu-form--start-point {
@@ -66,7 +87,8 @@
 }
 
 .nbu-form__actions--start-point {
-  margin-bottom: 22px; // вирівнюємо по базовій лінії з mat-form-field
+  // стартова точка без окремого підпису — кнопки вже у спільній висоті ряду
+  margin-bottom: 0;
 }
 
 .admin-route-requests__nbu-summary {
@@ -134,6 +156,16 @@
   list-style: none;
   padding: 0;
   margin: 0 0 12px;
+}
+
+.admin-route-requests__nbu-history-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.admin-route-requests__nbu-history-delete {
+  flex-shrink: 0;
 }
 
 .admin-route-requests__layout {

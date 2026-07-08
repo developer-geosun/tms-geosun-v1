@@ -2,9 +2,6 @@
   <header class="admin-route-requests__header">
     <h1>{{ 'pages.adminRouteRequests.title' | translate }}</h1>
     <div class="admin-route-requests__actions">
-      <button mat-stroked-button type="button" (click)="openScenariosPage()">
-        {{ 'pages.adminRouteRequests.manageScenarios' | translate }}
-      </button>
       <button mat-stroked-button type="button" (click)="loadRequests()">{{ 'pages.adminRouteRequests.refresh' | translate }}</button>
       <button mat-stroked-button type="button" (click)="backToMain()">{{ 'pages.adminRouteRequests.backToMain' | translate }}</button>
     </div>
@@ -241,10 +238,20 @@
             <h4>{{ 'pages.adminRouteRequests.nbuHistory' | translate }}</h4>
             <ul class="admin-route-requests__nbu-history">
               @for (item of nbuCostHistory(); track item.id) {
-                <li>
+                <li class="admin-route-requests__nbu-history-item">
                   <button type="button" mat-button (click)="viewNbuCalculation(item.id)">
                     {{ item.createdAt | date: 'short' }} — {{ item.scenarioName || '-' }}
                     ({{ item.totalProposalAmount }} {{ item.proposalCurrency }})
+                  </button>
+                  <button
+                    type="button"
+                    mat-icon-button
+                    color="warn"
+                    class="admin-route-requests__nbu-history-delete"
+                    [disabled]="isDeletingNbuCalculation()"
+                    [attr.aria-label]="'pages.adminRouteRequests.nbuHistoryDelete' | translate"
+                    (click)="deleteNbuCalculation(item.id, $event)">
+                    <mat-icon>delete</mat-icon>
                   </button>
                 </li>
               }

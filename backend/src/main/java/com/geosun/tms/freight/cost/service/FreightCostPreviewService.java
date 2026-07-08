@@ -178,6 +178,16 @@ public class FreightCostPreviewService {
     return toDto(calculation);
   }
 
+  @Transactional
+  public void delete(Long requestId, String calculationId) {
+    loadRouteRequest(requestId);
+    FreightCostCalculation calculation =
+        calculationRepository
+            .findByIdAndRouteRequest_Id(calculationId, requestId)
+            .orElseThrow(() -> ApiException.notFound("Cost calculation not found"));
+    calculationRepository.delete(calculation);
+  }
+
   private void validateScenarioMatchesBreakdown(RouteRequest routeRequest, String scenarioId) {
     if (!StringUtils.hasText(routeRequest.getNbuBreakdownScenarioId())) {
       throw ApiException.unprocessableEntity(
