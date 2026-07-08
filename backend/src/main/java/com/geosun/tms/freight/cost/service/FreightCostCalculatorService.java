@@ -29,7 +29,6 @@ public class FreightCostCalculatorService {
   private static final int MONEY_SCALE = 2;
   private static final int LITER_SCALE = 3;
   private static final BigDecimal HUNDRED = new BigDecimal("100");
-  private static final BigDecimal ONE_POINT_THIRTY = new BigDecimal("1.30");
 
   private final CountryTollRuleRepository countryTollRuleRepository;
 
@@ -112,21 +111,24 @@ public class FreightCostCalculatorService {
         Objects.requireNonNull(scenario.getMarginPercent(), "marginPercent")
             .divide(HUNDRED, 6, RoundingMode.HALF_UP);
 
+    // T = DirectCost × (1 + m) / (1 − p × (1 + m)), де p — % ЗП від T, m — % маржі від S
+    BigDecimal onePlusMargin = BigDecimal.ONE.add(marginPercent, MC);
     BigDecimal denominator =
-        BigDecimal.ONE.subtract(ONE_POINT_THIRTY.multiply(driverPercent, MC), MC);
+        BigDecimal.ONE.subtract(driverPercent.multiply(onePlusMargin, MC), MC);
     if (denominator.signum() <= 0) {
       throw ApiException.unprocessableEntity(
-          "CALCULATION_NOT_POSSIBLE", "Invalid driver salary percent for closed-form formula");
+          "CALCULATION_NOT_POSSIBLE",
+          "Invalid driver salary and margin percents for closed-form formula");
     }
     BigDecimal totalUah =
         money(
             directCostUah
-                .multiply(ONE_POINT_THIRTY, MC)
+                .multiply(onePlusMargin, MC)
                 .divide(denominator, MC)
                 .setScale(MONEY_SCALE, RoundingMode.HALF_UP));
     BigDecimal driverCostUah = money(totalUah.multiply(driverPercent, MC));
     BigDecimal costBeforeMarginUah = money(directCostUah.add(driverCostUah));
-    BigDecimal marginUah = money(costBeforeMarginUah.multiply(marginPercent, MC));
+    BigDecimal marginUah = money(totalUah.subtract(costBeforeMarginUah));
 
     BigDecimal totalProposalAmount = convertUahToCurrency(totalUah, proposalRate);
 

@@ -77,11 +77,51 @@ class FreightCostCalculatorServiceTest {
     assertThat(result.tollsUah()).isEqualByComparingTo("960.00");
     assertThat(result.directCostUah()).isEqualByComparingTo("33163.25");
 
+    assertThat(result.costBeforeMarginUah().add(result.marginUah()))
+        .isEqualByComparingTo(result.totalUah());
     assertThat(result.totalUah()).isGreaterThan(result.directCostUah());
     assertThat(result.totalUah().subtract(result.totalProposalAmount().multiply(bd("40"))).abs())
         .isLessThanOrEqualTo(bd("0.10"));
     assertThat(result.tollLines()).hasSize(1);
     assertThat(result.tollLines().getFirst().countryCode()).isEqualTo("PL");
+  }
+
+  @Test
+  void calculate_marginAndCostBeforeMarginSumToTotal() {
+    when(countryTollRuleRepository.findByTollTariffSet_IdAndActiveTrueOrderByCountryCodeAsc(
+            eq(TOLL_SET_ID)))
+        .thenReturn(List.of(plRule()));
+
+    FreightNumericScenario scenario = sampleScenario();
+    scenario.setDriverSalaryPercentOfFreight(bd("17"));
+    scenario.setMarginPercent(bd("80"));
+
+    FreightCostCalculationSummaryDto result =
+        calculator.calculate(
+            scenario,
+            new RouteLengths(bd("1268.835"), bd("0"), bd("1268.834"), bd("0"), false),
+            bd("0"),
+            List.of(
+                new CountryDistanceDto("UA", 501_045L, 0L, 1),
+                new CountryDistanceDto("PL", 767_789L, 0L, 2)),
+            new NbuRatesSnapshotDto(
+                LocalDate.of(2026, 7, 8),
+                java.time.Instant.parse("2026-07-08T10:00:00Z"),
+                List.of(
+                    new NbuRateDto("UAH", BigDecimal.ONE, BigDecimal.ONE, 1, null),
+                    new NbuRateDto("EUR", bd("50.88"), bd("50.88"), 1, null),
+                    new NbuRateDto("USD", bd("44.51"), bd("44.51"), 1, null))),
+            LocalDate.of(2026, 7, 8),
+            LocalDate.of(2026, 7, 8),
+            SeasonMode.NON_WINTER);
+
+    assertThat(result.costBeforeMarginUah())
+        .isEqualByComparingTo(result.directCostUah().add(result.driverCostUah()));
+    assertThat(result.marginPercent()).isEqualByComparingTo(bd("80"));
+    assertThat(result.driverSalaryPercent()).isEqualByComparingTo(bd("17"));
+    assertThat(result.costBeforeMarginUah().add(result.marginUah()))
+        .isEqualByComparingTo(result.totalUah());
+    assertThat(result.totalUah()).isGreaterThan(result.directCostUah());
   }
 
   @Test
