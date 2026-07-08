@@ -103,8 +103,7 @@ public class FreightCostPreviewService {
             routeRequest.getPreferredStartDate(),
             request.seasonOverride());
 
-    String calculationSummary =
-        summaryBuilder.build(summary, routeRequest.getRoute(), startPoint);
+    String calculationSummary = summaryBuilder.build(summary, routeRequest.getRoute(), startPoint);
     JsonNode breakdown = buildBreakdownJson(summary, scenario.getId(), request.calculationDate());
     String scenarioSnapshot = writeJson(scenarioSnapshot(scenario));
     String tollSnapshot = writeJson(tollSetSnapshot(scenario.getTollTariffSet().getId()));

@@ -132,10 +132,7 @@ class FreightCostCalculatorServiceTest {
 
     String text =
         new FreightCostCalculationSummaryBuilder()
-            .build(
-                data,
-                route,
-                new FreightRouteLengthService.StartPoint(50.4, 30.5, "Depot Kyiv"));
+            .build(data, route, new FreightRouteLengthService.StartPoint(50.4, 30.5, "Depot Kyiv"));
     assertThat(text).contains("30503.25");
     assertThat(text).contains("33063.25");
     assertThat(text).contains("25000.00");

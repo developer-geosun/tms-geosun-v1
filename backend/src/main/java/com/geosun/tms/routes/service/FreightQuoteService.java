@@ -157,9 +157,7 @@ public class FreightQuoteService {
     }
 
     String body =
-        StringUtils.hasText(messageBody)
-            ? messageBody.trim()
-            : defaultProposalBody(quote);
+        StringUtils.hasText(messageBody) ? messageBody.trim() : defaultProposalBody(quote);
     try {
       quoteProposalMailSender.sendProposalEmail(recipientEmail, body);
     } catch (MailException ex) {
@@ -172,8 +170,7 @@ public class FreightQuoteService {
     }
 
     List<FreightQuote> sentQuotes =
-        freightQuoteRepository.findByRequest_IdAndStatus(
-            routeRequest.getId(), QuoteStatus.SENT);
+        freightQuoteRepository.findByRequest_IdAndStatus(routeRequest.getId(), QuoteStatus.SENT);
     for (FreightQuote sent : sentQuotes) {
       sent.setStatus(QuoteStatus.SUPERSEDED);
     }
@@ -192,10 +189,7 @@ public class FreightQuoteService {
   }
 
   private static String defaultProposalBody(FreightQuote quote) {
-    return "Пропозиція фрахту: "
-        + quote.getTotalAmount()
-        + " "
-        + quote.getCurrency();
+    return "Пропозиція фрахту: " + quote.getTotalAmount() + " " + quote.getCurrency();
   }
 
   @Transactional(readOnly = true)
