@@ -82,6 +82,8 @@ app:
     routing-mode: ${HERE_ROUTING_MODE:fast}
     timeout-millis: ${HERE_TIMEOUT_MILLIS:5000}
     cache-ttl-seconds: ${HERE_CACHE_TTL_SECONDS:86400}
+  country-breakdown:
+    provider: ${COUNTRY_BREAKDOWN_PROVIDER:here}
   vertex-ai:
     project-id: ${VERTEX_AI_PROJECT_ID:}
     location: ${VERTEX_AI_LOCATION:europe-west1}

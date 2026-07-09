@@ -12,7 +12,7 @@
 - Есть admin-страницы `/admin/route-requests` (очередь, ИИ-расчёт, quote) и `/admin/freight-calculation-scenarios` (сценарии).
 - Backend на Java 21 + Spring Boot 3 с JWT auth, refresh token rotation и RBAC.
 - Backend модуль `routes`: сохранение, чтение списка/деталей (в т.ч. `view=active|all|deleted`), soft delete, блокировка `PUT` после заявки, `duplicate`/`restore`.
-- Backend модуль `route-requests`: создание заявок, список заявок пользователя, admin очередь; пробіг по країнах у відповіді заявки — з БД до явного admin `POST .../country-breakdown` (HERE лише там).
+- Backend модуль `route-requests`: создание заявок, список заявок пользователя, admin очередь; пробіг по країнах у відповіді заявки — з БД до явного admin `POST .../country-breakdown` (провайдер расчёта выбирается feature flag: `here` или `geojson`).
 - Backend модуль `quotes`: создание draft, отправка оффера, история офферов и idempotency.
 - Деплой frontend на GitHub Pages через GitHub Actions (`main`/`master`).
 
@@ -48,7 +48,7 @@
 - `GET /api/v1/route-requests/my/{id}` — своя заявка с `currentQuote`; `countryDistances` только из БД до явного `POST .../country-breakdown`.
 - `GET /api/v1/admin/route-requests` — очередь заявок с фильтрами и пагинацией (`ADMIN`/`MANAGER`).
 - `GET /api/v1/admin/route-requests/{id}` — карточка заявки (`ADMIN`/`MANAGER`).
-- `POST /api/v1/admin/route-requests/{id}/country-breakdown` — пересчёт пробега по странам (HERE + сохранение в БД), `ADMIN`/`MANAGER`.
+- `POST /api/v1/admin/route-requests/{id}/country-breakdown` — пересчёт пробега по странам (провайдер `here` или `geojson` + сохранение в БД), `ADMIN`/`MANAGER`.
 - `GET/POST/PUT/DELETE /api/v1/admin/freight-calculation-scenarios` — CRUD текстовых сценариев расчёта (`ADMIN`/`MANAGER`).
 - `POST /api/v1/admin/freight-calculation-scenarios/import` — импорт сценария из `.txt`/`.md`/`.json`.
 - `POST /api/v1/admin/route-requests/{id}/ai-calculations` — расчёт фрахта через Gemini (`ADMIN`/`MANAGER`).
@@ -59,6 +59,8 @@
 - `GET /api/v1/admin/route-requests/{id}/quotes` — получить историю quote (`ADMIN`/`MANAGER`).
 
 Переменные окружения для Vertex AI: `VERTEX_AI_PROJECT_ID`, `VERTEX_AI_LOCATION`, `VERTEX_AI_MODEL`, `GCP_CREDENTIALS_FILE` / `GOOGLE_APPLICATION_CREDENTIALS` (service account JSON). Опционально: `VERTEX_AI_TIMEOUT_MILLIS`, `VERTEX_AI_MAX_OUTPUT_TOKENS`, `VERTEX_AI_RATE_LIMIT_PER_HOUR`. См. `docs/vertex-ai-setup.md`.
+
+Переменные окружения для breakdown по странам: `COUNTRY_BREAKDOWN_PROVIDER=here|geojson` (по умолчанию `here`), `HERE_API_KEY` обязателен только при `COUNTRY_BREAKDOWN_PROVIDER=here`. Для `geojson` используются локальные границы стран из ресурсов backend.
 
 ### Поведение auth и RBAC
 
@@ -84,7 +86,7 @@
 
 - До конца Phase 1 поддерживался flow без сохранения маршрута.
 - Начиная с Phase 2 удален старый прямой submit через Google Apps Script из активного flow.
-- HERE API вызывается только на backend, frontend остается на Leaflet + OSM/Nominatim.
+- HERE API вызывается только на backend при `COUNTRY_BREAKDOWN_PROVIDER=here`; при `geojson` breakdown считается офлайн по полилинии и GeoJSON-границам, frontend остается на Leaflet + OSM/Nominatim.
 
 ## Как запустить
 

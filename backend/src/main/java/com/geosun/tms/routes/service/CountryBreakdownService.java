@@ -1,5 +1,6 @@
 package com.geosun.tms.routes.service;
 
+import com.geosun.tms.routes.config.CountryBreakdownProperties;
 import com.geosun.tms.routes.config.HereProperties;
 import com.geosun.tms.routes.domain.Route;
 import com.geosun.tms.routes.domain.RouteCountryDistance;
@@ -29,6 +30,8 @@ public class CountryBreakdownService {
   private final RouteGeometryCacheRepository routeGeometryCacheRepository;
   private final HereRoutingClient hereRoutingClient;
   private final HereProperties hereProperties;
+  private final CountryBreakdownProperties countryBreakdownProperties;
+  private final GeoJsonCountryBreakdownStrategy geoJsonCountryBreakdownStrategy;
   private final MeterRegistry meterRegistry;
 
   public CountryBreakdownService(
@@ -36,11 +39,15 @@ public class CountryBreakdownService {
       RouteGeometryCacheRepository routeGeometryCacheRepository,
       HereRoutingClient hereRoutingClient,
       HereProperties hereProperties,
+      CountryBreakdownProperties countryBreakdownProperties,
+      GeoJsonCountryBreakdownStrategy geoJsonCountryBreakdownStrategy,
       MeterRegistry meterRegistry) {
     this.routeCountryDistanceRepository = routeCountryDistanceRepository;
     this.routeGeometryCacheRepository = routeGeometryCacheRepository;
     this.hereRoutingClient = hereRoutingClient;
     this.hereProperties = hereProperties;
+    this.countryBreakdownProperties = countryBreakdownProperties;
+    this.geoJsonCountryBreakdownStrategy = geoJsonCountryBreakdownStrategy;
     this.meterRegistry = meterRegistry;
   }
 
@@ -64,7 +71,7 @@ public class CountryBreakdownService {
       routeCountryDistanceRepository.deleteByRouteId(route.getId());
     }
 
-    List<HereRoutingClient.CountryBreakdownRow> rows = loadFromHereOrFallback(route);
+    List<HereRoutingClient.CountryBreakdownRow> rows = calculateBreakdown(route);
     if (rows.isEmpty()) {
       return List.of();
     }
@@ -83,6 +90,13 @@ public class CountryBreakdownService {
     }
     List<RouteCountryDistance> saved = routeCountryDistanceRepository.saveAll(toSave);
     return toDto(saved);
+  }
+
+  private List<HereRoutingClient.CountryBreakdownRow> calculateBreakdown(Route route) {
+    if (countryBreakdownProperties.provider() == CountryBreakdownProperties.Provider.GEOJSON) {
+      return geoJsonCountryBreakdownStrategy.calculate(route);
+    }
+    return loadFromHereOrFallback(route);
   }
 
   private List<CountryDistanceDto> toDto(List<RouteCountryDistance> items) {
