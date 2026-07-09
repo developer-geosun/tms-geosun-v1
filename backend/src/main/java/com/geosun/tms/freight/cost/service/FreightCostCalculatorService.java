@@ -113,8 +113,7 @@ public class FreightCostCalculatorService {
 
     // T = DirectCost × (1 + m) / (1 − p × (1 + m)), де p — % ЗП від T, m — % маржі від S
     BigDecimal onePlusMargin = BigDecimal.ONE.add(marginPercent, MC);
-    BigDecimal denominator =
-        BigDecimal.ONE.subtract(driverPercent.multiply(onePlusMargin, MC), MC);
+    BigDecimal denominator = BigDecimal.ONE.subtract(driverPercent.multiply(onePlusMargin, MC), MC);
     if (denominator.signum() <= 0) {
       throw ApiException.unprocessableEntity(
           "CALCULATION_NOT_POSSIBLE",
