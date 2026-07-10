@@ -371,10 +371,14 @@
             <p>{{ 'pages.adminRouteRequests.noRoutePoints' | translate }}</p>
           }
 
-          <h3>{{ 'pages.adminRouteRequests.countryDistances' | translate }}</h3>
           @if (!selected.countryDistances.length) {
             <p>{{ 'pages.adminRouteRequests.countryDistancesEmpty' | translate }}</p>
           } @else {
+            <p>
+              <strong>{{ 'pages.adminRouteRequests.countryDistanceTotal' | translate }}:</strong>
+              {{ formatCountryDistanceTotalKm(selected.countryDistances) }}
+              {{ 'pages.freightCalculation.km' | translate }}
+            </p>
             <table class="admin-country-distances">
               <thead>
                 <tr>
@@ -387,7 +391,7 @@
                 @for (row of selected.countryDistances; track row.countryCode + '-' + $index) {
                   <tr>
                     <td>{{ row.countryCode }}</td>
-                    <td>{{ row.distanceMeters }}</td>
+                    <td>{{ formatCountryDistanceKm(row.distanceMeters) }}</td>
                     <td>{{ row.alongRouteOrder ?? '—' }}</td>
                   </tr>
                 }

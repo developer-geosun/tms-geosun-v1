@@ -47,13 +47,17 @@ public class GeoJsonCountryBreakdownStrategy {
       return rows;
     } catch (Exception ex) {
       meterRegistry.counter("country_breakdown.geojson.failed").increment();
-      log.warn("GeoJSON country breakdown failed for route {}", route == null ? null : route.getId(), ex);
+      log.warn(
+          "GeoJSON country breakdown failed for route {}",
+          route == null ? null : route.getId(),
+          ex);
       sample.stop(meterRegistry.timer("country_breakdown.geojson.duration"));
       return List.of();
     }
   }
 
-  private List<HereRoutingClient.CountryBreakdownRow> calculateBySegments(List<PolylineDecoder.LatLng> points) {
+  private List<HereRoutingClient.CountryBreakdownRow> calculateBySegments(
+      List<PolylineDecoder.LatLng> points) {
     Map<String, long[]> grouped = new LinkedHashMap<>();
     for (int i = 0; i < points.size() - 1; i++) {
       PolylineDecoder.LatLng start = points.get(i);
@@ -87,7 +91,8 @@ public class GeoJsonCountryBreakdownStrategy {
       if (entry.getValue()[0] <= 0) {
         continue;
       }
-      rows.add(new HereRoutingClient.CountryBreakdownRow(entry.getKey(), entry.getValue()[0], null));
+      rows.add(
+          new HereRoutingClient.CountryBreakdownRow(entry.getKey(), entry.getValue()[0], null));
     }
     return rows;
   }

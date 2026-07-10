@@ -606,6 +606,29 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     return `${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
   }
 
+  formatCountryDistanceKm(distanceMeters: number): string {
+    if (!Number.isFinite(distanceMeters)) {
+      return '0.0';
+    }
+    return (distanceMeters / 1000).toLocaleString(undefined, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    });
+  }
+
+  formatCountryDistanceTotalKm(
+    countryDistances: ReadonlyArray<{ distanceMeters: number }> | null | undefined
+  ): string {
+    if (!countryDistances?.length) {
+      return '0.0';
+    }
+    const totalMeters = countryDistances.reduce(
+      (sum, row) => sum + (Number.isFinite(row.distanceMeters) ? row.distanceMeters : 0),
+      0
+    );
+    return this.formatCountryDistanceKm(totalMeters);
+  }
+
   private handleNbuActionError(error: unknown, fallbackKey: string): void {
     if (isNbuRateError(error)) {
       this.nbuActionError.set('pages.adminRouteRequests.nbuRatesMissing');
