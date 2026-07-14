@@ -17,8 +17,10 @@ import com.geosun.tms.freight.cost.repository.CountryTollRuleRepository;
 import com.geosun.tms.freight.cost.repository.FreightCostCalculationRepository;
 import com.geosun.tms.reference.dto.response.NbuRatesSnapshotDto;
 import com.geosun.tms.reference.service.NbuExchangeRateService;
+import com.geosun.tms.routes.domain.FreightQuote;
 import com.geosun.tms.routes.domain.RouteRequest;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
+import com.geosun.tms.routes.repository.FreightQuoteRepository;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
 import com.geosun.tms.routes.service.CountryBreakdownService;
 import java.math.BigDecimal;
@@ -42,6 +44,7 @@ public class FreightCostPreviewService {
   private final NbuExchangeRateService nbuExchangeRateService;
   private final CountryTollRuleRepository countryTollRuleRepository;
   private final UserRepository userRepository;
+  private final FreightQuoteRepository freightQuoteRepository;
   private final ObjectMapper objectMapper;
 
   public FreightCostPreviewService(
@@ -55,6 +58,7 @@ public class FreightCostPreviewService {
       NbuExchangeRateService nbuExchangeRateService,
       CountryTollRuleRepository countryTollRuleRepository,
       UserRepository userRepository,
+      FreightQuoteRepository freightQuoteRepository,
       ObjectMapper objectMapper) {
     this.routeRequestRepository = routeRequestRepository;
     this.scenarioService = scenarioService;
@@ -66,6 +70,7 @@ public class FreightCostPreviewService {
     this.nbuExchangeRateService = nbuExchangeRateService;
     this.countryTollRuleRepository = countryTollRuleRepository;
     this.userRepository = userRepository;
+    this.freightQuoteRepository = freightQuoteRepository;
     this.objectMapper = objectMapper;
   }
 
@@ -179,6 +184,11 @@ public class FreightCostPreviewService {
         calculationRepository
             .findByIdAndRouteRequest_Id(calculationId, requestId)
             .orElseThrow(() -> ApiException.notFound("Cost calculation not found"));
+    // Як ON DELETE SET NULL у MySQL: відв'язуємо quotes перед delete (H2/JPA-сесія).
+    for (FreightQuote quote :
+        freightQuoteRepository.findByFreightCostCalculation_Id(calculationId)) {
+      quote.setFreightCostCalculation(null);
+    }
     calculationRepository.delete(calculation);
   }
 

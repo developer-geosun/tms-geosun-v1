@@ -1,5 +1,8 @@
 package com.geosun.tms.routes.integration;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,16 +15,21 @@ import com.geosun.tms.auth.domain.user.Role;
 import com.geosun.tms.auth.domain.user.User;
 import com.geosun.tms.auth.dto.request.LoginRequest;
 import com.geosun.tms.auth.repository.UserRepository;
+import jakarta.mail.internet.MimeMessage;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.lang.NonNull;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -37,6 +45,15 @@ class RouteRequestApiIntegrationTest {
   @Autowired private ObjectMapper objectMapper;
   @Autowired private UserRepository userRepository;
   @Autowired private PasswordEncoder passwordEncoder;
+
+  @MockBean private JavaMailSender javaMailSender;
+
+  @BeforeEach
+  void setUp() {
+    when(javaMailSender.createMimeMessage())
+        .thenReturn(new MimeMessage(jakarta.mail.Session.getInstance(new Properties())));
+    doNothing().when(javaMailSender).send(any(MimeMessage.class));
+  }
 
   @Test
   void userCanCreateAndReadOwnRouteRequest() throws Exception {

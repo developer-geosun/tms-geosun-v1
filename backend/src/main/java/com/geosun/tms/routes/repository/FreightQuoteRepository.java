@@ -14,4 +14,6 @@ public interface FreightQuoteRepository extends JpaRepository<FreightQuote, Stri
       Long requestId, Collection<QuoteStatus> statuses);
 
   List<FreightQuote> findByRequest_IdAndStatus(Long requestId, QuoteStatus status);
+
+  List<FreightQuote> findByFreightCostCalculation_Id(String calculationId);
 }

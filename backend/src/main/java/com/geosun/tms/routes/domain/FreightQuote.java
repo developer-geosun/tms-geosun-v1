@@ -18,6 +18,8 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 @Entity
@@ -60,8 +62,10 @@ public class FreightQuote {
   @Column(name = "internal_note", columnDefinition = "text")
   private String internalNote;
 
+  /** Як у Flyway V22: ON DELETE SET NULL (потрібно і для H2 у тестах). */
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "freight_cost_calculation_id")
+  @OnDelete(action = OnDeleteAction.SET_NULL)
   private FreightCostCalculation freightCostCalculation;
 
   @CreationTimestamp
