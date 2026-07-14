@@ -64,7 +64,10 @@ app:
   email:
     from: ${MAIL_FROM:no-reply@example.com}
     verification-expires-seconds: ${EMAIL_VERIFICATION_EXPIRES_SECONDS:86400}
+    # Якщо задано NGROK_DOMAIN — посилання в листі будується з нього (актуальний тунель).
+    # EMAIL_VERIFICATION_LINK_BASE — лише fallback без ngrok.
     verification-link-base: ${EMAIL_VERIFICATION_LINK_BASE:http://localhost:4200/verify-email}
+    ngrok-domain: ${NGROK_DOMAIN:}
   rate-limit:
     login-max-attempts: ${RATE_LIMIT_LOGIN_MAX_ATTEMPTS:5}
     login-window-seconds: ${RATE_LIMIT_LOGIN_WINDOW_SECONDS:900}

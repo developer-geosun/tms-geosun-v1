@@ -43,7 +43,7 @@ public class VerificationMailSender {
     String nonNullFromAddress =
         Objects.requireNonNull(emailProperties.getFrom(), "from address must not be null");
     String verificationLink =
-        buildVerificationLink(emailProperties.getVerificationLinkBase(), nonNullRawToken);
+        buildVerificationLink(emailProperties.resolveVerificationLinkBase(), nonNullRawToken);
     MimeMessage message = mailSender.createMimeMessage();
     try {
       MimeMessageHelper helper =
