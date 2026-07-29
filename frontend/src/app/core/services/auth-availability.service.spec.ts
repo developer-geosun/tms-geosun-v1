@@ -25,13 +25,22 @@ describe('AuthAvailabilityService', () => {
     httpMock.verify();
   });
 
-  it('sets availability true for successful readiness response', () => {
+  it('sets availability true for successful readiness response with UP status', () => {
     service.checkOnStartup().subscribe();
 
     const request = httpMock.expectOne('/actuator/health/readiness');
     request.flush({ status: 'UP' });
 
     expect(service.isAvailable()).toBeTrue();
+  });
+
+  it('sets availability false when readiness response status is not UP', () => {
+    service.checkOnStartup().subscribe();
+
+    const request = httpMock.expectOne('/actuator/health/readiness');
+    request.flush({ status: 'DOWN' });
+
+    expect(service.isAvailable()).toBeFalse();
   });
 
   it('sets availability false when backend is down', () => {
@@ -43,13 +52,13 @@ describe('AuthAvailabilityService', () => {
     expect(service.isAvailable()).toBeFalse();
   });
 
-  it('sets availability true for proxy 5xx errors', () => {
+  it('sets availability false for proxy 5xx errors', () => {
     service.checkOnStartup().subscribe();
 
     const request = httpMock.expectOne('/actuator/health/readiness');
     request.flush({ message: 'Bad Gateway' }, { status: 502, statusText: 'Bad Gateway' });
 
-    expect(service.isAvailable()).toBeTrue();
+    expect(service.isAvailable()).toBeFalse();
   });
 
   it('falls back to generic health endpoint when readiness returns 404', () => {
@@ -63,5 +72,4 @@ describe('AuthAvailabilityService', () => {
 
     expect(service.isAvailable()).toBeTrue();
   });
-
 });

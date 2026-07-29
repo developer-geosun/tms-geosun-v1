@@ -1,8 +1,6 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, inject, LOCALE_ID, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
-import { switchMap, tap, timer } from 'rxjs';
 import { AuthAvailabilityService } from '../../core/services';
 
 /**
@@ -24,27 +22,18 @@ export class StopServiceComponent {
   readonly lastCheckTime = signal<string>('--:--:--');
 
   constructor() {
-    // Перевіряємо доступність auth-сервера одразу та кожні 10 секунд
-    timer(0, 10_000)
-      .pipe(
-        tap(() => this.lastCheckTime.set(this.formatCurrentTime_())),
-        switchMap(() => this.authAvailabilityService.checkOnStartup()),
-        tap(() => {
-          if (this.authAvailabilityService.isAvailable()) {
-            void this.router.navigate(['/login']);
-          }
-        }),
-        takeUntilDestroyed(this.destroyRef)
-      )
-      .subscribe();
+    this.authAvailabilityService.startPollingWhileAvailable(this.router, this.destroyRef, '/login', () =>
+      this.updateLastCheckTime_()
+    );
   }
 
-  private formatCurrentTime_(): string {
-    return new Intl.DateTimeFormat(this.localeId, {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).format(new Date());
+  private updateLastCheckTime_(): void {
+    this.lastCheckTime.set(
+      new Intl.DateTimeFormat(this.localeId, {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      }).format(new Date())
+    );
   }
 }
-
