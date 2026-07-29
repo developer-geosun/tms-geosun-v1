@@ -9,7 +9,8 @@ export const APP_CONFIG = {
   linkedinUrl: 'https://www.linkedin.com/in/maksym-horielikov-738347275/', // URL для LinkedIn розробника
   logoUrl: 'https://www.geosun.net.ua',
   isServiceStopped: false, // Настройка остановки сервиса: при true все страницы редиректят на /stop-service
-  hereApiKey: '' // Ключ HERE API для карт/геокодування/маршрутів
+  hereApiKey: '', // Ключ HERE API для карт/геокодування/маршрутів
+  authAvailabilityPollIntervalSeconds: 10 // Інтервал опитування доступності auth-сервера
 };
 
 export type AppConfig = typeof APP_CONFIG;

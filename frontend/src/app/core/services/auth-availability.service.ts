@@ -6,7 +6,6 @@ import { Observable, catchError, map, of, switchMap, tap, timeout, timer } from 
 import { ConfigService } from './config.service';
 
 const AUTH_AVAILABILITY_TIMEOUT_MS = 5000;
-const AUTH_AVAILABILITY_POLL_INTERVAL_MS = 10_000;
 
 interface ActuatorHealthResponse {
   status?: string;
@@ -36,7 +35,12 @@ export class AuthAvailabilityService {
 
   // Періодична перевірка для guest-сторінок: редирект на stop-service, якщо бекенд недоступний
   startPollingWhileUnavailable(router: Router, destroyRef: DestroyRef, onCheck?: () => void): void {
-    timer(0, AUTH_AVAILABILITY_POLL_INTERVAL_MS)
+    const pollIntervalMs = this.getPollIntervalMs_();
+    if (pollIntervalMs === 0) {
+      return;
+    }
+
+    timer(0, pollIntervalMs)
       .pipe(
         tap(() => onCheck?.()),
         switchMap(() => this.checkOnStartup()),
@@ -57,7 +61,12 @@ export class AuthAvailabilityService {
     redirectTo = '/login',
     onCheck?: () => void
   ): void {
-    timer(0, AUTH_AVAILABILITY_POLL_INTERVAL_MS)
+    const pollIntervalMs = this.getPollIntervalMs_();
+    if (pollIntervalMs === 0) {
+      return;
+    }
+
+    timer(0, pollIntervalMs)
       .pipe(
         tap(() => onCheck?.()),
         switchMap(() => this.checkOnStartup()),
@@ -95,5 +104,14 @@ export class AuthAvailabilityService {
         throw error;
       })
     );
+  }
+
+  private getPollIntervalMs_(): number {
+    const intervalSeconds = this.configService.config.authAvailabilityPollIntervalSeconds;
+    if (!Number.isFinite(intervalSeconds) || intervalSeconds <= 0) {
+      return 0;
+    }
+
+    return Math.floor(intervalSeconds * 1000);
   }
 }

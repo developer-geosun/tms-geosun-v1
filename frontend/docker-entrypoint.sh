@@ -8,7 +8,8 @@ cat > "$APP_CONFIG_LOCAL_PATH" <<EOF
 // Локальний runtime-конфіг (згенеровано в контейнері).
 window.__APP_CONFIG__ = {
   ...(window.__APP_CONFIG__ || {}),
-  hereApiKey: "${HERE_API_KEY:-}"
+  hereApiKey: "${HERE_API_KEY:-}",
+  authAvailabilityPollIntervalSeconds: ${AUTH_AVAILABILITY_POLL_INTERVAL_SECONDS:-10}
 };
 EOF
 

@@ -10,12 +10,33 @@ const appConfigLocalPath = path.join(frontendRoot, 'src', 'assets', 'app-config.
 const envPath = path.join(repoRoot, '.env');
 
 function readHereApiKey() {
-  if (process.env.HERE_API_KEY && process.env.HERE_API_KEY.trim().length > 0) {
-    return process.env.HERE_API_KEY.trim();
+  return readEnvVar('HERE_API_KEY');
+}
+
+function readAuthAvailabilityPollIntervalSeconds() {
+  const rawValue = readEnvVar('AUTH_AVAILABILITY_POLL_INTERVAL_SECONDS');
+  if (rawValue.length === 0) {
+    return 10;
   }
+
+  const parsedValue = Number.parseInt(rawValue, 10);
+  if (Number.isNaN(parsedValue) || parsedValue < 0) {
+    return 10;
+  }
+
+  return parsedValue;
+}
+
+function readEnvVar(name) {
+  const processValue = process.env[name];
+  if (typeof processValue === 'string' && processValue.trim().length > 0) {
+    return processValue.trim();
+  }
+
   if (!fs.existsSync(envPath)) {
     return '';
   }
+
   const envContent = fs.readFileSync(envPath, 'utf8');
   const lines = envContent.split(/\r?\n/);
   for (const line of lines) {
@@ -27,21 +48,24 @@ function readHereApiKey() {
       continue;
     }
     const key = line.slice(0, separatorIndex).trim();
-    if (key !== 'HERE_API_KEY') {
+    if (key !== name) {
       continue;
     }
     const rawValue = line.slice(separatorIndex + 1).trim();
     return rawValue.replace(/^"(.*)"$/, '$1').replace(/^'(.*)'$/, '$1');
   }
+
   return '';
 }
 
 function syncHereApiKey() {
   const hereApiKey = readHereApiKey();
+  const pollIntervalSeconds = readAuthAvailabilityPollIntervalSeconds();
   const localConfigContent = `// Локальний runtime-конфіг (генерується автоматично, не комітити).
 window.__APP_CONFIG__ = {
   ...(window.__APP_CONFIG__ || {}),
-  hereApiKey: ${JSON.stringify(hereApiKey)}
+  hereApiKey: ${JSON.stringify(hereApiKey)},
+  authAvailabilityPollIntervalSeconds: ${pollIntervalSeconds}
 };
 `;
   fs.writeFileSync(appConfigLocalPath, localConfigContent, 'utf8');
