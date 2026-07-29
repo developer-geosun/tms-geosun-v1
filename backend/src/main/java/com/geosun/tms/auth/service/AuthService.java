@@ -3,24 +3,31 @@ package com.geosun.tms.auth.service;
 import com.geosun.tms.auth.config.AppEmailProperties;
 import com.geosun.tms.auth.domain.EmailNormalizer;
 import com.geosun.tms.auth.domain.token.EmailVerificationToken;
+import com.geosun.tms.auth.domain.token.PasswordResetToken;
 import com.geosun.tms.auth.domain.token.RefreshToken;
 import com.geosun.tms.auth.domain.user.Role;
 import com.geosun.tms.auth.domain.user.User;
 import com.geosun.tms.auth.dto.mapper.UserDtoMapper;
+import com.geosun.tms.auth.dto.request.ForgotPasswordRequest;
 import com.geosun.tms.auth.dto.request.LoginRequest;
+import com.geosun.tms.auth.dto.request.PasswordResetInfoRequest;
 import com.geosun.tms.auth.dto.request.RefreshRequest;
 import com.geosun.tms.auth.dto.request.RegisterRequest;
 import com.geosun.tms.auth.dto.request.ResendVerificationRequest;
+import com.geosun.tms.auth.dto.request.ResetPasswordRequest;
 import com.geosun.tms.auth.dto.request.VerifyEmailRequest;
 import com.geosun.tms.auth.dto.response.AuthTokensResponse;
 import com.geosun.tms.auth.dto.response.LogoutResponse;
 import com.geosun.tms.auth.dto.response.OperationSuccessResponse;
+import com.geosun.tms.auth.dto.response.PasswordResetInfoResponse;
 import com.geosun.tms.auth.dto.response.RegisterResponse;
 import com.geosun.tms.auth.dto.response.UserPublicDto;
 import com.geosun.tms.auth.exception.ApiException;
+import com.geosun.tms.auth.mail.PasswordResetMailSender;
 import com.geosun.tms.auth.mail.VerificationMailSender;
 import com.geosun.tms.auth.ratelimit.RateLimitService;
 import com.geosun.tms.auth.repository.EmailVerificationTokenRepository;
+import com.geosun.tms.auth.repository.PasswordResetTokenRepository;
 import com.geosun.tms.auth.repository.RefreshTokenRepository;
 import com.geosun.tms.auth.repository.UserRepository;
 import com.geosun.tms.auth.security.UserPrincipal;
@@ -37,7 +44,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Реєстрація, вхід, верифікація email, refresh/logout та профіль.
+ * Реєстрація, вхід, верифікація email, скидання пароля, refresh/logout та профіль.
  */
 @Service
 public class AuthService {
@@ -46,32 +53,38 @@ public class AuthService {
 
   private final UserRepository userRepository;
   private final EmailVerificationTokenRepository emailVerificationTokenRepository;
+  private final PasswordResetTokenRepository passwordResetTokenRepository;
   private final RefreshTokenRepository refreshTokenRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtService jwtService;
   private final JwtProperties jwtProperties;
   private final AppEmailProperties appEmailProperties;
   private final VerificationMailSender verificationMailSender;
+  private final PasswordResetMailSender passwordResetMailSender;
   private final RateLimitService rateLimitService;
 
   public AuthService(
       UserRepository userRepository,
       EmailVerificationTokenRepository emailVerificationTokenRepository,
+      PasswordResetTokenRepository passwordResetTokenRepository,
       RefreshTokenRepository refreshTokenRepository,
       PasswordEncoder passwordEncoder,
       JwtService jwtService,
       JwtProperties jwtProperties,
       AppEmailProperties appEmailProperties,
       VerificationMailSender verificationMailSender,
+      PasswordResetMailSender passwordResetMailSender,
       RateLimitService rateLimitService) {
     this.userRepository = userRepository;
     this.emailVerificationTokenRepository = emailVerificationTokenRepository;
+    this.passwordResetTokenRepository = passwordResetTokenRepository;
     this.refreshTokenRepository = refreshTokenRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
     this.jwtProperties = jwtProperties;
     this.appEmailProperties = appEmailProperties;
     this.verificationMailSender = verificationMailSender;
+    this.passwordResetMailSender = passwordResetMailSender;
     this.rateLimitService = rateLimitService;
   }
 
@@ -195,6 +208,83 @@ public class AuthService {
     }
 
     return new OperationSuccessResponse(true, "Verification email sent");
+  }
+
+  @Transactional
+  public OperationSuccessResponse forgotPassword(ForgotPasswordRequest request) {
+    String email = EmailNormalizer.normalize(request.email());
+    rateLimitService.checkForgotPassword(email);
+
+    User user = userRepository.findByEmailAndDeletedFalse(email).orElse(null);
+    if (user == null || !user.isActive() || !user.isEmailVerified()) {
+      return new OperationSuccessResponse(true, "Password reset email sent");
+    }
+
+    passwordResetTokenRepository.deletePendingByUserId(user.getId());
+    passwordResetTokenRepository.flush();
+
+    String raw = OpaqueTokenGenerator.generate();
+    PasswordResetToken token = new PasswordResetToken();
+    token.setUser(user);
+    token.setTokenHash(TokenHasher.sha256Hex(raw));
+    token.setExpiresAt(
+        Instant.now().plusSeconds(appEmailProperties.getPasswordResetExpiresSeconds()));
+    passwordResetTokenRepository.save(token);
+
+    try {
+      passwordResetMailSender.sendPasswordResetEmail(email, raw);
+    } catch (MailException ex) {
+      log.error("Failed to send password reset email");
+    }
+
+    return new OperationSuccessResponse(true, "Password reset email sent");
+  }
+
+  @Transactional(readOnly = true)
+  public PasswordResetInfoResponse passwordResetInfo(PasswordResetInfoRequest request) {
+    PasswordResetToken token = requireValidPasswordResetToken(request.token());
+    return new PasswordResetInfoResponse(token.getUser().getEmail());
+  }
+
+  @Transactional
+  public OperationSuccessResponse resetPassword(ResetPasswordRequest request) {
+    PasswordResetToken token = requireValidPasswordResetToken(request.token());
+    User user = token.getUser();
+
+    user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+    token.setUsedAt(Instant.now());
+    userRepository.save(user);
+    passwordResetTokenRepository.save(token);
+
+    passwordResetTokenRepository.deletePendingByUserId(user.getId());
+    refreshTokenRepository.revokeAllActiveByUserId(user.getId(), Instant.now());
+
+    return new OperationSuccessResponse(true, "Password reset successfully");
+  }
+
+  private PasswordResetToken requireValidPasswordResetToken(String rawToken) {
+    String raw = rawToken != null ? rawToken.trim() : "";
+    if (raw.isEmpty()) {
+      throw ApiException.badRequest("VALIDATION_ERROR", "Token is required");
+    }
+    String hash = TokenHasher.sha256Hex(raw);
+    PasswordResetToken token =
+        passwordResetTokenRepository
+            .findByTokenHash(hash)
+            .orElseThrow(
+                () ->
+                    ApiException.badRequest(
+                        "INVALID_TOKEN", "Invalid or expired password reset token"));
+
+    if (token.getUsedAt() != null || !token.getExpiresAt().isAfter(Instant.now())) {
+      throw ApiException.badRequest("INVALID_TOKEN", "Invalid or expired password reset token");
+    }
+
+    User user = token.getUser();
+    if (user.isDeleted() || !user.isActive()) {
+      throw ApiException.badRequest("INVALID_TOKEN", "Invalid or expired password reset token");
+    }
+    return token;
   }
 
   @Transactional

@@ -15,6 +15,8 @@ Use this checklist after syncing frontend with backend auth API (`/api/v1/auth`)
 - [ ] `GET /api/v1/auth/me` succeeds with `Authorization: Bearer <accessToken>`.
 - [ ] `POST /api/v1/auth/refresh` rotates session and frontend updates both tokens.
 - [ ] `POST /api/v1/auth/logout` succeeds and frontend clears auth state.
+- [ ] `POST /api/v1/auth/forgot-password` returns success for unknown email (anti-enumeration) and sends mail for verified users (check MailHog).
+- [ ] `POST /api/v1/auth/reset-password` with token from email updates password; old password and old refresh fail.
 
 ## Security and Error Handling
 

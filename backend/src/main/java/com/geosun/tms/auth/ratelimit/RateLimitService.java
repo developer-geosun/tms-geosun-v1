@@ -8,7 +8,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import org.springframework.stereotype.Service;
 
 /**
- * In-memory rate limiting для login (лише невдалі спроби), resend та refresh.
+ * In-memory rate limiting для login (лише невдалі спроби), resend, forgot-password та refresh.
  */
 @Service
 public class RateLimitService {
@@ -18,6 +18,7 @@ public class RateLimitService {
   private final ConcurrentHashMap<String, Deque<Long>> refreshHits = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Deque<Long>> registerHits = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Long> resendLastMillis = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Long> forgotPasswordLastMillis = new ConcurrentHashMap<>();
 
   public RateLimitService(RateLimitProperties properties) {
     this.properties = properties;
@@ -71,6 +72,18 @@ public class RateLimitService {
     }
   }
 
+  public void checkForgotPassword(String normalizedEmail) {
+    long now = System.currentTimeMillis();
+    long windowMs = properties.getForgotPasswordSeconds() * 1000L;
+    synchronized (forgotPasswordLastMillis) {
+      Long last = forgotPasswordLastMillis.get(normalizedEmail);
+      if (last != null && now - last < windowMs) {
+        throw ApiException.tooManyRequests("Too many password reset requests for this email");
+      }
+      forgotPasswordLastMillis.put(normalizedEmail, now);
+    }
+  }
+
   public void checkRefresh(String clientIp) {
     String key = "refresh|" + clientIp;
     slidingWindowAllow(
@@ -106,6 +119,9 @@ public class RateLimitService {
     registerHits.clear();
     synchronized (resendLastMillis) {
       resendLastMillis.clear();
+    }
+    synchronized (forgotPasswordLastMillis) {
+      forgotPasswordLastMillis.clear();
     }
   }
 }

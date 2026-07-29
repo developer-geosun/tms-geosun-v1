@@ -43,5 +43,14 @@ function attachAccessToken_(request: HttpRequest<unknown>, accessToken: string |
 }
 
 function isAuthEndpoint_(url: string): boolean {
-  return url.includes('/auth/login') || url.includes('/auth/refresh') || url.includes('/auth/logout');
+  return (
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/refresh') ||
+    url.includes('/auth/logout') ||
+    url.includes('/auth/verify-email') ||
+    url.includes('/auth/forgot-password') ||
+    url.includes('/auth/reset-password-info') ||
+    url.includes('/auth/reset-password')
+  );
 }

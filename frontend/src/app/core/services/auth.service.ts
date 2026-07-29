@@ -5,12 +5,16 @@ import { ConfigService } from './config.service';
 import {
   AuthState,
   AuthUser,
+  ForgotPasswordRequest,
   LoginRequest,
   LoginResponse,
   OperationSuccessResponse,
+  PasswordResetInfoRequest,
+  PasswordResetInfoResponse,
   RefreshResponse,
   RegisterRequest,
   RegisterResponse,
+  ResetPasswordRequest,
   VerifyEmailRequest,
   UserRole
 } from '../../shared/models';
@@ -56,6 +60,24 @@ export class AuthService {
   verifyEmail(payload: VerifyEmailRequest): Observable<OperationSuccessResponse> {
     return this.http
       .post<OperationSuccessResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/verify-email'), payload)
+      .pipe(map((response) => this.ensureSuccessResponse_(response)));
+  }
+
+  forgotPassword(payload: ForgotPasswordRequest): Observable<OperationSuccessResponse> {
+    return this.http
+      .post<OperationSuccessResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/forgot-password'), payload)
+      .pipe(map((response) => this.ensureSuccessResponse_(response)));
+  }
+
+  getPasswordResetInfo(payload: PasswordResetInfoRequest): Observable<PasswordResetInfoResponse> {
+    return this.http
+      .post<PasswordResetInfoResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/reset-password-info'), payload)
+      .pipe(map((response) => this.ensureSuccessResponse_(response)));
+  }
+
+  resetPassword(payload: ResetPasswordRequest): Observable<OperationSuccessResponse> {
+    return this.http
+      .post<OperationSuccessResponse | ApiErrorEnvelope>(this.toApiUrl('/auth/reset-password'), payload)
       .pipe(map((response) => this.ensureSuccessResponse_(response)));
   }
 

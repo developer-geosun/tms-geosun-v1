@@ -26,6 +26,23 @@ export interface VerifyEmailRequest {
   token: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface PasswordResetInfoRequest {
+  token: string;
+}
+
+export interface PasswordResetInfoResponse {
+  email: string;
+}
+
 export interface OperationSuccessResponse {
   success: boolean;
   message: string;

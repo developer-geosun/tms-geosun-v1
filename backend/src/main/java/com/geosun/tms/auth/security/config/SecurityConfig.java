@@ -72,6 +72,9 @@ public class SecurityConfig {
                     "/api/v1/auth/login",
                     "/api/v1/auth/verify-email",
                     "/api/v1/auth/resend-verification",
+                    "/api/v1/auth/forgot-password",
+                    "/api/v1/auth/reset-password-info",
+                    "/api/v1/auth/reset-password",
                     "/api/v1/auth/refresh")
                 .permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/users/**")

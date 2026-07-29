@@ -23,6 +23,18 @@ export const routes: Routes = [
       import('./pages/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent)
   },
   {
+    path: 'forgot-password',
+    canActivate: [authAvailabilityGuard, guestGuard],
+    loadComponent: () =>
+      import('./pages/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    canActivate: [authAvailabilityGuard, guestGuard],
+    loadComponent: () =>
+      import('./pages/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
+  },
+  {
     path: 'main',
     canActivate: [authAvailabilityGuard, serviceStopGuard, authGuard],
     data: { roles: ['admin', 'manager', 'employee', 'user'] },

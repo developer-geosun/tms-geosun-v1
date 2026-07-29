@@ -17,10 +17,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geosun.tms.auth.domain.user.Role;
 import com.geosun.tms.auth.domain.user.User;
+import com.geosun.tms.auth.dto.request.ForgotPasswordRequest;
 import com.geosun.tms.auth.dto.request.LoginRequest;
+import com.geosun.tms.auth.dto.request.PasswordResetInfoRequest;
 import com.geosun.tms.auth.dto.request.RefreshRequest;
 import com.geosun.tms.auth.dto.request.RegisterRequest;
 import com.geosun.tms.auth.dto.request.ResendVerificationRequest;
+import com.geosun.tms.auth.dto.request.ResetPasswordRequest;
 import com.geosun.tms.auth.dto.request.VerifyEmailRequest;
 import com.geosun.tms.auth.ratelimit.RateLimitService;
 import com.geosun.tms.auth.repository.UserRepository;
@@ -387,6 +390,133 @@ class ApiIntegrationTest {
                 .header("Authorization", "Bearer " + adminSession.access()))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.code").value("NOT_FOUND"));
+  }
+
+  @Test
+  void forgotPassword_unknownEmail_returns200_withoutMail() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/v1/auth/forgot-password")
+                .contentType(jsonContentType())
+                .content(toJson(new ForgotPasswordRequest("ghost-reset@example.com"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true));
+    verify(javaMailSender, times(0)).send(anyMailMessage());
+  }
+
+  @Test
+  void forgotPassword_unverifiedUser_returns200_withoutMail() throws Exception {
+    mockMvc.perform(
+        post("/api/v1/auth/register")
+            .contentType(jsonContentType())
+            .content(toJson(new RegisterRequest("unverified-reset@example.com", "Secret123"))));
+    verify(javaMailSender, times(1)).send(anyMailMessage());
+    org.mockito.Mockito.reset(javaMailSender);
+    stubMailSenderSuccess();
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/forgot-password")
+                .contentType(jsonContentType())
+                .content(toJson(new ForgotPasswordRequest("unverified-reset@example.com"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true));
+    verify(javaMailSender, times(0)).send(anyMailMessage());
+  }
+
+  @Test
+  void resetPassword_flow_updatesPassword_andRevokesRefresh() throws Exception {
+    registerVerifyLogin("reset-flow@example.com");
+    Session session = login("reset-flow@example.com", "Secret123");
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/forgot-password")
+                .contentType(jsonContentType())
+                .content(toJson(new ForgotPasswordRequest("reset-flow@example.com"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true));
+
+    ArgumentCaptor<MimeMessage> mailCap = ArgumentCaptor.forClass(MimeMessage.class);
+    verifyMailSentAndCapture(javaMailSender, mailCap);
+    String resetToken = extractVerificationToken(requireMailText(capturedMail(mailCap)));
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/reset-password-info")
+                .contentType(jsonContentType())
+                .content(toJson(new PasswordResetInfoRequest(resetToken))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.email").value("reset-flow@example.com"));
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/reset-password")
+                .contentType(jsonContentType())
+                .content(toJson(new ResetPasswordRequest(resetToken, "NewSecret99"))))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.success").value(true));
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/login")
+                .contentType(jsonContentType())
+                .content(toJson(new LoginRequest("reset-flow@example.com", "Secret123"))))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"));
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/login")
+                .contentType(jsonContentType())
+                .content(toJson(new LoginRequest("reset-flow@example.com", "NewSecret99"))))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/refresh")
+                .contentType(jsonContentType())
+                .content(toJson(new RefreshRequest(session.refresh()))))
+        .andExpect(status().isUnauthorized());
+  }
+
+  @Test
+  void resetPassword_invalidToken_returns400() throws Exception {
+    mockMvc
+        .perform(
+            post("/api/v1/auth/reset-password")
+                .contentType(jsonContentType())
+                .content(toJson(new ResetPasswordRequest("invalid-reset-token", "NewSecret99"))))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
+  }
+
+  @Test
+  void resetPassword_usedToken_returns400() throws Exception {
+    registerVerifyLogin("reuse-reset@example.com");
+
+    mockMvc.perform(
+        post("/api/v1/auth/forgot-password")
+            .contentType(jsonContentType())
+            .content(toJson(new ForgotPasswordRequest("reuse-reset@example.com"))));
+    ArgumentCaptor<MimeMessage> mailCap = ArgumentCaptor.forClass(MimeMessage.class);
+    verifyMailSentAndCapture(javaMailSender, mailCap);
+    String resetToken = extractVerificationToken(requireMailText(capturedMail(mailCap)));
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/reset-password")
+                .contentType(jsonContentType())
+                .content(toJson(new ResetPasswordRequest(resetToken, "NewSecret99"))))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            post("/api/v1/auth/reset-password")
+                .contentType(jsonContentType())
+                .content(toJson(new ResetPasswordRequest(resetToken, "AnotherSecret1"))))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.code").value("INVALID_TOKEN"));
   }
 
   @Test

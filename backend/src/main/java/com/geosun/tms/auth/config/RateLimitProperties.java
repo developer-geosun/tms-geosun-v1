@@ -14,6 +14,8 @@ public class RateLimitProperties {
 
   private int resendVerificationSeconds = 60;
 
+  private int forgotPasswordSeconds = 60;
+
   private int refreshMaxRequests = 30;
 
   private int refreshWindowSeconds = 60;
@@ -43,6 +45,14 @@ public class RateLimitProperties {
 
   public void setResendVerificationSeconds(int resendVerificationSeconds) {
     this.resendVerificationSeconds = resendVerificationSeconds;
+  }
+
+  public int getForgotPasswordSeconds() {
+    return forgotPasswordSeconds;
+  }
+
+  public void setForgotPasswordSeconds(int forgotPasswordSeconds) {
+    this.forgotPasswordSeconds = forgotPasswordSeconds;
   }
 
   public int getRefreshMaxRequests() {

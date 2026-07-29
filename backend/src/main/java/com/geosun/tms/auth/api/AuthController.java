@@ -1,14 +1,18 @@
 package com.geosun.tms.auth.api;
 
 import com.geosun.tms.auth.config.OpenApiConfig;
+import com.geosun.tms.auth.dto.request.ForgotPasswordRequest;
 import com.geosun.tms.auth.dto.request.LoginRequest;
+import com.geosun.tms.auth.dto.request.PasswordResetInfoRequest;
 import com.geosun.tms.auth.dto.request.RefreshRequest;
 import com.geosun.tms.auth.dto.request.RegisterRequest;
 import com.geosun.tms.auth.dto.request.ResendVerificationRequest;
+import com.geosun.tms.auth.dto.request.ResetPasswordRequest;
 import com.geosun.tms.auth.dto.request.VerifyEmailRequest;
 import com.geosun.tms.auth.dto.response.AuthTokensResponse;
 import com.geosun.tms.auth.dto.response.LogoutResponse;
 import com.geosun.tms.auth.dto.response.OperationSuccessResponse;
+import com.geosun.tms.auth.dto.response.PasswordResetInfoResponse;
 import com.geosun.tms.auth.dto.response.RegisterResponse;
 import com.geosun.tms.auth.dto.response.UserPublicDto;
 import com.geosun.tms.auth.infrastructure.web.ClientIpResolver;
@@ -76,6 +80,33 @@ public class AuthController {
   public OperationSuccessResponse resendVerification(
       @Valid @RequestBody ResendVerificationRequest request) {
     return authService.resendVerification(request);
+  }
+
+  @Operation(
+      summary = "Forgot password",
+      description =
+          "Anti-enumeration: same 200 always; email sent only for active verified users.")
+  @PostMapping("/forgot-password")
+  public OperationSuccessResponse forgotPassword(
+      @Valid @RequestBody ForgotPasswordRequest request) {
+    return authService.forgotPassword(request);
+  }
+
+  @Operation(
+      summary = "Password reset info",
+      description = "Returns account email for a valid unused reset token.")
+  @PostMapping("/reset-password-info")
+  public PasswordResetInfoResponse passwordResetInfo(
+      @Valid @RequestBody PasswordResetInfoRequest request) {
+    return authService.passwordResetInfo(request);
+  }
+
+  @Operation(
+      summary = "Reset password",
+      description = "Consumes reset token from email; revokes all refresh sessions.")
+  @PostMapping("/reset-password")
+  public OperationSuccessResponse resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+    return authService.resetPassword(request);
   }
 
   @Operation(

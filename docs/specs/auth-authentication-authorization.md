@@ -132,8 +132,42 @@
     }
     ```
 
+- `POST /api/v1/auth/forgot-password` - запрос письма для сброса пароля (anti-enumeration: всегда 200).
+  - Request:
+    ```json
+    {
+      "email": "user@example.com"
+    }
+    ```
+  - Response 200:
+    ```json
+    {
+      "success": true,
+      "message": "Password reset email sent"
+    }
+    ```
+  - Письмо отправляется только для active + emailVerified пользователя. Токен opaque, TTL по `PASSWORD_RESET_EXPIRES_SECONDS` (default 3600).
+
+- `POST /api/v1/auth/reset-password` - установка нового пароля по токену из письма.
+  - Request:
+    ```json
+    {
+      "token": "opaque-token-from-email",
+      "newPassword": "string"
+    }
+    ```
+  - Response 200:
+    ```json
+    {
+      "success": true,
+      "message": "Password reset successfully"
+    }
+    ```
+  - После успеха: новый bcrypt-хеш, токен помечен used, все refresh-сессии пользователя отозваны.
+
 ## 9) UX/UI Requirements (frontend) / UX/UI требования (frontend)
 - Страница login с полями email/password.
+- Страницы forgot-password (email) и reset-password (новый пароль по `?token=` из письма).
 - Состояния: `loading` / `error` / `success`.
 - Guard на приватных маршрутах.
 - HTTP interceptor для `Authorization: Bearer <access token>`.

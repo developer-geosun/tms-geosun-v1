@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Guard для «гостьових» сторінок (login, register, verify-email).
+ * Guard для «гостьових» сторінок (login, register, verify-email, forgot/reset password).
  * Якщо користувач уже авторизований — перенаправляє його на домашню
  * сторінку, щоб над формою входу не показувались меню й дані сесії.
  */
