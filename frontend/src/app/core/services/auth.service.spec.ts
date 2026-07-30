@@ -15,7 +15,7 @@ describe('AuthService', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ConfigService, useValue: { environment: { apiUrl: 'http://localhost:8080' } } }
+        { provide: ConfigService, useValue: { apiUrl: 'http://localhost:8080', environment: { apiUrl: 'http://localhost:8080' } } }
       ]
     });
 

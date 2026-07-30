@@ -35,17 +35,17 @@ services:
     ports:
       - "${GATEWAY_DEV_PORT:-8082}:80"
 
-  # Окремий ngrok-тунель для dev gateway
+  # Окремий ngrok-тунель лише для backend (dev)
   ngrok-dev:
     profiles:
       - dev
     image: ngrok/ngrok:latest
     container_name: tms-ngrok-dev
     depends_on:
-      - gateway-dev
+      - backend
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
-    command: http --url=${NGROK_DOMAIN} gateway-dev:80
+    command: http --url=${NGROK_DOMAIN} backend:8080
     ports:
       - "${NGROK_DEV_INSPECT_PORT:-4041}:4040"
 

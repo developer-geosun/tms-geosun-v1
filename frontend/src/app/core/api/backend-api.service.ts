@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { environment } from '../../../environments/environment';
+import { Injectable, inject } from '@angular/core';
+import { ConfigService } from '../services/config.service';
 
 /**
  * Тонка обгортка для побудови URL backend API за contract-first підходом.
@@ -9,8 +9,8 @@ import { environment } from '../../../environments/environment';
   providedIn: 'root'
 })
 export class BackendApiService {
+  private readonly configService = inject(ConfigService);
   private readonly basePath = '/api/v1';
-  private readonly baseUrl = (environment.apiUrl || '').replace(/\/+$/, '');
 
   get routes(): string {
     return this.build('/routes');
@@ -74,7 +74,7 @@ export class BackendApiService {
   }
 
   private build(path: string): string {
-    return `${this.baseUrl}${this.basePath}${path}`;
+    return `${this.configService.apiUrl}${this.basePath}${path}`;
   }
 }
 

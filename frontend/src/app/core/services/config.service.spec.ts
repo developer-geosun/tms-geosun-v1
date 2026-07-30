@@ -16,12 +16,14 @@ describe('ConfigService runtime config', () => {
   it('overrides defaults from window.__APP_CONFIG__', () => {
     (window as Window & { __APP_CONFIG__?: unknown }).__APP_CONFIG__ = {
       logoUrl: 'https://example.com',
-      isServiceStopped: true
+      isServiceStopped: true,
+      apiUrl: 'https://api.example.com/'
     };
 
     const service = TestBed.inject(ConfigService);
 
     expect(service.logoUrl).toBe('https://example.com');
     expect(service.isServiceStopped).toBeTrue();
+    expect(service.apiUrl).toBe('https://api.example.com');
   });
 });

@@ -9,7 +9,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test --watch=false --browsers=ChromeHeadless",
-    "deploy": "ng build --configuration production --base-href=/tms-geosun/ && npx gh-pages@latest -d dist/tms-geosun",
+    "deploy": "ng build --configuration production --base-href=/tms-geosun-v1/ && npx gh-pages@latest -d dist/tms-geosun",
     "lint": "ng lint",
     "lint:fix": "ng lint --fix"
   },

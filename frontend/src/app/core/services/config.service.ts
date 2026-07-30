@@ -17,6 +17,19 @@ export class ConfigService {
   readonly environment = environment;
 
   /**
+   * Базовий URL backend API.
+   * Runtime (__APP_CONFIG__.apiUrl) має пріоритет над environment.apiUrl.
+   */
+  get apiUrl(): string {
+    const fromRuntime =
+      typeof this.config.apiUrl === 'string' ? this.config.apiUrl.trim() : '';
+    if (fromRuntime.length > 0) {
+      return fromRuntime.replace(/\/+$/, '');
+    }
+    return (this.environment.apiUrl || '').replace(/\/+$/, '');
+  }
+
+  /**
    * Отримує URL для Telegram (для toolbar)
    */
   get telegramUrl(): string {

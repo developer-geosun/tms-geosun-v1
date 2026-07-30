@@ -13,7 +13,7 @@ describe('AuthAvailabilityService', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ConfigService, useValue: { environment: { apiUrl: '' } } }
+        { provide: ConfigService, useValue: { apiUrl: '', environment: { apiUrl: '' } } }
       ]
     });
 

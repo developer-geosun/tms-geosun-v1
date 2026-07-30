@@ -183,9 +183,7 @@ export class AuthService {
   }
 
   private toApiUrl(path: string): string {
-    const baseUrl = this.configService.environment.apiUrl;
-    const sanitizedBase = baseUrl.replace(/\/+$/, '');
-    return `${sanitizedBase}/api/v1${path}`;
+    return `${this.configService.apiUrl}/api/v1${path}`;
   }
 
   private loadInitialState(): AuthState {

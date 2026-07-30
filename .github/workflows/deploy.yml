@@ -1,7 +1,15 @@
 # Деплой Angular з frontend/ на гілку gh-pages (GitHub Pages: Settings → Pages → branch gh-pages / root)
+# Frontend на GitHub Pages; API — окремо (зазвичай ngrok-тунель на backend).
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 jobs:
@@ -22,17 +30,66 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
         working-directory: frontend
         run: npm ci --legacy-peer-deps
 
+      - name: Resolve Pages base href
+        id: pages
+        run: |
+          REPO_NAME="${{ github.event.repository.name }}"
+          echo "base_href=/${REPO_NAME}/" >> "$GITHUB_OUTPUT"
+          echo "Using base-href=/${REPO_NAME}/"
+
       - name: Build Angular application
         working-directory: frontend
-        run: npx ng build --configuration=production --base-href=/tms-geosun/
+        env:
+          HERE_API_KEY: ${{ secrets.HERE_API_KEY }}
+        run: npx ng build --configuration=production --base-href=${{ steps.pages.outputs.base_href }}
+
+      - name: Inject runtime API config for GitHub Pages
+        env:
+          API_URL: ${{ secrets.API_URL }}
+          HERE_API_KEY: ${{ secrets.HERE_API_KEY }}
+        run: |
+          set -e
+          DIST="frontend/dist/tms-geosun"
+          CONFIG="$DIST/assets/app-config.js"
+          if [ ! -f "$CONFIG" ]; then
+            echo "Error: $CONFIG not found"
+            exit 1
+          fi
+          # API_URL — публічний URL backend (наприклад https://xxx.ngrok-free.app)
+          node <<'NODE'
+          const fs = require('fs');
+          const configPath = 'frontend/dist/tms-geosun/assets/app-config.js';
+          const apiUrl = (process.env.API_URL || '').trim().replace(/\/+$/, '');
+          const hereApiKey = (process.env.HERE_API_KEY || '').trim();
+          let content = fs.readFileSync(configPath, 'utf8');
+          if (apiUrl) {
+            if (/apiUrl\s*:/.test(content)) {
+              content = content.replace(/apiUrl\s*:\s*[^,\n]+/, `apiUrl: ${JSON.stringify(apiUrl)}`);
+            } else {
+              content = content.replace(
+                /window\.__APP_CONFIG__\s*=\s*\{/,
+                `window.__APP_CONFIG__ = {\n  apiUrl: ${JSON.stringify(apiUrl)},`
+              );
+            }
+          } else {
+            console.warn('Warning: secrets.API_URL is empty — frontend will use relative API URLs');
+          }
+          if (hereApiKey) {
+            if (/hereApiKey\s*:/.test(content)) {
+              content = content.replace(/hereApiKey\s*:\s*[^,\n]+/, `hereApiKey: ${JSON.stringify(hereApiKey)}`);
+            }
+          }
+          fs.writeFileSync(configPath, content, 'utf8');
+          console.log('Runtime config updated for GitHub Pages deploy');
+          NODE
 
       - name: Configure Git
         run: |

@@ -89,9 +89,7 @@ export class AuthAvailabilityService {
   }
 
   private toBaseUrl(path: string): string {
-    const baseUrl = this.configService.environment.apiUrl;
-    const sanitizedBase = baseUrl.replace(/\/+$/, '');
-    return `${sanitizedBase}${path}`;
+    return `${this.configService.apiUrl}${path}`;
   }
 
   private checkHealthEndpoint_(): Observable<ActuatorHealthResponse> {

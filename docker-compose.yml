@@ -53,7 +53,6 @@ services:
       EMAIL_VERIFICATION_LINK_BASE: ${EMAIL_VERIFICATION_LINK_BASE:-http://localhost:4200/verify-email}
       PASSWORD_RESET_EXPIRES_SECONDS: ${PASSWORD_RESET_EXPIRES_SECONDS:-3600}
       PASSWORD_RESET_LINK_BASE: ${PASSWORD_RESET_LINK_BASE:-http://localhost:4200/reset-password}
-      NGROK_DOMAIN: ${NGROK_DOMAIN:-}
       CORS_ALLOWED_ORIGIN_PATTERNS: ${CORS_ALLOWED_ORIGIN_PATTERNS:-}
       SMTP_HOST: ${SMTP_HOST:-mailhog}
       SMTP_PORT: ${SMTP_PORT:-1025}
@@ -111,15 +110,15 @@ services:
     ports:
       - "${GATEWAY_PORT:-8081}:80"
 
-  # Публічний тунель для локального gateway (за наявності домену/токена)
+  # Публічний тунель лише для backend API (frontend — на GitHub Pages)
   ngrok:
     image: ngrok/ngrok:latest
     container_name: tms-ngrok
     depends_on:
-      - gateway
+      - backend
     environment:
       NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:-}
-    command: http --url=${NGROK_DOMAIN} gateway:80
+    command: http --url=${NGROK_DOMAIN} backend:8080
     ports:
       - "${NGROK_INSPECT_PORT:-4040}:4040"
 

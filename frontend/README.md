@@ -45,7 +45,7 @@ Notes:
 - `frontend-dev` is optimized for fast UI iteration (Angular `ng serve` with hot reload).
 - `frontend` is a production preview container (static build + nginx).
 - Docker dev mode uses `proxy.docker.conf.json` and forwards `/api` to `http://backend:8080`.
-- For public dev links (including email verification), run `gateway-dev` + `ngrok-dev` from the `dev` profile.
+- For public API access use `ngrok` / `ngrok-dev` (backend only). Frontend for public use is on GitHub Pages.
 - On first `frontend-dev` start dependencies are installed; next starts are faster.
 
 ## Build
@@ -72,7 +72,14 @@ ng test
 
 ### GitHub Actions
 
-Deployment is configured via `.github/workflows/deploy.yml` and runs on push to `main` or `master`.
+Deployment is configured via `.github/workflows/deploy.yml` and runs on push to `main` or `master` when `frontend/**` changes (or via manual `workflow_dispatch`).
+
+Required repository secrets:
+
+- `API_URL` — public backend base URL (ngrok), written into `assets/app-config.js` at deploy time
+- `HERE_API_KEY` — optional HERE key for maps on Pages
+
+GitHub Pages source: branch `gh-pages` / root.
 
 ### Manual deploy to GitHub Pages
 
@@ -82,7 +89,7 @@ npm run deploy
 
 The deploy command uses:
 
-- base href: `/tms-geosun/`
+- base href: `/tms-geosun-v1/`
 - output directory: `dist/tms-geosun`
 
 ## Useful commands

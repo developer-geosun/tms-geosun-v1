@@ -11,6 +11,46 @@
 - MySQL `8` (для локального запуска backend без Docker)
 - Docker Desktop + Docker Compose (для запуска всего стека в контейнерах)
 
+## Публикация: frontend на GitHub Pages, API через ngrok
+
+Архитектура для публичного доступа:
+
+- **Frontend** — статика на GitHub Pages (`https://developer-geosun.github.io/tms-geosun-v1/`).
+- **Backend** — локально (Docker), наружу только через **ngrok** (без проксирования UI).
+
+### 1) GitHub secrets (Settings → Secrets and variables → Actions)
+
+| Secret | Назначение |
+| --- | --- |
+| `API_URL` | Публичный URL backend, например `https://<NGROK_DOMAIN>` |
+| `HERE_API_KEY` | (опционально) ключ HERE для карт на Pages |
+
+### 2) GitHub Pages
+
+Settings → Pages → Build and deployment → Source: **Deploy from a branch** → Branch: **`gh-pages`** / `/ (root)`.
+
+Workflow `.github/workflows/deploy.yml` собирает frontend и пушит в `gh-pages` при push в `master`/`main` (изменения в `frontend/**`) или вручную (`workflow_dispatch`).
+
+### 3) Backend + ngrok (локально)
+
+В `.env`:
+
+```bash
+NGROK_AUTHTOKEN=<ваш_ngrok_authtoken>
+NGROK_DOMAIN=<ваш_домен_из_ngrok>
+CORS_ALLOWED_ORIGIN_PATTERNS=https://developer-geosun.github.io
+EMAIL_VERIFICATION_LINK_BASE=https://developer-geosun.github.io/tms-geosun-v1/verify-email
+PASSWORD_RESET_LINK_BASE=https://developer-geosun.github.io/tms-geosun-v1/reset-password
+```
+
+Запуск API с публичным туннелем:
+
+```bash
+docker compose up --build mysql mailhog backend ngrok
+```
+
+После старта туннеля значение `API_URL` в GitHub Secrets должно совпадать с `https://<NGROK_DOMAIN>` (и при смене домена — перезапустить Deploy workflow).
+
 ## Вариант 1: локальный запуск (frontend + backend по отдельности)
 
 ### 1) Backend
@@ -53,11 +93,12 @@ cp .env.example .env
 - Для страницы расчета через HERE укажите `HERE_API_KEY=<ваш_ключ_here>`.
 - Для выбора источника расчёта пробега по странам укажите `COUNTRY_BREAKDOWN_PROVIDER=here|geojson` (для режима без HERE — `geojson`).
 - Для расчёта фрахта через Vertex AI (admin) укажите `VERTEX_AI_PROJECT_ID`, `GCP_CREDENTIALS_FILE` (JSON service account) — см. [`docs/vertex-ai-setup.md`](docs/vertex-ai-setup.md).
-- Для публичного адреса через ngrok (один домен для frontend + backend) укажите:
+- Для публичного API через ngrok (только backend) укажите:
   - `NGROK_AUTHTOKEN=<ваш_ngrok_authtoken>`
   - `NGROK_DOMAIN=<ваш_домен_из_ngrok>`
-  - `GATEWAY_PORT=8081` (локальный порт gateway)
-  - `EMAIL_VERIFICATION_LINK_BASE=https://<NGROK_DOMAIN>/verify-email`
+  - `CORS_ALLOWED_ORIGIN_PATTERNS=https://developer-geosun.github.io`
+  - `EMAIL_VERIFICATION_LINK_BASE=https://developer-geosun.github.io/tms-geosun-v1/verify-email`
+  - `PASSWORD_RESET_LINK_BASE=https://developer-geosun.github.io/tms-geosun-v1/reset-password`
 
 2. Запуск контейнеров (из корня проекта):
 
@@ -109,21 +150,21 @@ docker compose --profile dev down --remove-orphans
 - `frontend` — это production preview (build + nginx), подходит для проверки итоговой сборки.
 - `frontend-dev` — это режим разработки (ng serve), подходит для быстрых правок и тестирования.
 - В Docker dev-режиме API проксируется через `frontend/proxy.docker.conf.json` на `http://backend:8080`.
-- Для внешнего dev-доступа и корректной email-верификации используйте `gateway-dev` и `ngrok-dev` (профиль `dev`).
-- Для dev-ссылки из письма укажите `EMAIL_VERIFICATION_LINK_BASE=https://<NGROK_DOMAIN>/verify-email`.
+- Для публичного API используйте `ngrok` / `ngrok-dev` (тунель только на backend).
+- Для ссылок из писем укажите `EMAIL_VERIFICATION_LINK_BASE` на URL frontend (локальный или GitHub Pages).
 - На первом запуске `frontend-dev` установит зависимости (`npm ci`), далее старт обычно заметно быстрее.
 - Если выполнить обычный `docker compose down` без `--profile dev`, может появиться `Network ... Resource is still in use`, потому что dev-контейнеры останутся запущенными.
 
-### Dev-профиль через один домен (frontend-dev + backend + ngrok)
+### Dev-профиль (frontend-dev + backend + ngrok только на API)
 
 ```bash
-docker compose --profile dev up -d --build mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+docker compose --profile dev up -d --build mysql mailhog backend frontend-dev ngrok-dev
 
 # остановка dev-профиля
 docker compose --profile dev down --remove-orphans
 ```
 
-Локальный вход через dev gateway: `http://localhost:8082` (или `GATEWAY_DEV_PORT`).
+Локальный вход через gateway (опционально, без ngrok UI): `http://localhost:8082` (или `GATEWAY_DEV_PORT`).
 
 ### Быстрые команды
 
@@ -146,10 +187,10 @@ docker compose stop frontend
 docker compose --profile dev up -d frontend-dev
 ```
 
-Dev через единый домен (с корректной verify-email ссылкой):
+Публичный API (backend + ngrok):
 
 ```bash
-docker compose --profile dev up -d --build mysql mailhog backend frontend-dev gateway-dev ngrok-dev
+docker compose up --build mysql mailhog backend ngrok
 ```
 
 Полная остановка dev-профиля (без "Network ... Resource is still in use"):
@@ -158,20 +199,20 @@ docker compose --profile dev up -d --build mysql mailhog backend frontend-dev ga
 docker compose --profile dev down --remove-orphans
 ```
 
-### Запуск через один домен (frontend + backend + ngrok)
+### Локальный стек с gateway (без публичного UI через ngrok)
 
 ```bash
-docker compose up --build mysql mailhog backend frontend gateway ngrok
+docker compose up --build mysql mailhog backend frontend gateway
 ```
 
 ## Полезные URL после запуска
 
-- Frontend: `http://localhost:4200`
+- Frontend (локально): `http://localhost:4200`
+- Frontend (GitHub Pages): `https://developer-geosun.github.io/tms-geosun-v1/`
 - Backend health: `http://localhost:8080/actuator/health`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - Gateway (единый локальный вход): `http://localhost:8081`
 - ngrok Inspector: `http://localhost:4040`
-- Public frontend URL (пример): `https://<NGROK_DOMAIN>`
 - Public API health (пример): `https://<NGROK_DOMAIN>/actuator/health`
 
 ## Быстрая проверка backend auth API

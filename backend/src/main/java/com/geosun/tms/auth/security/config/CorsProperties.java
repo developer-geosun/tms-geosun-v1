@@ -9,24 +9,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.StringUtils;
 
 /**
- * CORS: базові локальні origin та динамічні змінні з оточення (NGROK_DOMAIN тощо).
+ * CORS: базові локальні origin та динамічні змінні з оточення
+ * (GitHub Pages через CORS_ALLOWED_ORIGIN_PATTERNS тощо).
+ * NGROK_DOMAIN більше не додається як frontend-origin: ngrok тунелює лише backend.
  */
 @ConfigurationProperties(prefix = "app.cors")
 public class CorsProperties {
 
-  /** Домен без схеми або повний origin (змінна NGROK_DOMAIN). */
-  private String ngrokDomain = "";
-
   /** Додаткові шаблони через кому (змінна CORS_ALLOWED_ORIGIN_PATTERNS). */
   private String allowedOriginPatternsExtra = "";
-
-  public String getNgrokDomain() {
-    return ngrokDomain;
-  }
-
-  public void setNgrokDomain(String ngrokDomain) {
-    this.ngrokDomain = ngrokDomain;
-  }
 
   public String getAllowedOriginPatternsExtra() {
     return allowedOriginPatternsExtra;
@@ -41,9 +32,10 @@ public class CorsProperties {
     Set<String> patterns = new LinkedHashSet<>();
     patterns.add("http://localhost:4200");
     patterns.add("http://127.0.0.1:4200");
-    if (StringUtils.hasText(ngrokDomain)) {
-      patterns.add(normalizeToOriginPattern(ngrokDomain.trim()));
-    }
+    patterns.add("http://localhost:8081");
+    patterns.add("http://127.0.0.1:8081");
+    patterns.add("http://localhost:8082");
+    patterns.add("http://127.0.0.1:8082");
     for (String part : splitCommaSeparated(allowedOriginPatternsExtra)) {
       patterns.add(normalizeToOriginPattern(part));
     }
