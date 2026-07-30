@@ -13,20 +13,6 @@ function readHereApiKey() {
   return readEnvVar('HERE_API_KEY');
 }
 
-function readAuthAvailabilityPollIntervalSeconds() {
-  const rawValue = readEnvVar('AUTH_AVAILABILITY_POLL_INTERVAL_SECONDS');
-  if (rawValue.length === 0) {
-    return 10;
-  }
-
-  const parsedValue = Number.parseInt(rawValue, 10);
-  if (Number.isNaN(parsedValue) || parsedValue < 0) {
-    return 10;
-  }
-
-  return parsedValue;
-}
-
 function readEnvVar(name) {
   const processValue = process.env[name];
   if (typeof processValue === 'string' && processValue.trim().length > 0) {
@@ -60,12 +46,10 @@ function readEnvVar(name) {
 
 function syncHereApiKey() {
   const hereApiKey = readHereApiKey();
-  const pollIntervalSeconds = readAuthAvailabilityPollIntervalSeconds();
   const localConfigContent = `// Локальний runtime-конфіг (генерується автоматично, не комітити).
 window.__APP_CONFIG__ = {
   ...(window.__APP_CONFIG__ || {}),
-  hereApiKey: ${JSON.stringify(hereApiKey)},
-  authAvailabilityPollIntervalSeconds: ${pollIntervalSeconds}
+  hereApiKey: ${JSON.stringify(hereApiKey)}
 };
 `;
   fs.writeFileSync(appConfigLocalPath, localConfigContent, 'utf8');

@@ -94,7 +94,6 @@ services:
       - backend
     environment:
       HERE_API_KEY: ${HERE_API_KEY:-}
-      AUTH_AVAILABILITY_POLL_INTERVAL_SECONDS: ${AUTH_AVAILABILITY_POLL_INTERVAL_SECONDS:-10}
     ports:
       - "${FRONTEND_PORT:-4200}:80"
 

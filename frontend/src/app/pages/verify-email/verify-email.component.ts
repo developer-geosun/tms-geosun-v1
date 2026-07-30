@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 import { take } from 'rxjs';
-import { AuthAvailabilityService, AuthService } from '../../core/services';
+import { AuthService } from '../../core/services';
 
 type VerificationStatus = 'idle' | 'loading' | 'success' | 'invalid' | 'error';
 
@@ -29,16 +29,12 @@ type VerificationStatus = 'idle' | 'loading' | 'success' | 'invalid' | 'error';
 })
 export class VerifyEmailComponent {
   private readonly authService = inject(AuthService);
-  private readonly authAvailabilityService = inject(AuthAvailabilityService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly status = signal<VerificationStatus>('idle');
 
   constructor() {
-    this.authAvailabilityService.startPollingWhileUnavailable(this.router, this.destroyRef);
-
     this.activatedRoute.queryParamMap.pipe(take(1)).subscribe((params) => {
       const token = params.get('token')?.trim() ?? '';
       if (!token) {

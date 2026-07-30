@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -11,7 +11,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
 import { take } from 'rxjs';
-import { AuthAvailabilityService, AuthService } from '../../core/services';
+import { AuthService } from '../../core/services';
 
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
@@ -38,10 +38,8 @@ const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 export class ResetPasswordComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly authAvailabilityService = inject(AuthAvailabilityService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
 
   readonly isLoading = signal(false);
   readonly isResolvingAccount = signal(false);
@@ -59,8 +57,6 @@ export class ResetPasswordComponent {
   });
 
   constructor() {
-    this.authAvailabilityService.startPollingWhileUnavailable(this.router, this.destroyRef);
-
     this.activatedRoute.queryParamMap.pipe(take(1)).subscribe((params) => {
       const token = params.get('token')?.trim() ?? '';
       if (!token) {

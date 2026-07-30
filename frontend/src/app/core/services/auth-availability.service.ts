@@ -1,8 +1,6 @@
 import { HttpBackend, HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { DestroyRef, Injectable, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Router } from '@angular/router';
-import { Observable, catchError, map, of, switchMap, tap, timeout, timer } from 'rxjs';
+import { Injectable, inject, signal } from '@angular/core';
+import { Observable, catchError, map, of, tap, timeout } from 'rxjs';
 import { NGROK_SKIP_BROWSER_WARNING_HEADERS } from '../http/ngrok-headers';
 import { ConfigService } from './config.service';
 
@@ -24,6 +22,7 @@ export class AuthAvailabilityService {
     return this.available();
   }
 
+  // Одноразова перевірка доступності після завантаження сторінки (через guard)
   checkOnStartup(): Observable<void> {
     return this.checkHealthEndpoint_().pipe(
       timeout(AUTH_AVAILABILITY_TIMEOUT_MS),
@@ -32,53 +31,6 @@ export class AuthAvailabilityService {
       tap((isAvailable) => this.available.set(isAvailable)),
       map(() => void 0)
     );
-  }
-
-  // Періодична перевірка для guest-сторінок: редирект на stop-service, якщо бекенд недоступний
-  startPollingWhileUnavailable(router: Router, destroyRef: DestroyRef, onCheck?: () => void): void {
-    const pollIntervalMs = this.getPollIntervalMs_();
-    if (pollIntervalMs === 0) {
-      return;
-    }
-
-    timer(0, pollIntervalMs)
-      .pipe(
-        tap(() => onCheck?.()),
-        switchMap(() => this.checkOnStartup()),
-        tap(() => {
-          if (!this.isAvailable()) {
-            void router.navigate(['/stop-service']);
-          }
-        }),
-        takeUntilDestroyed(destroyRef)
-      )
-      .subscribe();
-  }
-
-  // Періодична перевірка для stop-service: повернення на login, коли бекенд знову доступний
-  startPollingWhileAvailable(
-    router: Router,
-    destroyRef: DestroyRef,
-    redirectTo = '/login',
-    onCheck?: () => void
-  ): void {
-    const pollIntervalMs = this.getPollIntervalMs_();
-    if (pollIntervalMs === 0) {
-      return;
-    }
-
-    timer(0, pollIntervalMs)
-      .pipe(
-        tap(() => onCheck?.()),
-        switchMap(() => this.checkOnStartup()),
-        tap(() => {
-          if (this.isAvailable()) {
-            void router.navigate([redirectTo]);
-          }
-        }),
-        takeUntilDestroyed(destroyRef)
-      )
-      .subscribe();
   }
 
   private isHealthyResponse_(response: unknown): boolean {
@@ -107,14 +59,5 @@ export class AuthAvailabilityService {
           throw error;
         })
       );
-  }
-
-  private getPollIntervalMs_(): number {
-    const intervalSeconds = this.configService.config.authAvailabilityPollIntervalSeconds;
-    if (!Number.isFinite(intervalSeconds) || intervalSeconds <= 0) {
-      return 0;
-    }
-
-    return Math.floor(intervalSeconds * 1000);
   }
 }

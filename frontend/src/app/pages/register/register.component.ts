@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -10,7 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { TranslateModule } from '@ngx-translate/core';
-import { AuthAvailabilityService, AuthService } from '../../core/services';
+import { AuthService } from '../../core/services';
 
 const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
@@ -37,13 +37,7 @@ const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 export class RegisterComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly authAvailabilityService = inject(AuthAvailabilityService);
   private readonly router = inject(Router);
-  private readonly destroyRef = inject(DestroyRef);
-
-  constructor() {
-    this.authAvailabilityService.startPollingWhileUnavailable(this.router, this.destroyRef);
-  }
 
   readonly isLoading = signal(false);
   readonly hasSuccess = signal(false);

@@ -8,18 +8,11 @@ import { TranslateHttpLoader } from '@ngx-translate/http-loader';
 import { firstValueFrom } from 'rxjs';
 import { routes } from './app.routes';
 import { authInterceptor, ngrokSkipInterceptor } from './core/interceptors';
-import { AuthAvailabilityService, AuthService, TranslatedMatPaginatorIntl } from './core/services';
+import { AuthService, TranslatedMatPaginatorIntl } from './core/services';
 
 // Фабрика для завантаження перекладів з assets
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
-}
-
-function authAvailabilityInitializerFactory(): () => Promise<void> {
-  return async () => {
-    const authAvailabilityService = inject(AuthAvailabilityService);
-    await firstValueFrom(authAvailabilityService.checkOnStartup());
-  };
 }
 
 function sessionVerifyInitializerFactory(): () => Promise<void> {
@@ -36,11 +29,6 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withInterceptors([ngrokSkipInterceptor, authInterceptor])),
     provideAnimations(),
-    {
-      provide: APP_INITIALIZER,
-      useFactory: authAvailabilityInitializerFactory,
-      multi: true
-    },
     {
       provide: APP_INITIALIZER,
       useFactory: sessionVerifyInitializerFactory,
