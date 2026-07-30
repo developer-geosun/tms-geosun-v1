@@ -1,1 +1,0 @@
-"use strict";(self.webpackChunktms_geosun=self.webpackChunktms_geosun||[]).push([[76],{4036(c,e,_){_.d(e,{O:()=>o});var n=_(8203),a=_(5547),s=_(5802);let o=(()=>{class t{static \u0275fac=function(u){return new(u||t)};static \u0275mod=a.$C({type:t});static \u0275inj=s.G2t({imports:[n.jI]})}return t})()}}]);
