@@ -12,6 +12,5 @@ window.__APP_CONFIG__ = {
   isServiceStopped: false,
   // Порожній = relative URL (локальний proxy / gateway). На GitHub Pages підставляється URL backend (ngrok).
   apiUrl: "https://nature-truce-boxing.ngrok-free.dev",
-  hereApiKey: "",
-  authAvailabilityPollIntervalSeconds: 10
+  hereApiKey: ""
 };
