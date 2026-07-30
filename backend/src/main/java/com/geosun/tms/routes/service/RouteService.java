@@ -66,9 +66,7 @@ public class RouteService implements RouteContractsFacade {
       throw new IllegalArgumentException("userId must not be null");
     }
     User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> ApiException.notFound("User not found"));
+        userRepository.findById(userId).orElseThrow(() -> ApiException.notFound("User not found"));
 
     Route route = new Route();
     route.setUser(user);
