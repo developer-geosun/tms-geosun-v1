@@ -105,7 +105,7 @@
       "message": "Authorization server is temporarily unavailable",
       "subMessage": "Sign in and registration are currently unavailable",
       "tryLater": "Please try again later",
-      "lastCheck": "Last check"
+      "refresh": "Refresh"
     },
     "freightCalculation": {
       "title": "Freight calculation",
