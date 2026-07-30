@@ -47,14 +47,11 @@ jobs:
 
       - name: Build Angular application
         working-directory: frontend
-        env:
-          HERE_API_KEY: ${{ secrets.HERE_API_KEY }}
         run: npx ng build --configuration=production --base-href=${{ steps.pages.outputs.base_href }}
 
       - name: Inject runtime API config for GitHub Pages
         env:
           API_URL: ${{ secrets.API_URL }}
-          HERE_API_KEY: ${{ secrets.HERE_API_KEY }}
         run: |
           set -e
           DIST="frontend/dist/tms-geosun"
@@ -68,7 +65,6 @@ jobs:
           const fs = require('fs');
           const configPath = 'frontend/dist/tms-geosun/assets/app-config.js';
           const apiUrl = (process.env.API_URL || '').trim().replace(/\/+$/, '');
-          const hereApiKey = (process.env.HERE_API_KEY || '').trim();
           let content = fs.readFileSync(configPath, 'utf8');
           if (apiUrl) {
             if (/apiUrl\s*:/.test(content)) {
@@ -81,11 +77,6 @@ jobs:
             }
           } else {
             console.warn('Warning: secrets.API_URL is empty — frontend will use relative API URLs');
-          }
-          if (hereApiKey) {
-            if (/hereApiKey\s*:/.test(content)) {
-              content = content.replace(/hereApiKey\s*:\s*[^,\n]+/, `hereApiKey: ${JSON.stringify(hereApiKey)}`);
-            }
           }
           fs.writeFileSync(configPath, content, 'utf8');
           console.log('Runtime config updated for GitHub Pages deploy');
