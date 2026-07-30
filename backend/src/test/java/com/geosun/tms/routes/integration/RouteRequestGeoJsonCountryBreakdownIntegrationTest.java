@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.lang.NonNull;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -42,6 +43,7 @@ class RouteRequestGeoJsonCountryBreakdownIntegrationTest {
   @Autowired private PasswordEncoder passwordEncoder;
 
   @Test
+  @SuppressWarnings("null")
   void geoJsonProviderCalculatesTransitCountries() throws Exception {
     User user = createUser("rq-geojson-user@example.com", "Secret123", Role.USER);
     User admin = createUser("rq-geojson-admin@example.com", "Secret123", Role.ADMIN);
@@ -165,11 +167,13 @@ class RouteRequestGeoJsonCountryBreakdownIntegrationTest {
         List.of(startPoint, finishPoint));
   }
 
-  private String toJson(Object value) throws Exception {
+  @SuppressWarnings("null")
+  private @NonNull String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
-  private MediaType jsonContentType() {
+  @SuppressWarnings("null")
+  private @NonNull MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 }

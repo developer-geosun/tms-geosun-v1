@@ -44,7 +44,7 @@ import {
 } from '../../core/utils/country-reference-localized-name';
 import { LanguageService } from '../../core/services/language.service';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
-import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-calculation-scenarios/admin-freight-scenario-confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-toll-tariff-sets',
@@ -555,7 +555,7 @@ export class AdminTollTariffSetsComponent implements AfterViewInit {
   }
 
   private openConfirmDialog(messageKey: string): Promise<boolean> {
-    const ref = this.dialog.open(AdminFreightScenarioConfirmDialogComponent, {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
       data: { messageKey }
     });
     return firstValueFrom(ref.afterClosed()).then((result) => Boolean(result));

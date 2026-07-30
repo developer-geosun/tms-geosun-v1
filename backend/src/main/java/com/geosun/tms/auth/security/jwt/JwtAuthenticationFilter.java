@@ -14,7 +14,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Optional;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.NonNull;
@@ -74,8 +73,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     JwtAccessClaims claims = parsed.get();
-    String subjectUserId = Objects.requireNonNull(claims.subjectUserId());
-    Optional<User> userOpt = userRepository.findById(subjectUserId);
+    Optional<User> userOpt = userRepository.findById(claims.subjectUserId());
     if (userOpt.isEmpty()) {
       writeUnauthorized(response, request, "Invalid or expired access token");
       return;

@@ -47,6 +47,9 @@ public class CurrencyService {
 
   private Currency loadCurrency(String code) {
     String normalized = normalizeCode(code);
+    if (normalized == null) {
+      throw new IllegalStateException("currency code must not be null");
+    }
     return currencyRepository
         .findById(normalized)
         .orElseThrow(() -> ApiException.notFound("Валюту не знайдено: " + normalized));

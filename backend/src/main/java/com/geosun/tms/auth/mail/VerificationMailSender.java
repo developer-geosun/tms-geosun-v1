@@ -6,7 +6,6 @@ import jakarta.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.MailException;
@@ -38,22 +37,31 @@ public class VerificationMailSender {
   }
 
   public void sendVerificationEmail(String toAddress, String rawToken) throws MailException {
-    String nonNullToAddress = Objects.requireNonNull(toAddress, "toAddress must not be null");
-    String nonNullRawToken = Objects.requireNonNull(rawToken, "rawToken must not be null");
-    String nonNullFromAddress =
-        Objects.requireNonNull(emailProperties.getFrom(), "from address must not be null");
+    if (toAddress == null) {
+      throw new NullPointerException("toAddress must not be null");
+    }
+    if (rawToken == null) {
+      throw new NullPointerException("rawToken must not be null");
+    }
+    String fromAddress = emailProperties.getFrom();
+    if (fromAddress == null) {
+      throw new NullPointerException("from address must not be null");
+    }
     String verificationLink =
-        buildVerificationLink(emailProperties.resolveVerificationLinkBase(), nonNullRawToken);
+        buildVerificationLink(emailProperties.resolveVerificationLinkBase(), rawToken);
     MimeMessage message = mailSender.createMimeMessage();
     try {
       MimeMessageHelper helper =
           new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
-      helper.setFrom(nonNullFromAddress);
-      helper.setTo(nonNullToAddress);
+      helper.setFrom(fromAddress);
+      helper.setTo(toAddress);
       helper.setSubject(MAIL_SUBJECT);
-      helper.setText(
-          Objects.requireNonNull(buildPlainTextBody(verificationLink)),
-          Objects.requireNonNull(buildHtmlBody(verificationLink)));
+      String plainBody = buildPlainTextBody(verificationLink);
+      String htmlBody = buildHtmlBody(verificationLink);
+      if (plainBody == null || htmlBody == null) {
+        throw new MailPreparationException("Verification email body must not be null");
+      }
+      helper.setText(plainBody, htmlBody);
     } catch (MessagingException | IOException ex) {
       throw new MailPreparationException("Failed to prepare verification email", ex);
     }
@@ -70,7 +78,11 @@ public class VerificationMailSender {
 
   private static String readTemplate(Resource resource) throws IOException {
     try (var inputStream = resource.getInputStream()) {
-      return StreamUtils.copyToString(inputStream, Objects.requireNonNull(StandardCharsets.UTF_8));
+      var utf8 = StandardCharsets.UTF_8;
+      if (utf8 == null) {
+        throw new IllegalStateException("UTF-8 charset must be available");
+      }
+      return StreamUtils.copyToString(inputStream, utf8);
     }
   }
 

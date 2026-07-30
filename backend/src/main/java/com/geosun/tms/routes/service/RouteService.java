@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
@@ -63,10 +62,12 @@ public class RouteService implements RouteContractsFacade {
   @Transactional
   public RouteSnapshotDto saveRoute(String userId, SaveRouteRequest request) {
     validatePoints(request.points());
-    String safeUserId = Objects.requireNonNull(userId, "userId must not be null");
+    if (userId == null) {
+      throw new IllegalArgumentException("userId must not be null");
+    }
     User user =
         userRepository
-            .findById(safeUserId)
+            .findById(userId)
             .orElseThrow(() -> ApiException.notFound("User not found"));
 
     Route route = new Route();
@@ -132,10 +133,12 @@ public class RouteService implements RouteContractsFacade {
   @Transactional
   public RouteSnapshotDto updateMyRoute(String userId, Long routeId, SaveRouteRequest request) {
     validatePoints(request.points());
-    String safeUserId = Objects.requireNonNull(userId, "userId must not be null");
+    if (userId == null) {
+      throw new IllegalArgumentException("userId must not be null");
+    }
     Route route =
         routeRepository
-            .findByIdAndUserIdWithPoints(routeId, safeUserId)
+            .findByIdAndUserIdWithPoints(routeId, userId)
             .orElseThrow(() -> ApiException.notFound("Route not found"));
     if (routeRequestRepository.existsByRoute_Id(routeId)) {
       throw ApiException.conflict(

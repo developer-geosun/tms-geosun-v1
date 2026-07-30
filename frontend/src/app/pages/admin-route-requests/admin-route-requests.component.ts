@@ -46,7 +46,7 @@ import {
   buildNbuCostPreviewDisplay,
   NbuCostPreviewSource
 } from '../../core/utils/freight-cost-preview-display.util';
-import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-calculation-scenarios/admin-freight-scenario-confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 import {
   SendProposalDialogComponent,
   SendProposalDialogData
@@ -642,7 +642,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   }
 
   private openConfirmDialog(messageKey: string): Promise<boolean> {
-    const ref = this.dialog.open(AdminFreightScenarioConfirmDialogComponent, {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
       data: { messageKey }
     });
     return firstValueFrom(ref.afterClosed()).then((result) => Boolean(result));

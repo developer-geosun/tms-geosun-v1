@@ -52,7 +52,7 @@ class RouteRequestApiIntegrationTest {
   void setUp() {
     when(javaMailSender.createMimeMessage())
         .thenReturn(new MimeMessage(jakarta.mail.Session.getInstance(new Properties())));
-    doNothing().when(javaMailSender).send(any(MimeMessage.class));
+    doNothing().when(javaMailSender).send(anyMailMessage());
   }
 
   @Test
@@ -405,11 +405,20 @@ class RouteRequestApiIntegrationTest {
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
   }
 
+  @SuppressWarnings("null")
   private @NonNull String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
+  /** APPLICATION_JSON / requireNonNull без Spring @NonNull — приглушуємо Eclipse null-analysis. */
+  @SuppressWarnings("null")
   private @NonNull MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
+  }
+
+  /** Mockito any() не анотований @NonNull — обгортаємо для null-analysis. */
+  @SuppressWarnings("null")
+  private static @NonNull MimeMessage anyMailMessage() {
+    return any(MimeMessage.class);
   }
 }

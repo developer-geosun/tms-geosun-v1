@@ -12,7 +12,6 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Objects;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
@@ -46,7 +45,10 @@ public class AdminQuoteController {
           @NonNull
           String idempotencyKey,
       @Valid @RequestBody @NonNull CreateQuoteRequest request) {
-    String adminUserId = Objects.requireNonNull(principal.getUserId());
+    String adminUserId = principal.getUserId();
+    if (adminUserId == null) {
+      throw new IllegalArgumentException("adminUserId must not be null");
+    }
     QuoteDto quote =
         freightQuoteService.createDraftQuote(requestId, adminUserId, idempotencyKey, request);
     return ResponseEntity.status(HttpStatus.CREATED).body(quote);
@@ -63,7 +65,10 @@ public class AdminQuoteController {
           @NonNull
           String idempotencyKey,
       @RequestBody(required = false) SendQuoteRequest request) {
-    String adminUserId = Objects.requireNonNull(principal.getUserId());
+    String adminUserId = principal.getUserId();
+    if (adminUserId == null) {
+      throw new IllegalArgumentException("adminUserId must not be null");
+    }
     String messageBody = request == null ? null : request.messageBody();
     return freightQuoteService.sendQuote(quoteId, adminUserId, idempotencyKey, messageBody);
   }

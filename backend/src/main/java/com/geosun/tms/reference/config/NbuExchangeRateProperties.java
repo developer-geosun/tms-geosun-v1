@@ -1,6 +1,7 @@
 package com.geosun.tms.reference.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.lang.NonNull;
 
 @ConfigurationProperties(prefix = "app.nbu")
 public class NbuExchangeRateProperties {
@@ -32,7 +33,11 @@ public class NbuExchangeRateProperties {
     this.maxLookbackDays = maxLookbackDays;
   }
 
+  @NonNull
   public String exchangeRatesPath() {
+    if (baseUrl == null) {
+      throw new NullPointerException("baseUrl");
+    }
     return baseUrl + "/exchange";
   }
 }

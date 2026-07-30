@@ -2,7 +2,7 @@
 
 ## Правила языка документа
 - Основной язык: **RU** (термины API/кода: английский по принятому в проекте стиле).
-- Связанные документы: `docs/specs/routes-server-workflow-and-freight-quoting.md`, `docs/specs/freight-calculation-gemini-scenarios.md`, `docs/specs/route-point-operations-rules.md`, `docs/system.md`.
+- Связанные документы: `docs/specs/routes-server-workflow-and-freight-quoting.md`, `docs/specs/freight-cost-scenario-nbu-pricing.md`, `docs/specs/route-point-operations-rules.md`, `docs/system.md`.
 
 ## Контекст UI (актуальный роутинг)
 В актуальном приложении (`frontend/src/app/app.routes.ts`) нет отдельных URL под старые сценарии вроде выделенной «истории маршрутов» или `freight-calculation` как отдельной страницы. Требования по UX из §8 реализуются на **существующих** экранах и в shared-компонентах:
@@ -98,7 +98,7 @@
 
 ## 6. Согласование с расчётом фрахта
 - Создание заявки пользователем **не** требует сценария расчёта и не генерирует country breakdown.
-- Расчёт коммерческой ставки через Gemini и текстовые сценарии — см. `docs/specs/freight-calculation-gemini-scenarios.md` (отдельный шаг admin/manager после создания заявки).
+- Расчёт коммерческой ставки через числовые сценарии и НБУ — см. `docs/specs/freight-cost-scenario-nbu-pricing.md` (отдельный шаг admin/manager после создания заявки).
 
 ## 7. Открытые вопросы (согласовать до кодирования)
 

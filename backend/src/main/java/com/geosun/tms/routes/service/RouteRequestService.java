@@ -136,10 +136,12 @@ public class RouteRequestService {
 
   @Transactional(readOnly = true)
   public RouteRequestDto getRequestByIdForAdmin(Long requestId) {
-    Long nonNullRequestId = Objects.requireNonNull(requestId, "requestId must not be null");
+    if (requestId == null) {
+      throw new IllegalArgumentException("requestId must not be null");
+    }
     RouteRequest request =
         routeRequestRepository
-            .findById(nonNullRequestId)
+            .findById(requestId)
             .orElseThrow(() -> ApiException.notFound("Route request not found"));
     return toDto(request, true);
   }
@@ -148,10 +150,12 @@ public class RouteRequestService {
   @Transactional
   public RouteRequestDto recalculateCountryBreakdownForAdmin(
       Long requestId, CountryBreakdownRequest body) {
-    Long nonNullRequestId = Objects.requireNonNull(requestId, "requestId must not be null");
+    if (requestId == null) {
+      throw new IllegalArgumentException("requestId must not be null");
+    }
     RouteRequest request =
         routeRequestRepository
-            .findById(nonNullRequestId)
+            .findById(requestId)
             .orElseThrow(() -> ApiException.notFound("Route request not found"));
 
     if (body != null && StringUtils.hasText(body.scenarioId())) {
@@ -171,7 +175,10 @@ public class RouteRequestService {
   }
 
   private RouteRequestDto toDto(RouteRequest request, boolean includeRoutePoints) {
-    Long requestId = Objects.requireNonNull(request.getId(), "Route request id must not be null");
+    Long requestId = request.getId();
+    if (requestId == null) {
+      throw new IllegalStateException("Route request id must not be null");
+    }
     RouteSnapshotDto route =
         includeRoutePoints
             ? toRouteSnapshot(request.getRoute())

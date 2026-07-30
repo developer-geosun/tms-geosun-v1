@@ -4,10 +4,9 @@
 - Основной язык: **RU** (термины API/кода: английский по принятому в проекте стилю).
 - **Правила расчёта (формулы, статьи затрат, v1):** [`freight-trip-cost-calculation-rules-margin30-ua8150-driverpct.md`](./freight-trip-cost-calculation-rules-margin30-ua8150-driverpct.md) — **источник истины** для детерминированного калькулятора; при расхождении с этим ТЗ приоритет у файла правил.
 - Связанные документы: `currencies-reference.md`, `routes-server-workflow-and-freight-quoting.md`, `route-immutability-list-filters-deferred-country-breakdown.md`, `route-point-operations-rules.md`, `auth-authentication-authorization.md`, `system.md`.
-- **Другой вариант расчёта (уже в проекте):** `freight-calculation-gemini-scenarios.md` — текстовые сценарии и Gemini; **не отменяется**, работает параллельно.
 
 ## 1. Цель
-**Дополнительный** вариант расчёта: дать **ADMIN** и **MANAGER** воспроизводимый **серверный** (без ИИ) расчёт себестоимости и формирование **quote** по заявке:
+**Вариант** расчёта: дать **ADMIN** и **MANAGER** воспроизводимый **серверный** расчёт себестоимости и формирование **quote** по заявке:
 - параметры — в **сценарии** в БД (ADMIN/MANAGER задают при CRUD; при расчёте — выбор `scenarioId` + снимок на дату);
 - конвертация — **курсы НБУ из БД** на `calculationDate` (§6);
 - формулы — по [файлу правил](./freight-trip-cost-calculation-rules-margin30-ua8150-driverpct.md).
@@ -16,8 +15,7 @@
 
 ## 2. Контекст
 - Есть: `Route`, `RouteRequest`, `FreightQuote`, admin API заявок, роли `ADMIN` / `MANAGER` / `USER`.
-- **Уже реализовано:** расчёт через Gemini и справочник **текстовых** сценариев (`FreightCalculationScenario` с `rulesText`) — см. `freight-calculation-gemini-scenarios.md`.
-- **Этот ТЗ:** второй контур — **числовые** сценарии в БД, формульный калькулятор, те же заявки/quote; отдельные API/экраны или расширение карточки заявки (уточнить при реализации).
+- **Этот ТЗ:** числовые сценарии в БД, формульный калькулятор, те же заявки/quote; отдельные API/экраны или расширение карточки заявки (уточнить при реализации).
 - Курсы НБУ: `currency_nbu_rates`, sync/чтение — `currencies-reference.md`; **не дублировать** API НБУ в расчёте фрахта.
 - **MANAGER = ADMIN** для CRUD сценариев, расчёта и отправки quote по этому варианту (§8).
 
@@ -180,7 +178,7 @@
 | 11.6 | Тарифы дорог | Несколько `TollTariffSet`; сценарий выбирает один набор; правила стран — внутри набора |
 | 11.7 | Справочник стран | `country_reference`, seed Европы, API/UI **только чтение** в v1 |
 | 11.8 | Регистр кодов стран | `codeAlpha2`, `codeAlpha3`, `country_code` — **только UPPERCASE** в БД, API и UI |
-| 11.9 | Country breakdown | Тело `scenarioId` **опционально**: без него — как раньше (Gemini); с ним — привязка NBU |
+| 11.9 | Country breakdown | Тело `scenarioId` **опционально**: с ним — привязка NBU |
 | 11.10 | Курсы на дату | Ближайший предыдущий полный снимок НБУ ≤ `calculationDate` |
 
 ## 12. Статус реализации v1 (2026-05-26)
@@ -208,4 +206,4 @@
 - [ ] Эталонный unit-тест с фиксированными суммами из файла правил (вне v1).
 
 ---
-*Версия документа: 1.4. Дополнительный вариант расчёта; Gemini-вариант остаётся по `freight-calculation-gemini-scenarios.md`.*
+*Версия документа: 1.5. Расчёт фрахта через числовые сценарии и курсы НБУ.*

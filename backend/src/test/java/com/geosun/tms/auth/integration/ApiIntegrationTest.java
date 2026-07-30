@@ -156,7 +156,7 @@ class ApiIntegrationTest {
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest("flow@example.com", "Secret123"))));
 
-    ArgumentCaptor<MimeMessage> mailCap = ArgumentCaptor.forClass(MimeMessage.class);
+    ArgumentCaptor<MimeMessage> mailCap = mimeMessageCaptor();
     verifyMailSentAndCapture(javaMailSender, mailCap);
     String token = extractVerificationToken(requireMailText(capturedMail(mailCap)));
 
@@ -292,7 +292,7 @@ class ApiIntegrationTest {
         post("/api/v1/auth/register")
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest("ratelimit@example.com", "Secret123"))));
-    ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
+    ArgumentCaptor<MimeMessage> cap = mimeMessageCaptor();
     verifyMailSentAndCapture(javaMailSender, cap);
     mockMvc.perform(
         post("/api/v1/auth/verify-email")
@@ -437,7 +437,7 @@ class ApiIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.success").value(true));
 
-    ArgumentCaptor<MimeMessage> mailCap = ArgumentCaptor.forClass(MimeMessage.class);
+    ArgumentCaptor<MimeMessage> mailCap = mimeMessageCaptor();
     verifyMailSentAndCapture(javaMailSender, mailCap);
     String resetToken = extractVerificationToken(requireMailText(capturedMail(mailCap)));
 
@@ -499,7 +499,7 @@ class ApiIntegrationTest {
         post("/api/v1/auth/forgot-password")
             .contentType(jsonContentType())
             .content(toJson(new ForgotPasswordRequest("reuse-reset@example.com"))));
-    ArgumentCaptor<MimeMessage> mailCap = ArgumentCaptor.forClass(MimeMessage.class);
+    ArgumentCaptor<MimeMessage> mailCap = mimeMessageCaptor();
     verifyMailSentAndCapture(javaMailSender, mailCap);
     String resetToken = extractVerificationToken(requireMailText(capturedMail(mailCap)));
 
@@ -541,7 +541,7 @@ class ApiIntegrationTest {
         post("/api/v1/auth/register")
             .contentType(jsonContentType())
             .content(toJson(new RegisterRequest(email, "Secret123"))));
-    ArgumentCaptor<MimeMessage> cap = ArgumentCaptor.forClass(MimeMessage.class);
+    ArgumentCaptor<MimeMessage> cap = mimeMessageCaptor();
     verifyMailSentAndCapture(javaMailSender, cap);
     String token = extractVerificationToken(requireMailText(capturedMail(cap)));
     mockMvc.perform(
@@ -571,16 +571,19 @@ class ApiIntegrationTest {
     return matcher.group(1);
   }
 
+  @SuppressWarnings("null")
   @NonNull
   private MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 
+  @SuppressWarnings("null")
   @NonNull
   private String toJson(@NonNull Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
+  @SuppressWarnings("null")
   @NonNull
   private static String responseBody(@NonNull MvcResult result) {
     try {
@@ -606,16 +609,30 @@ class ApiIntegrationTest {
     }
   }
 
+  /** Mockito any() не анотований @NonNull — обгортаємо для null-analysis. */
+  @SuppressWarnings("null")
+  @NonNull
   private static MimeMessage anyMailMessage() {
     return any(MimeMessage.class);
   }
 
-  private static void verifyMailSentAndCapture(
-      @NonNull JavaMailSender javaMailSender, @NonNull ArgumentCaptor<MimeMessage> mailCap) {
-    verify(javaMailSender, times(1)).send(mailCap.capture());
+  /** Mockito forClass не анотований @NonNull — обгортаємо для null-analysis. */
+  @SuppressWarnings("null")
+  @NonNull
+  private static ArgumentCaptor<MimeMessage> mimeMessageCaptor() {
+    return ArgumentCaptor.forClass(MimeMessage.class);
   }
 
-  private static MimeMessage capturedMail(ArgumentCaptor<MimeMessage> mailCap) {
+  @SuppressWarnings("null")
+  private static void verifyMailSentAndCapture(
+      JavaMailSender javaMailSender, @NonNull ArgumentCaptor<MimeMessage> mailCap) {
+    verify(Objects.requireNonNull(javaMailSender), times(1)).send(mailCap.capture());
+  }
+
+  /** getValue() без @NonNull у Mockito — гарантуємо non-null для викликів requireMailText. */
+  @SuppressWarnings("null")
+  @NonNull
+  private static MimeMessage capturedMail(@NonNull ArgumentCaptor<MimeMessage> mailCap) {
     return Objects.requireNonNull(mailCap.getValue(), "Expected captured MimeMessage");
   }
 

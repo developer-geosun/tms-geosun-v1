@@ -8,7 +8,6 @@ import com.geosun.tms.auth.repository.UserRepository;
 import com.geosun.tms.auth.security.SecurityErrorWriter;
 import com.geosun.tms.auth.security.jwt.JwtAuthenticationFilter;
 import com.geosun.tms.auth.security.jwt.JwtService;
-import com.geosun.tms.freight.config.VertexAiProperties;
 import com.geosun.tms.routes.config.CountryBreakdownProperties;
 import com.geosun.tms.routes.config.HereProperties;
 import jakarta.servlet.http.HttpServletResponse;
@@ -42,7 +41,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
   RateLimitProperties.class,
   HereProperties.class,
   CountryBreakdownProperties.class,
-  VertexAiProperties.class,
   CorsProperties.class
 })
 public class SecurityConfig {

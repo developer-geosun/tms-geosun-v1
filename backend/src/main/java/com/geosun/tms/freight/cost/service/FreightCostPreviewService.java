@@ -27,7 +27,6 @@ import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -189,6 +188,9 @@ public class FreightCostPreviewService {
         freightQuoteRepository.findByFreightCostCalculation_Id(calculationId)) {
       quote.setFreightCostCalculation(null);
     }
+    if (calculation == null) {
+      throw new NullPointerException("calculation");
+    }
     calculationRepository.delete(calculation);
   }
 
@@ -299,14 +301,20 @@ public class FreightCostPreviewService {
   }
 
   private RouteRequest loadRouteRequest(Long requestId) {
+    if (requestId == null) {
+      throw new NullPointerException("requestId");
+    }
     return routeRequestRepository
-        .findById(Objects.requireNonNull(requestId, "requestId"))
+        .findById(requestId)
         .orElseThrow(() -> ApiException.notFound("Route request not found"));
   }
 
   private User loadUser(String userId) {
+    if (userId == null) {
+      throw new NullPointerException("userId");
+    }
     return userRepository
-        .findById(Objects.requireNonNull(userId, "userId"))
+        .findById(userId)
         .orElseThrow(() -> ApiException.notFound("User not found"));
   }
 

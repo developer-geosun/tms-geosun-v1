@@ -49,16 +49,9 @@
 - `GET /api/v1/admin/route-requests` — очередь заявок с фильтрами и пагинацией (`ADMIN`/`MANAGER`).
 - `GET /api/v1/admin/route-requests/{id}` — карточка заявки (`ADMIN`/`MANAGER`).
 - `POST /api/v1/admin/route-requests/{id}/country-breakdown` — пересчёт пробега по странам (провайдер `here` или `geojson` + сохранение в БД), `ADMIN`/`MANAGER`.
-- `GET/POST/PUT/DELETE /api/v1/admin/freight-calculation-scenarios` — CRUD текстовых сценариев расчёта (`ADMIN`/`MANAGER`).
-- `POST /api/v1/admin/freight-calculation-scenarios/import` — импорт сценария из `.txt`/`.md`/`.json`.
-- `POST /api/v1/admin/route-requests/{id}/ai-calculations` — расчёт фрахта через Gemini (`ADMIN`/`MANAGER`).
-- `GET /api/v1/admin/route-requests/{id}/ai-calculations` — история ИИ-расчётов по заявке.
-- `GET /api/v1/admin/ai-calculations/{id}` — детали одного ИИ-расчёта.
 - `POST /api/v1/admin/route-requests/{id}/quotes` — создать draft quote (`ADMIN`/`MANAGER`).
 - `POST /api/v1/admin/quotes/{id}/send` — отправить quote (`ADMIN`/`MANAGER`).
 - `GET /api/v1/admin/route-requests/{id}/quotes` — получить историю quote (`ADMIN`/`MANAGER`).
-
-Переменные окружения для Vertex AI: `VERTEX_AI_PROJECT_ID`, `VERTEX_AI_LOCATION`, `VERTEX_AI_MODEL`, `GCP_CREDENTIALS_FILE` / `GOOGLE_APPLICATION_CREDENTIALS` (service account JSON). Опционально: `VERTEX_AI_TIMEOUT_MILLIS`, `VERTEX_AI_MAX_OUTPUT_TOKENS`, `VERTEX_AI_RATE_LIMIT_PER_HOUR`. См. `docs/vertex-ai-setup.md`.
 
 Переменные окружения для breakdown по странам: `COUNTRY_BREAKDOWN_PROVIDER=here|geojson` (по умолчанию `here`), `HERE_API_KEY` обязателен только при `COUNTRY_BREAKDOWN_PROVIDER=here`. Для `geojson` используются локальные границы стран из ресурсов backend.
 

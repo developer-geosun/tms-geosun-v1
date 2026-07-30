@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -160,12 +161,15 @@ class CurrencyApiIntegrationTest {
     return "Bearer " + token;
   }
 
+  @SuppressWarnings("null")
   @NonNull
   private static MediaType jsonContentType() {
-    return MediaType.APPLICATION_JSON;
+    return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 
+  @SuppressWarnings("null")
+  @NonNull
   private String toJson(Object value) throws Exception {
-    return objectMapper.writeValueAsString(value);
+    return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 }

@@ -36,14 +36,6 @@ export class BackendApiService {
     return this.build('/admin/quotes');
   }
 
-  get adminFreightScenarios(): string {
-    return this.build('/admin/freight-calculation-scenarios');
-  }
-
-  get adminAiCalculations(): string {
-    return this.build('/admin/ai-calculations');
-  }
-
   get adminCurrencies(): string {
     return this.build('/admin/currencies');
   }

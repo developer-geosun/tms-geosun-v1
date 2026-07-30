@@ -209,7 +209,7 @@ class FreightNumericPricingApiIntegrationTest {
     return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asText();
   }
 
-  private void seedRate(String code, BigDecimal rate, int units) {
+  private void seedRate(@NonNull String code, BigDecimal rate, int units) {
     Currency currency =
         currencyRepository
             .findById(code)
@@ -350,10 +350,12 @@ class FreightNumericPricingApiIntegrationTest {
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
   }
 
+  @SuppressWarnings("null")
   private @NonNull String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
+  @SuppressWarnings("null")
   private @NonNull MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }

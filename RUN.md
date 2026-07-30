@@ -92,7 +92,6 @@ cp .env.example .env
 - Для dev-сборки frontend в Docker укажите `FRONTEND_BUILD_CONFIGURATION=development` (в этом режиме будут видны dev-значения из `environment.ts`, включая автозаполнение тестового логина).
 - Для страницы расчета через HERE укажите `HERE_API_KEY=<ваш_ключ_here>`.
 - Для выбора источника расчёта пробега по странам укажите `COUNTRY_BREAKDOWN_PROVIDER=here|geojson` (для режима без HERE — `geojson`).
-- Для расчёта фрахта через Vertex AI (admin) укажите `VERTEX_AI_PROJECT_ID`, `GCP_CREDENTIALS_FILE` (JSON service account) — см. [`docs/vertex-ai-setup.md`](docs/vertex-ai-setup.md).
 - Для публичного API через ngrok (только backend) укажите:
   - `NGROK_AUTHTOKEN=<ваш_ngrok_authtoken>`
   - `NGROK_DOMAIN=<ваш_домен_из_ngrok>`

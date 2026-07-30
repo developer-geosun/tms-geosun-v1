@@ -23,7 +23,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
-import java.util.Objects;
 import org.springframework.lang.NonNull;
 import org.springframework.mail.MailException;
 import org.springframework.stereotype.Service;
@@ -136,9 +135,12 @@ public class FreightQuoteService {
         userRepository
             .findById(adminUserId)
             .orElseThrow(() -> ApiException.notFound("User not found"));
+    if (normalizedQuoteId == null) {
+      throw new IllegalStateException("quoteId must not be null");
+    }
     FreightQuote quote =
         freightQuoteRepository
-            .findById(Objects.requireNonNull(normalizedQuoteId))
+            .findById(normalizedQuoteId)
             .orElseThrow(() -> ApiException.notFound("Quote not found"));
     if (quote.getStatus() == QuoteStatus.SENT) {
       persistIdempotency(OP_SEND, key, adminUser, quote.getRequest(), quote);
@@ -259,7 +261,7 @@ public class FreightQuoteService {
     if (!StringUtils.hasText(quoteId)) {
       throw ApiException.badRequest("VALIDATION_ERROR", "Quote id is required");
     }
-    return Objects.requireNonNull(quoteId).trim();
+    return quoteId.trim();
   }
 
   private static LocalDate parseDateOrNull(String rawDate) {

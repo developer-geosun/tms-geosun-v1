@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.lang.NonNull;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,7 +29,7 @@ public class UserController {
   @Operation(summary = "Soft-delete user", description = "ADMIN only; idempotent 204.")
   @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME)
   @DeleteMapping("/{id}")
-  public ResponseEntity<Void> softDelete(@PathVariable("id") String id) {
+  public ResponseEntity<Void> softDelete(@PathVariable("id") @NonNull String id) {
     userDeletionService.softDelete(id);
     return ResponseEntity.noContent().build();
   }

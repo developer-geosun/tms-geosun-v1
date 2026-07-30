@@ -160,17 +160,29 @@ public class NbuExchangeRateService {
 
   @NonNull
   private static String currencyCode(@NonNull Currency currency) {
-    return currency.getCode();
+    String code = currency.getCode();
+    if (code == null) {
+      throw new NullPointerException("currencyCode");
+    }
+    return code;
   }
 
   @NonNull
   private static String nbuRateDtoCurrencyCode(@NonNull NbuRateDto dto) {
-    return dto.currencyCode();
+    String code = dto.currencyCode();
+    if (code == null) {
+      throw new NullPointerException("currencyCode");
+    }
+    return code;
   }
 
   @NonNull
   private static Instant nbuRateFetchedAt(@NonNull CurrencyNbuRate rate) {
-    return rate.getFetchedAt();
+    Instant fetchedAt = rate.getFetchedAt();
+    if (fetchedAt == null) {
+      throw new NullPointerException("fetchedAt");
+    }
+    return fetchedAt;
   }
 
   private NbuRateDto toDto(@NonNull CurrencyNbuRate entity) {

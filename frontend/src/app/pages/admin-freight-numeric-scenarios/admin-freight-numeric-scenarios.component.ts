@@ -24,7 +24,7 @@ import {
   UpdateFreightNumericScenarioContractRequest
 } from '../../core/api';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
-import { AdminFreightScenarioConfirmDialogComponent } from '../admin-freight-calculation-scenarios/admin-freight-scenario-confirm-dialog.component';
+import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-freight-numeric-scenarios',
@@ -291,7 +291,7 @@ export class AdminFreightNumericScenariosComponent {
   }
 
   private openConfirmDialog(messageKey: string): Promise<boolean> {
-    const ref = this.dialog.open(AdminFreightScenarioConfirmDialogComponent, {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
       data: { messageKey }
     });
     return firstValueFrom(ref.afterClosed()).then((result) => Boolean(result));

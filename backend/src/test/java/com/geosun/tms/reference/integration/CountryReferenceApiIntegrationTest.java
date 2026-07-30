@@ -13,6 +13,7 @@ import com.geosun.tms.auth.dto.request.LoginRequest;
 import com.geosun.tms.auth.repository.UserRepository;
 import com.geosun.tms.reference.domain.CountryReference;
 import com.geosun.tms.reference.repository.CountryReferenceRepository;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,18 +103,18 @@ class CountryReferenceApiIntegrationTest {
   }
 
   private String login(String email) throws Exception {
-    var result = mockMvc.perform(postLogin(email)).andExpect(status().isOk()).andReturn();
+    var result =
+        mockMvc
+            .perform(
+                post("/api/v1/auth/login")
+                    .contentType(jsonContentType())
+                    .content(toJson(new LoginRequest(email, "Secret123"))))
+            .andExpect(status().isOk())
+            .andReturn();
     return objectMapper
         .readTree(result.getResponse().getContentAsString())
         .get("accessToken")
         .asText();
-  }
-
-  private org.springframework.test.web.servlet.RequestBuilder postLogin(String email)
-      throws Exception {
-    return post("/api/v1/auth/login")
-        .contentType(jsonContentType())
-        .content(objectMapper.writeValueAsString(new LoginRequest(email, "Secret123")));
   }
 
   @NonNull
@@ -121,8 +122,15 @@ class CountryReferenceApiIntegrationTest {
     return "Bearer " + token;
   }
 
+  @SuppressWarnings("null")
   @NonNull
   private static MediaType jsonContentType() {
-    return MediaType.APPLICATION_JSON;
+    return Objects.requireNonNull(MediaType.APPLICATION_JSON);
+  }
+
+  @SuppressWarnings("null")
+  @NonNull
+  private String toJson(Object value) throws Exception {
+    return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 }
