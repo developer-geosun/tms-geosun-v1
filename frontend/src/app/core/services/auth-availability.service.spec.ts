@@ -29,6 +29,7 @@ describe('AuthAvailabilityService', () => {
     service.checkOnStartup().subscribe();
 
     const request = httpMock.expectOne('/actuator/health/readiness');
+    expect(request.request.headers.get('ngrok-skip-browser-warning')).toBe('true');
     request.flush({ status: 'UP' });
 
     expect(service.isAvailable()).toBeTrue();

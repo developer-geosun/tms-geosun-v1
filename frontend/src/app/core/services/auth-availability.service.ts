@@ -3,6 +3,7 @@ import { DestroyRef, Injectable, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router } from '@angular/router';
 import { Observable, catchError, map, of, switchMap, tap, timeout, timer } from 'rxjs';
+import { NGROK_SKIP_BROWSER_WARNING_HEADERS } from '../http/ngrok-headers';
 import { ConfigService } from './config.service';
 
 const AUTH_AVAILABILITY_TIMEOUT_MS = 5000;
@@ -93,15 +94,19 @@ export class AuthAvailabilityService {
   }
 
   private checkHealthEndpoint_(): Observable<ActuatorHealthResponse> {
-    return this.http.get<ActuatorHealthResponse>(this.toBaseUrl('/actuator/health/readiness')).pipe(
-      catchError((error: unknown) => {
-        // Для сумісності з середовищами, де readiness endpoint вимкнений.
-        if (error instanceof HttpErrorResponse && error.status === 404) {
-          return this.http.get<ActuatorHealthResponse>(this.toBaseUrl('/actuator/health'));
-        }
-        throw error;
-      })
-    );
+    // HttpBackend обходить interceptors — заголовок ngrok додаємо явно.
+    const options = { headers: NGROK_SKIP_BROWSER_WARNING_HEADERS };
+    return this.http
+      .get<ActuatorHealthResponse>(this.toBaseUrl('/actuator/health/readiness'), options)
+      .pipe(
+        catchError((error: unknown) => {
+          // Для сумісності з середовищами, де readiness endpoint вимкнений.
+          if (error instanceof HttpErrorResponse && error.status === 404) {
+            return this.http.get<ActuatorHealthResponse>(this.toBaseUrl('/actuator/health'), options);
+          }
+          throw error;
+        })
+      );
   }
 
   private getPollIntervalMs_(): number {
