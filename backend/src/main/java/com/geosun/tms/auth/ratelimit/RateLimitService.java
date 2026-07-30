@@ -18,7 +18,8 @@ public class RateLimitService {
   private final ConcurrentHashMap<String, Deque<Long>> refreshHits = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Deque<Long>> registerHits = new ConcurrentHashMap<>();
   private final ConcurrentHashMap<String, Long> resendLastMillis = new ConcurrentHashMap<>();
-  private final ConcurrentHashMap<String, Long> forgotPasswordLastMillis = new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Long> forgotPasswordLastMillis =
+      new ConcurrentHashMap<>();
 
   public RateLimitService(RateLimitProperties properties) {
     this.properties = properties;

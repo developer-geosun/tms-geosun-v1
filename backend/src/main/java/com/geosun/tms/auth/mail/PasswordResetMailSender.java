@@ -22,8 +22,7 @@ import org.springframework.util.StreamUtils;
 @Component
 public class PasswordResetMailSender {
   private static final String TEMPLATE_TOKEN = "{{RESET_LINK}}";
-  private static final String MAIL_SUBJECT =
-      "Password reset / Сброс пароля / Скидання пароля";
+  private static final String MAIL_SUBJECT = "Password reset / Сброс пароля / Скидання пароля";
   private static final Resource PLAIN_TEMPLATE_RESOURCE =
       new ClassPathResource("mail/password-reset-email.txt");
   private static final Resource HTML_TEMPLATE_RESOURCE =
