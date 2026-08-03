@@ -125,6 +125,48 @@ class FreightCostCalculatorServiceTest {
   }
 
   @Test
+  void calculate_fixedPerTripMarginUsesClosedForm() {
+    when(countryTollRuleRepository.findByTollTariffSet_IdAndActiveTrueOrderByCountryCodeAsc(
+            eq(TOLL_SET_ID)))
+        .thenReturn(List.of(plRule()));
+
+    FreightNumericScenario scenario = sampleScenario();
+    scenario.setMarginType(MarginType.FIXED_PER_TRIP);
+    scenario.setMarginPercent(null);
+    // M = 250 EUR × 40 UAH/EUR = 10_000 UAH (proposalCurrency = EUR)
+    scenario.setMarginFixedAmount(bd("250.00"));
+    scenario.setDriverSalaryPercentOfFreight(bd("15"));
+
+    FreightCostCalculationSummaryDto result =
+        calculator.calculate(
+            scenario,
+            new RouteLengths(bd("1000"), bd("150"), bd("850"), bd("0"), false),
+            bd("0"),
+            List.of(new CountryDistanceDto("PL", 200_000L, 0L, 1)),
+            new NbuRatesSnapshotDto(
+                LocalDate.of(2026, 5, 20),
+                java.time.Instant.parse("2026-05-20T10:00:00Z"),
+                List.of(
+                    new NbuRateDto("UAH", BigDecimal.ONE, BigDecimal.ONE, 1, null),
+                    new NbuRateDto("EUR", bd("40"), bd("40"), 1, null),
+                    new NbuRateDto("USD", bd("38"), bd("38"), 1, null))),
+            LocalDate.of(2026, 5, 20),
+            LocalDate.of(2026, 6, 15),
+            SeasonMode.NON_WINTER);
+
+    // DirectCost з еталонного тесту sampleScenario + PL 200 км
+    assertThat(result.directCostUah()).isEqualByComparingTo("33163.25");
+    // T = (C + M_uah) / (1 − p) = (33163.25 + 10000) / 0.85
+    assertThat(result.totalUah()).isEqualByComparingTo("50780.29");
+    assertThat(result.marginUah()).isEqualByComparingTo("10000.00");
+    assertThat(result.marginPercent()).isNull();
+    assertThat(result.costBeforeMarginUah().add(result.marginUah()))
+        .isEqualByComparingTo(result.totalUah());
+    assertThat(result.costBeforeMarginUah())
+        .isEqualByComparingTo(result.directCostUah().add(result.driverCostUah()));
+  }
+
+  @Test
   void summaryBuilder_containsKeyFiguresFromBreakdown() {
     FreightCostCalculationSummaryDto data =
         new FreightCostCalculationSummaryDto(

@@ -45,11 +45,6 @@ public class FreightCostCalculatorService {
       LocalDate calculationDate,
       LocalDate preferredStartDate,
       SeasonMode seasonOverride) {
-    if (scenario.getMarginType() == MarginType.FIXED_PER_TRIP) {
-      throw ApiException.unprocessableEntity(
-          "NOT_SUPPORTED", "FIXED_PER_TRIP margin is not supported in v1 calculator");
-    }
-
     boolean winter = resolveWinter(scenario.getSeasonMode(), seasonOverride, preferredStartDate);
     BigDecimal loadedConsumption =
         winter
@@ -107,27 +102,58 @@ public class FreightCostCalculatorService {
 
     BigDecimal driverPercent =
         scenario.getDriverSalaryPercentOfFreight().divide(HUNDRED, 6, RoundingMode.HALF_UP);
-    BigDecimal marginPercent =
-        Objects.requireNonNull(scenario.getMarginPercent(), "marginPercent")
-            .divide(HUNDRED, 6, RoundingMode.HALF_UP);
 
-    // T = DirectCost × (1 + m) / (1 − p × (1 + m)), де p — % ЗП від T, m — % маржі від S
-    BigDecimal onePlusMargin = BigDecimal.ONE.add(marginPercent, MC);
-    BigDecimal denominator = BigDecimal.ONE.subtract(driverPercent.multiply(onePlusMargin, MC), MC);
-    if (denominator.signum() <= 0) {
-      throw ApiException.unprocessableEntity(
-          "CALCULATION_NOT_POSSIBLE",
-          "Invalid driver salary and margin percents for closed-form formula");
+    BigDecimal marginPercentOut;
+    BigDecimal totalUah;
+    BigDecimal driverCostUah;
+    BigDecimal costBeforeMarginUah;
+    BigDecimal marginUah;
+
+    if (scenario.getMarginType() == MarginType.FIXED_PER_TRIP) {
+      // M задається в proposalCurrency; T = (C + M_uah) / (1 − p), p — % ЗП від T
+      BigDecimal marginFixedProposal =
+          Objects.requireNonNull(scenario.getMarginFixedAmount(), "marginFixedAmount");
+      marginUah = convertCurrencyToUah(marginFixedProposal, proposalRate);
+      if (driverPercent.compareTo(BigDecimal.ONE) >= 0) {
+        throw ApiException.unprocessableEntity(
+            "CALCULATION_NOT_POSSIBLE",
+            "Invalid driver salary percent for FIXED_PER_TRIP closed-form formula");
+      }
+      BigDecimal denominator = BigDecimal.ONE.subtract(driverPercent, MC);
+      totalUah =
+          money(
+              directCostUah
+                  .add(marginUah)
+                  .divide(denominator, MC)
+                  .setScale(MONEY_SCALE, RoundingMode.HALF_UP));
+      // S = T − M, щоб T = S + M з точністю до копійки; ЗП = S − C
+      costBeforeMarginUah = money(totalUah.subtract(marginUah));
+      driverCostUah = money(costBeforeMarginUah.subtract(directCostUah));
+      marginPercentOut = null;
+    } else {
+      // T = C × (1 + m) / (1 − p × (1 + m)), де p — % ЗП від T, m — % маржі від S
+      BigDecimal marginPercent =
+          Objects.requireNonNull(scenario.getMarginPercent(), "marginPercent")
+              .divide(HUNDRED, 6, RoundingMode.HALF_UP);
+      BigDecimal onePlusMargin = BigDecimal.ONE.add(marginPercent, MC);
+      BigDecimal denominator =
+          BigDecimal.ONE.subtract(driverPercent.multiply(onePlusMargin, MC), MC);
+      if (denominator.signum() <= 0) {
+        throw ApiException.unprocessableEntity(
+            "CALCULATION_NOT_POSSIBLE",
+            "Invalid driver salary and margin percents for closed-form formula");
+      }
+      totalUah =
+          money(
+              directCostUah
+                  .multiply(onePlusMargin, MC)
+                  .divide(denominator, MC)
+                  .setScale(MONEY_SCALE, RoundingMode.HALF_UP));
+      driverCostUah = money(totalUah.multiply(driverPercent, MC));
+      costBeforeMarginUah = money(directCostUah.add(driverCostUah));
+      marginUah = money(totalUah.subtract(costBeforeMarginUah));
+      marginPercentOut = scenario.getMarginPercent();
     }
-    BigDecimal totalUah =
-        money(
-            directCostUah
-                .multiply(onePlusMargin, MC)
-                .divide(denominator, MC)
-                .setScale(MONEY_SCALE, RoundingMode.HALF_UP));
-    BigDecimal driverCostUah = money(totalUah.multiply(driverPercent, MC));
-    BigDecimal costBeforeMarginUah = money(directCostUah.add(driverCostUah));
-    BigDecimal marginUah = money(totalUah.subtract(costBeforeMarginUah));
 
     BigDecimal totalProposalAmount = convertUahToCurrency(totalUah, proposalRate);
 
@@ -157,7 +183,7 @@ public class FreightCostCalculatorService {
         scenario.getDriverSalaryPercentOfFreight(),
         driverCostUah,
         costBeforeMarginUah,
-        scenario.getMarginPercent(),
+        marginPercentOut,
         marginUah,
         totalUah,
         totalProposalAmount);
@@ -281,6 +307,15 @@ public class FreightCostCalculatorService {
 
   private static BigDecimal convertEurToUah(BigDecimal amountEur, BigDecimal eurRatePerUnit) {
     return money(amountEur.multiply(eurRatePerUnit));
+  }
+
+  /** Конвертація суми в валюті (ratePerUnit = UAH за 1 одиницю) → UAH. */
+  private static BigDecimal convertCurrencyToUah(BigDecimal amount, BigDecimal ratePerUnit) {
+    if (ratePerUnit.signum() == 0) {
+      throw ApiException.unprocessableEntity(
+          "NBU_RATES_NOT_AVAILABLE_FOR_DATE", "Invalid currency rate for margin conversion");
+    }
+    return money(amount.multiply(ratePerUnit));
   }
 
   private static BigDecimal convertUahToCurrency(

@@ -250,6 +250,7 @@ public class FreightCostPreviewService {
     map.put("driverSalaryPercentOfFreight", scenario.getDriverSalaryPercentOfFreight());
     map.put("marginType", scenario.getMarginType().name());
     map.put("marginPercent", scenario.getMarginPercent());
+    map.put("marginFixedAmount", scenario.getMarginFixedAmount());
     map.put("proposalCurrency", scenario.getProposalCurrency());
     map.put("tollTariffSetId", scenario.getTollTariffSet().getId());
     return map;

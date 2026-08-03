@@ -109,6 +109,10 @@
           </mat-select>
         </mat-form-field>
         <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
+          <mat-label>{{ 'pages.adminFreightNumericScenarios.proposalCurrency' | translate }}</mat-label>
+          <input matInput formControlName="proposalCurrency" maxlength="3" />
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
           <mat-label>{{ 'pages.adminFreightNumericScenarios.marginTypeLabel' | translate }}</mat-label>
           <mat-select formControlName="marginType">
             @for (type of marginTypeOptions; track type) {
@@ -116,10 +120,16 @@
             }
           </mat-select>
         </mat-form-field>
-        <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
-          <mat-label>{{ 'pages.adminFreightNumericScenarios.proposalCurrency' | translate }}</mat-label>
-          <input matInput formControlName="proposalCurrency" maxlength="3" />
-        </mat-form-field>
+        <div class="admin-freight-numeric-scenarios__field-grid">
+          <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
+            <mat-label>{{ 'pages.adminFreightNumericScenarios.marginPercent' | translate }}</mat-label>
+            <input matInput type="number" step="0.01" formControlName="marginPercent" />
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
+            <mat-label>{{ 'pages.adminFreightNumericScenarios.marginFixedAmount' | translate }}</mat-label>
+            <input matInput type="number" step="0.01" formControlName="marginFixedAmount" />
+          </mat-form-field>
+        </div>
         <div class="admin-freight-numeric-scenarios__field-grid">
           <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
             <mat-label>{{ 'pages.adminFreightNumericScenarios.fuelConsumptionEmpty' | translate }}</mat-label>
@@ -152,14 +162,6 @@
           <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
             <mat-label>{{ 'pages.adminFreightNumericScenarios.perDiemFixedExtraDays' | translate }}</mat-label>
             <input matInput type="number" step="1" formControlName="perDiemFixedExtraDays" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
-            <mat-label>{{ 'pages.adminFreightNumericScenarios.marginPercent' | translate }}</mat-label>
-            <input matInput type="number" step="0.01" formControlName="marginPercent" />
-          </mat-form-field>
-          <mat-form-field appearance="outline" class="admin-freight-numeric-scenarios__field">
-            <mat-label>{{ 'pages.adminFreightNumericScenarios.marginFixedAmount' | translate }}</mat-label>
-            <input matInput type="number" step="0.01" formControlName="marginFixedAmount" />
           </mat-form-field>
         </div>
         <mat-checkbox formControlName="isActive">{{ 'pages.adminFreightNumericScenarios.isActive' | translate }}</mat-checkbox>

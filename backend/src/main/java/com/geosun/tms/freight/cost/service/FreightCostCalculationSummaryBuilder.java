@@ -95,7 +95,11 @@ public class FreightCostCalculationSummaryBuilder {
     sb.append("ЗП: ").append(percent(data.driverSalaryPercent())).append("% → ");
     sb.append(money(data.driverCostUah())).append(" UAH\n");
     sb.append("S (до маржі): ").append(money(data.costBeforeMarginUah())).append(" UAH\n");
-    sb.append("Маржа: ").append(percent(data.marginPercent())).append("% → ");
+    if (data.marginPercent() != null) {
+      sb.append("Маржа: ").append(percent(data.marginPercent())).append("% → ");
+    } else {
+      sb.append("Маржа (FIXED_PER_TRIP, у валюті пропозиції): ");
+    }
     sb.append(money(data.marginUah())).append(" UAH\n");
     sb.append("T (разом UAH): ").append(money(data.totalUah())).append(" UAH\n\n");
 

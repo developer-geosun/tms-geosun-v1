@@ -1,4 +1,5 @@
-import { ChangeDetectionStrategy, Component, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -53,6 +54,7 @@ export class AdminFreightNumericScenariosComponent {
   private readonly scenariosApi = inject(FreightNumericScenariosApiService);
   private readonly tollTariffSetsApi = inject(TollTariffSetsApiService);
   private readonly dialog = inject(MatDialog);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly seasonModeOptions: SeasonModeContract[] = ['AUTO', 'WINTER', 'NON_WINTER'];
   readonly marginTypeOptions: MarginTypeContract[] = ['PERCENT_OF_COST_BEFORE_MARGIN', 'FIXED_PER_TRIP'];
@@ -97,6 +99,10 @@ export class AdminFreightNumericScenariosComponent {
   });
 
   constructor() {
+    this.scenarioForm.controls.marginType.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((marginType) => this.syncMarginFieldAvailability(marginType));
+    this.syncMarginFieldAvailability(this.scenarioForm.controls.marginType.value);
     void this.loadTollTariffSets();
     void this.loadScenarios();
   }
@@ -160,6 +166,7 @@ export class AdminFreightNumericScenariosComponent {
       proposalCurrency: 'EUR',
       tollTariffSetId: ''
     });
+    this.syncMarginFieldAvailability('PERCENT_OF_COST_BEFORE_MARGIN');
   }
 
   startEdit(scenario: FreightNumericScenarioContractDto): void {
@@ -183,6 +190,7 @@ export class AdminFreightNumericScenariosComponent {
       proposalCurrency: scenario.proposalCurrency,
       tollTariffSetId: scenario.tollTariffSetId
     });
+    this.syncMarginFieldAvailability(scenario.marginType);
   }
 
   async saveScenario(): Promise<void> {
@@ -239,6 +247,19 @@ export class AdminFreightNumericScenariosComponent {
     return `pages.adminFreightNumericScenarios.marginType.${type}`;
   }
 
+  /** Активує лише поле, що відповідає обраному типу маржі. */
+  private syncMarginFieldAvailability(marginType: MarginTypeContract): void {
+    const percentCtrl = this.scenarioForm.controls.marginPercent;
+    const fixedCtrl = this.scenarioForm.controls.marginFixedAmount;
+    if (marginType === 'FIXED_PER_TRIP') {
+      percentCtrl.disable({ emitEvent: false });
+      fixedCtrl.enable({ emitEvent: false });
+    } else {
+      fixedCtrl.disable({ emitEvent: false });
+      percentCtrl.enable({ emitEvent: false });
+    }
+  }
+
   private toPayload():
     | CreateFreightNumericScenarioContractRequest
     | UpdateFreightNumericScenarioContractRequest
@@ -269,6 +290,7 @@ export class AdminFreightNumericScenariosComponent {
     ) {
       return null;
     }
+    const isFixed = values.marginType === 'FIXED_PER_TRIP';
     return {
       name: values.name.trim(),
       description: values.description.trim() || null,
@@ -283,8 +305,8 @@ export class AdminFreightNumericScenariosComponent {
       perDiemRouteDivisorKm: Math.trunc(perDiemRouteDivisorKm),
       perDiemFixedExtraDays: Math.trunc(perDiemFixedExtraDays),
       marginType: values.marginType,
-      marginPercent: parseOptionalFormNumber(values.marginPercent),
-      marginFixedAmount: parseOptionalFormNumber(values.marginFixedAmount),
+      marginPercent: isFixed ? null : parseOptionalFormNumber(values.marginPercent),
+      marginFixedAmount: isFixed ? parseOptionalFormNumber(values.marginFixedAmount) : null,
       proposalCurrency: values.proposalCurrency.trim().toUpperCase(),
       tollTariffSetId: values.tollTariffSetId
     };

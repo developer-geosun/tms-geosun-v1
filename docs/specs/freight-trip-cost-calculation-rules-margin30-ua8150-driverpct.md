@@ -93,20 +93,40 @@ DirectCost = Fuel_cost_UAH + PerDiem_UAH + Tolls_UAH
 
 Обозначения: **C** = `DirectCost`; **S** = себестоимость до маржи = C + ЗП; **T** = итоговый фрахт (quote); **F** = T.
 
+**Маржа (`PERCENT_OF_COST_BEFORE_MARGIN`):**
+
 ```
 DriverCost = p × T
 S = C + DriverCost
-Margin = m × S          // 30% от S
+Margin = m × S
 T = S + Margin
 ```
 
 Закрытая форма (проверка знаменателя > 0):
 
 ```
-T = 1,30 × C / (1 − 1,30 × p)
+T = C × (1 + m) / (1 − p × (1 + m))
 ```
 
-При p = 0,15: `T = 1,30 × C / 0,805`. Далее `DriverCost = p × T`, `Margin = 0,30 × S`, контроль `T = S + Margin`.
+При m = 0,30 и p = 0,15: `T = 1,30 × C / 0,805`. Далее `DriverCost = p × T`, `Margin = 0,30 × S`, контроль `T = S + Margin`.
+
+**Маржа (`FIXED_PER_TRIP`):** `marginFixedAmount` задаётся в **валюте предложения** (`proposalCurrency`) на рейс; в UAH пересчитывается курсом НБУ на `calculationDate`.
+
+```
+M_uah = marginFixedAmount × ratePerUnit(proposalCurrency)
+Margin = M_uah
+DriverCost ≈ p × T   (ЗП от итогового фрахта)
+S = C + DriverCost
+T = S + M_uah
+```
+
+Закрытая форма (p < 1):
+
+```
+T = (C + M_uah) / (1 − p)
+```
+
+Контроль: `S = T − M_uah`, `DriverCost = S − C`, `T = S + M_uah`.
 
 Альтернатива в коде: итерация 2–5 шагов до `|Tₙ − Tₙ₋₁| < ε` (если закрытая форма не применима).
 

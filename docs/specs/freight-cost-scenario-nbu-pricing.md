@@ -53,7 +53,7 @@
 | `perDiemFixedExtraDays` | дни | Добавка (дефолт +2) |
 | `marginType` | enum | `PERCENT_OF_COST_BEFORE_MARGIN` / `FIXED_PER_TRIP` |
 | `marginPercent` | % | Маржа от себестоимости до маржи (с ЗП) |
-| `marginFixedAmount` | сумма | При `FIXED_PER_TRIP` |
+| `marginFixedAmount` | сумма в `proposalCurrency` | При `FIXED_PER_TRIP` — маржа на рейс; в расчёте → UAH по курсу НБУ |
 | `proposalCurrency` | ISO 4217 | Валюта quote (часто EUR) |
 | `tollTariffSetId` | UUID | **Набор тарифов дорог**, который использует сценарий (§5.1) |
 
