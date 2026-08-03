@@ -217,6 +217,37 @@ export class AdminFreightNumericScenariosComponent {
     }
   }
 
+  async duplicateScenario(scenario: FreightNumericScenarioContractDto): Promise<void> {
+    this.actionError.set('');
+    this.actionSuccess.set('');
+    const payload: CreateFreightNumericScenarioContractRequest = {
+      name: this.buildCloneName(scenario.name),
+      description: scenario.description,
+      isActive: scenario.isActive,
+      fuelConsumptionEmptyLPer100km: scenario.fuelConsumptionEmptyLPer100km,
+      fuelConsumptionLoadedNonWinterLPer100km: scenario.fuelConsumptionLoadedNonWinterLPer100km,
+      fuelConsumptionLoadedWinterLPer100km: scenario.fuelConsumptionLoadedWinterLPer100km,
+      seasonMode: scenario.seasonMode,
+      fuelPricePerLiter: scenario.fuelPricePerLiter,
+      driverSalaryPercentOfFreight: scenario.driverSalaryPercentOfFreight,
+      perDiemAmountPerDay: scenario.perDiemAmountPerDay,
+      perDiemRouteDivisorKm: scenario.perDiemRouteDivisorKm,
+      perDiemFixedExtraDays: scenario.perDiemFixedExtraDays,
+      marginType: scenario.marginType,
+      marginPercent: scenario.marginPercent,
+      marginFixedAmount: scenario.marginFixedAmount,
+      proposalCurrency: scenario.proposalCurrency,
+      tollTariffSetId: scenario.tollTariffSetId
+    };
+    try {
+      await this.scenariosApi.create(payload);
+      this.actionSuccess.set('pages.adminFreightNumericScenarios.duplicated');
+      await this.loadScenarios();
+    } catch {
+      this.actionError.set('pages.adminFreightNumericScenarios.duplicateFailed');
+    }
+  }
+
   async deleteScenario(scenario: FreightNumericScenarioContractDto): Promise<void> {
     const confirmed = await this.openConfirmDialog('pages.adminFreightNumericScenarios.deleteConfirm');
     if (!confirmed) {
@@ -233,6 +264,17 @@ export class AdminFreightNumericScenariosComponent {
     } catch {
       this.actionError.set('pages.adminFreightNumericScenarios.deleteFailed');
     }
+  }
+
+  /** Додає суфікс « clone» до назви, не перевищуючи ліміт 128 символів. */
+  private buildCloneName(name: string): string {
+    const suffix = ' clone';
+    const maxLen = 128;
+    const base = name.trim();
+    if (base.length + suffix.length <= maxLen) {
+      return `${base}${suffix}`;
+    }
+    return `${base.slice(0, maxLen - suffix.length)}${suffix}`;
   }
 
   async backToRouteRequests(): Promise<void> {
