@@ -207,6 +207,22 @@
   color: #374151;
 }
 
+.request-card__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.request-card__amount {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--mat-sys-tertiary);
+  white-space: nowrap;
+}
+
 .admin-route-requests__details {
   border: 1px solid #e5e7eb;
   border-radius: 10px;

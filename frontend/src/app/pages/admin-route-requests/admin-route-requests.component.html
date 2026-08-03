@@ -73,7 +73,14 @@
               <strong>{{ request.route?.title || request.routeId }}</strong>
               <span class="request-card__status">{{ request.status }}</span>
             </div>
-            <small>{{ request.createdAt | date: 'short' }}</small>
+            <div class="request-card__meta">
+              <small>{{ request.createdAt | date: 'short' }}</small>
+              @if (cardQuoteAmount(request); as quoteAmount) {
+                <span class="request-card__amount" [attr.title]="'pages.adminRouteRequests.quoteAmount' | translate">
+                  {{ quoteAmount }}
+                </span>
+              }
+            </div>
           </button>
         }
         <mat-paginator

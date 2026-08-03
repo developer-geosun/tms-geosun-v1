@@ -302,6 +302,22 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     void this.loadRequestDetails(requestId);
   }
 
+  /** Сума пропозиції для картки в черзі (лише QUOTED з поточною котировкою). */
+  cardQuoteAmount(request: RouteRequestContractDto): string | null {
+    if (String(request.status).toLowerCase() !== 'quoted') {
+      return null;
+    }
+    const quote = request.currentQuote;
+    if (!quote || !Number.isFinite(quote.totalAmount) || !quote.currency?.trim()) {
+      return null;
+    }
+    const amount = new Intl.NumberFormat('uk-UA', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(quote.totalAmount);
+    return `${amount} ${quote.currency.trim().toUpperCase()}`;
+  }
+
   // Список повертає запити без точок маршруту (includeRoutePoints=false),
   // тому підвантажуємо повну деталь по id, щоб показати точки та карту.
   private async loadRequestDetails(requestId: number): Promise<void> {
