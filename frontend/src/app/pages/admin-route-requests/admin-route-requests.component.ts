@@ -221,11 +221,12 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   ngOnDestroy(): void {
     this.resizeTimers.forEach((timer) => clearTimeout(timer));
     this.resizeTimers = [];
-    this.map?.remove();
-    this.map = null;
+    this.disposeMap();
   }
 
   async loadRequests(): Promise<void> {
+    // isLoading знищує #requestMap у шаблоні — відпускаємо Leaflet до зникнення DOM
+    this.disposeMap();
     this.isLoading.set(true);
     this.loadError.set('');
     this.quoteActionError.set('');
@@ -725,11 +726,31 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.scheduleMapResizeFix();
   }
 
+  private disposeMap(): void {
+    this.mapRouteLayer = null;
+    this.mapStartToFirstLayer = null;
+    this.mapMarkers = [];
+    this.startPointMarker = null;
+    this.map?.remove();
+    this.map = null;
+  }
+
   private ensureMapInitialized(): void {
-    if (!this.requestMapElement || this.map) {
+    const el = this.requestMapElement?.nativeElement;
+    if (!el) {
       return;
     }
-    this.map = L.map(this.requestMapElement.nativeElement, { zoomControl: true }).setView([50.4501, 30.5234], 5);
+
+    // Після пагінації Angular створює новий div, а this.map лишається прив’язаним до старого
+    if (this.map && this.map.getContainer() !== el) {
+      this.disposeMap();
+    }
+
+    if (this.map) {
+      return;
+    }
+
+    this.map = L.map(el, { zoomControl: true }).setView([50.4501, 30.5234], 5);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; GeoSun'
     }).addTo(this.map);
