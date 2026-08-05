@@ -218,6 +218,14 @@ app-social-icon {
   border: 1px solid rgba(61, 71, 82, .22);
   text-decoration: none;
   transition: all .25s cubic-bezier(.4, 0, .2, 1);
+
+  // Інверсія кольорів (специфічність вища за generic :hover нижче)
+  &:hover,
+  &:focus-visible {
+    background: #006fa6;
+    color: #fff;
+    border-color: transparent;
+  }
 }
 
 .logo-hover-icons a.company-site-button .mat-icon {

@@ -86,6 +86,14 @@ svg {
     width: 22px;
     height: 22px;
   }
+
+  // Інверсія: кольоровий фон + біла іконка (перебиває host-context над :host:hover)
+  &:hover,
+  &:focus-within {
+    background-color: var(--hover-color, #0088cc);
+    color: #fff;
+    border-color: transparent;
+  }
 }
 
 // Адаптивність
