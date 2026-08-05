@@ -24,7 +24,7 @@ export class RoutesToolbarBottomSheetComponent {
   readonly data = inject<RoutesToolbarSheetData>(MAT_BOTTOM_SHEET_DATA);
 
   /** Критерії сортування (рядок: радіо + стрілки лише для обраного). */
-  readonly sortCriteria: ReadonlyArray<{ value: RoutesToolbarSortKey; labelKey: string }> = [
+  readonly sortCriteria: readonly { value: RoutesToolbarSortKey; labelKey: string }[] = [
     { value: 'id', labelKey: 'pages.routes.sortById' },
     { value: 'createdAt', labelKey: 'pages.routes.sortByCreated' },
     { value: 'updatedAt', labelKey: 'pages.routes.sortByUpdated' },

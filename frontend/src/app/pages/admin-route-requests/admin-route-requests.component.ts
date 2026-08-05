@@ -634,7 +634,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   }
 
   formatCountryDistanceTotalKm(
-    countryDistances: ReadonlyArray<{ distanceMeters: number }> | null | undefined
+    countryDistances: readonly { distanceMeters: number }[] | null | undefined
   ): string {
     if (!countryDistances?.length) {
       return '0.0';
