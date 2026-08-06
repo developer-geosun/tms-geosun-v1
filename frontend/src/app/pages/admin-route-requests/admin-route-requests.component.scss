@@ -5,6 +5,7 @@
   flex-direction: column;
   gap: 16px;
   padding: 16px;
+  color: var(--mat-sys-on-surface);
 }
 
 .admin-route-requests__header {
@@ -12,6 +13,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+
+  h1 {
+    margin: 0;
+    color: var(--mat-sys-on-surface);
+  }
 }
 
 .admin-route-requests__actions {
@@ -27,7 +33,7 @@
   align-items: flex-start;
   margin-bottom: 8px;
 
-  // Р±РµР· РїРѕРјРёР»РѕРє Сѓ С„С–Р»СЊС‚СЂР°С…: РїСЂРёР±РёСЂР°С”РјРѕ РїРѕСЂРѕР¶РЅС–Р№ subscript, С‰РѕР± СЂСЏРґ Р±СѓРІ РѕРґРЅС–С”С— РІРёСЃРѕС‚Рё
+  // без помилок у фільтрах: прибираємо порожній subscript, щоб ряд був однієї висоти
   .mat-mdc-form-field-subscript-wrapper {
     display: none;
   }
@@ -37,7 +43,7 @@
   display: flex;
   gap: 8px;
   align-items: stretch;
-  // РІРёСЃРѕС‚Р° СЏРє Сѓ mat-form-field outline Р±РµР· subscript
+  // висота як у mat-form-field outline без subscript
   height: 56px;
 
   button {
@@ -52,7 +58,7 @@
   align-items: flex-start;
   margin-bottom: 12px;
 
-  // Р±РµР· РїРѕРјРёР»РѕРє Сѓ С†СЊРѕРјСѓ СЂСЏРґРєСѓ: РїСЂРёР±РёСЂР°С”РјРѕ РїРѕСЂРѕР¶РЅС–Р№ subscript РґР»СЏ СЃРїС–Р»СЊРЅРѕС— РІРёСЃРѕС‚Рё Р· РєРЅРѕРїРєР°РјРё
+  // без помилок у цьому рядку: прибираємо порожній subscript для спільної висоти з кнопками
   .mat-mdc-form-field-subscript-wrapper {
     display: none;
   }
@@ -89,7 +95,7 @@
 }
 
 .nbu-form__actions--start-point {
-  // СЃС‚Р°СЂС‚РѕРІР° С‚РѕС‡РєР° Р±РµР· РѕРєСЂРµРјРѕРіРѕ РїС–РґРїРёСЃСѓ вЂ” РєРЅРѕРїРєРё РІР¶Рµ Сѓ СЃРїС–Р»СЊРЅС–Р№ РІРёСЃРѕС‚С– СЂСЏРґСѓ
+  // стартова точка без окремого підпису — кнопки вже у спільній висоті ряду
   margin-bottom: 0;
 }
 
@@ -103,6 +109,7 @@
   gap: 4px 8px;
   line-height: 1.4;
   margin-bottom: 8px;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .admin-route-requests__nbu-table-wrap {
@@ -117,27 +124,30 @@
 
 .admin-route-requests__nbu-cost-table th {
   font-weight: 600;
-  background: #f3f4f6;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
 }
 
 .admin-route-requests__nbu-cost-table td,
 .admin-route-requests__nbu-cost-table th {
   padding: 10px 12px;
+  color: var(--mat-sys-on-surface);
+  border-color: var(--mat-sys-outline-variant);
 }
 
 .admin-route-requests__nbu-cost-table tr.mat-mdc-row:nth-child(even) td {
-  background: #fafafa;
+  background: var(--mat-sys-surface-container-low);
 }
 
 .nbu-cost-row--subtotal {
   font-weight: 600;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--mat-sys-outline-variant);
 }
 
 .nbu-cost-row--total {
   font-weight: 700;
-  background: #eff6ff !important;
-  border-top: 2px solid #93c5fd;
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface)) !important;
+  border-top: 2px solid color-mix(in srgb, var(--mat-sys-primary) 45%, var(--mat-sys-outline-variant));
 }
 
 .admin-route-requests__nbu-breakdown-panel {
@@ -152,6 +162,11 @@
   max-height: 420px;
   overflow: auto;
   margin: 0;
+  color: var(--mat-sys-on-surface);
+  background: var(--mat-sys-surface-container-low);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  padding: 10px;
 }
 
 .admin-route-requests__nbu-history {
@@ -164,6 +179,7 @@
   display: flex;
   align-items: center;
   gap: 4px;
+  color: var(--mat-sys-on-surface);
 }
 
 .admin-route-requests__nbu-history-delete {
@@ -183,17 +199,36 @@
 }
 
 .request-card {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 10px;
   padding: 10px;
   text-align: left;
-  background: #fff;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
   cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+
+  strong {
+    color: var(--mat-sys-on-surface);
+  }
+
+  small {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &:hover {
+    border-color: color-mix(in srgb, var(--mat-sys-primary) 40%, var(--mat-sys-outline-variant));
+    background: color-mix(in srgb, var(--mat-sys-primary) 6%, var(--mat-sys-surface-container-high));
+  }
 }
 
 .request-card--active {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.18);
+  border-color: var(--mat-sys-primary);
+  background: color-mix(in srgb, var(--mat-sys-primary) 12%, var(--mat-sys-surface-container-high));
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--mat-sys-primary) 22%, transparent);
 }
 
 .request-card__top {
@@ -206,7 +241,7 @@
 .request-card__status {
   font-size: 12px;
   text-transform: uppercase;
-  color: #374151;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .request-card__meta {
@@ -221,15 +256,30 @@
   flex-shrink: 0;
   font-size: 13px;
   font-weight: 600;
-  color: var(--mat-sys-tertiary);
+  color: var(--mat-sys-primary);
   white-space: nowrap;
 }
 
 .admin-route-requests__details {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 10px;
   padding: 14px;
-  background: #fff;
+  background: var(--mat-sys-surface-container-high);
+  color: var(--mat-sys-on-surface);
+
+  h2,
+  h3 {
+    color: var(--mat-sys-on-surface);
+  }
+
+  p,
+  li {
+    color: var(--mat-sys-on-surface);
+  }
+
+  strong {
+    color: var(--mat-sys-on-surface);
+  }
 }
 
 .request-map {
@@ -237,9 +287,10 @@
   min-height: 280px;
   height: min(50vh, 420px);
   border-radius: 8px;
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--mat-sys-outline-variant);
   margin-bottom: 12px;
   overflow: hidden;
+  background: var(--mat-sys-surface-container);
 }
 
 .quote-form {
@@ -254,13 +305,26 @@
   flex-direction: column;
   gap: 4px;
   font-size: 13px;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .quote-form input,
 .quote-form textarea {
-  border: 1px solid #cbd5e1;
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 8px;
   padding: 7px 8px;
+  background: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+
+  &::placeholder {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &:focus {
+    outline: 2px solid color-mix(in srgb, var(--mat-sys-primary) 45%, transparent);
+    outline-offset: 1px;
+    border-color: var(--mat-sys-primary);
+  }
 }
 
 .quote-form__actions {
@@ -276,26 +340,28 @@
 }
 
 .quote-history__item {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--mat-sys-outline-variant);
   border-radius: 8px;
   padding: 10px;
   display: grid;
   gap: 4px;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
 }
 
 .admin-route-requests__error {
-  color: #dc2626;
+  color: var(--mat-sys-error);
 }
 
 .admin-route-requests__error-detail {
-  color: #991b1b;
+  color: color-mix(in srgb, var(--mat-sys-error) 85%, var(--mat-sys-on-surface));
   font-size: 12px;
   margin: 4px 0 8px;
   word-break: break-word;
 }
 
 .admin-route-requests__success {
-  color: #166534;
+  color: color-mix(in srgb, var(--mat-sys-primary) 55%, #2bb673);
 }
 
 .admin-route-requests__country-actions {
@@ -315,6 +381,7 @@
   display: grid;
   gap: 4px;
   font-size: 14px;
+  color: var(--mat-sys-on-surface);
 }
 
 .admin-country-distances {
@@ -322,17 +389,24 @@
   border-collapse: collapse;
   margin-bottom: 12px;
   font-size: 14px;
+  color: var(--mat-sys-on-surface);
 }
 
 .admin-country-distances th,
 .admin-country-distances td {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--mat-sys-outline-variant);
   padding: 6px 8px;
   text-align: left;
 }
 
 .admin-country-distances th {
-  background: #f9fafb;
+  background: var(--mat-sys-surface-container);
+  color: var(--mat-sys-on-surface);
+  font-weight: 600;
+}
+
+.admin-country-distances td {
+  background: var(--mat-sys-surface-container-low);
 }
 
 @include bp.below-desktop {
