@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 :host {
   display: flex;
   align-items: center;
@@ -72,7 +74,7 @@ svg {
   transition: transform 0.25s ease;
 }
 
-// Ряд іконок у тулбарі при наведенні на логотип — крупніше, білий фон, кольорові піктограми
+// Р СЏРґ С–РєРѕРЅРѕРє Сѓ С‚СѓР»Р±Р°СЂС– РїСЂРё РЅР°РІРµРґРµРЅРЅС– РЅР° Р»РѕРіРѕС‚РёРї вЂ” РєСЂСѓРїРЅС–С€Рµ, Р±С–Р»РёР№ С„РѕРЅ, РєРѕР»СЊРѕСЂРѕРІС– РїС–РєС‚РѕРіСЂР°РјРё
 :host-context(.logo-hover-icons) {
   width: 40px;
   height: 40px;
@@ -87,7 +89,7 @@ svg {
     height: 22px;
   }
 
-  // Інверсія: кольоровий фон + біла іконка (перебиває host-context над :host:hover)
+  // Р†РЅРІРµСЂСЃС–СЏ: РєРѕР»СЊРѕСЂРѕРІРёР№ С„РѕРЅ + Р±С–Р»Р° С–РєРѕРЅРєР° (РїРµСЂРµР±РёРІР°С” host-context РЅР°Рґ :host:hover)
   &:hover,
   &:focus-within {
     background-color: var(--hover-color, #0088cc);
@@ -96,8 +98,7 @@ svg {
   }
 }
 
-// Адаптивність
-@media (max-width: 768px) {
+@include bp.below-desktop {
   :host {
     width: 24px;
     height: 24px;

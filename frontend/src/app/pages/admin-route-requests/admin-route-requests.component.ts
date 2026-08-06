@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   ElementRef,
+  HostListener,
   OnDestroy,
   ViewChild,
   computed,
@@ -46,7 +47,9 @@ import {
   buildNbuCostPreviewDisplay,
   NbuCostPreviewSource
 } from '../../core/utils/freight-cost-preview-display.util';
+import { LayoutService } from '../../core/layout';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
+import { getHandsetFriendlyDialogConfig } from '../../shared/utils/handset-friendly-dialog-config';
 import {
   SendProposalDialogComponent,
   SendProposalDialogData
@@ -86,6 +89,11 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   private readonly dialog = inject(MatDialog);
   private readonly routeRequestsApi = inject(RouteRequestsApiService);
   private readonly numericScenariosApi = inject(FreightNumericScenariosApiService);
+  private readonly layout = inject(LayoutService);
+
+  private static readonly DESKTOP_DEFAULT_PAGE_SIZE = 20;
+  private static readonly HANDSET_DEFAULT_PAGE_SIZE = 5;
+
   private map: L.Map | null = null;
   private mapRouteLayer: L.Polyline | null = null;
   private mapStartToFirstLayer: L.Polyline | null = null;
@@ -99,7 +107,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly requests = signal<RouteRequestContractDto[]>([]);
   readonly totalElements = signal(0);
   readonly pageIndex = signal(0);
-  readonly pageSize = signal(20);
+  readonly pageSize = signal(AdminRouteRequestsComponent.DESKTOP_DEFAULT_PAGE_SIZE);
   readonly selectedRequestId = signal<number | null>(null);
   readonly quoteHistory = signal<QuoteContractDto[]>([]);
   readonly quoteLoadError = signal('');
@@ -192,6 +200,25 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
 
   constructor() {
     void this.loadNumericScenarios();
+    // LayoutService вже має актуальний viewport (root service).
+    this.pageSize.set(
+      this.layout.handsetPageSize(
+        AdminRouteRequestsComponent.DESKTOP_DEFAULT_PAGE_SIZE,
+        AdminRouteRequestsComponent.HANDSET_DEFAULT_PAGE_SIZE
+      )
+    );
+    effect(() => {
+      const size = this.layout.handsetPageSize(
+        AdminRouteRequestsComponent.DESKTOP_DEFAULT_PAGE_SIZE,
+        AdminRouteRequestsComponent.HANDSET_DEFAULT_PAGE_SIZE
+      );
+      if (this.pageSize() === size) {
+        return;
+      }
+      this.pageSize.set(size);
+      this.pageIndex.set(0);
+      void this.loadRequests();
+    });
     void this.loadRequests();
     effect(() => {
       const request = this.selectedRequest();
@@ -548,15 +575,15 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       proposalCurrency: preview.proposalCurrency,
       routePoints: [...(selected.route?.points ?? [])].sort((a, b) => a.order - b.order)
     };
-    const ref = this.dialog.open(SendProposalDialogComponent, {
-      width: 'min(640px, calc(100vw - 24px))',
-      maxWidth: '100vw',
-      maxHeight: 'min(92vh, 760px)',
-      autoFocus: 'first-tabbable',
-      restoreFocus: true,
-      disableClose: true,
-      data
-    });
+    const ref = this.dialog.open(
+      SendProposalDialogComponent,
+      getHandsetFriendlyDialogConfig({
+        width: 'min(640px, calc(100vw - 24px))',
+        maxHeight: 'min(92vh, 760px)',
+        disableClose: true,
+        data
+      })
+    );
     const sent = await firstValueFrom(ref.afterClosed());
     if (sent) {
       await this.loadRequests();
@@ -774,6 +801,11 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     requestAnimationFrame(() => {
       this.map?.invalidateSize();
     });
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.scheduleMapResizeFix();
   }
 
   private renderMapForRequest(request: RouteRequestContractDto): void {

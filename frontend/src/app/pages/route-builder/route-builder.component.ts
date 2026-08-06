@@ -2,7 +2,6 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
   ElementRef,
   HostListener,
   OnDestroy,
@@ -14,7 +13,6 @@ import {
   inject,
   signal
 } from '@angular/core';
-import { MediaMatcher } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -56,6 +54,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { Subscription } from 'rxjs';
 import { RouteDeleteConfirmDialogComponent, getRouteFreightRequestDialogConfig, RouteFreightRequestDialogComponent } from '../../shared/components';
+import { LayoutService } from '../../core/layout';
 
 @Component({
   selector: 'app-route-builder',
@@ -92,8 +91,7 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private readonly translate = inject(TranslateService);
   private readonly activatedRoute = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  private readonly mediaMatcher = inject(MediaMatcher);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly layout = inject(LayoutService);
 
   readonly waypoints = signal<Waypoint[]>([]);
   readonly segmentDistances = signal<number[]>([]);
@@ -171,17 +169,13 @@ export class RouteBuilderComponent implements AfterViewInit, OnDestroy {
   private queryParamsSubscription: Subscription | null = null;
 
   constructor() {
-    const compactMql = this.mediaMatcher.matchMedia('(max-width: 1100px)');
-    const onCompactChange = (): void => {
-      const compact = compactMql.matches;
+    effect(() => {
+      const compact = this.layout.isCompactSplit();
       this.compactRouteLayout.set(compact);
       if (!compact) {
         this.mobileMapPanelOpen.set(false);
       }
-    };
-    onCompactChange();
-    compactMql.addEventListener('change', onCompactChange);
-    this.destroyRef.onDestroy(() => compactMql.removeEventListener('change', onCompactChange));
+    });
 
     effect(() => {
       const points = this.waypoints();

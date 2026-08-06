@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 .admin-route-requests {
   display: flex;
   flex-direction: column;
@@ -25,7 +27,7 @@
   align-items: flex-start;
   margin-bottom: 8px;
 
-  // без помилок у фільтрах: прибираємо порожній subscript, щоб ряд був однієї висоти
+  // Р±РµР· РїРѕРјРёР»РѕРє Сѓ С„С–Р»СЊС‚СЂР°С…: РїСЂРёР±РёСЂР°С”РјРѕ РїРѕСЂРѕР¶РЅС–Р№ subscript, С‰РѕР± СЂСЏРґ Р±СѓРІ РѕРґРЅС–С”С— РІРёСЃРѕС‚Рё
   .mat-mdc-form-field-subscript-wrapper {
     display: none;
   }
@@ -35,7 +37,7 @@
   display: flex;
   gap: 8px;
   align-items: stretch;
-  // висота як у mat-form-field outline без subscript
+  // РІРёСЃРѕС‚Р° СЏРє Сѓ mat-form-field outline Р±РµР· subscript
   height: 56px;
 
   button {
@@ -50,7 +52,7 @@
   align-items: flex-start;
   margin-bottom: 12px;
 
-  // без помилок у цьому рядку: прибираємо порожній subscript для спільної висоти з кнопками
+  // Р±РµР· РїРѕРјРёР»РѕРє Сѓ С†СЊРѕРјСѓ СЂСЏРґРєСѓ: РїСЂРёР±РёСЂР°С”РјРѕ РїРѕСЂРѕР¶РЅС–Р№ subscript РґР»СЏ СЃРїС–Р»СЊРЅРѕС— РІРёСЃРѕС‚Рё Р· РєРЅРѕРїРєР°РјРё
   .mat-mdc-form-field-subscript-wrapper {
     display: none;
   }
@@ -87,7 +89,7 @@
 }
 
 .nbu-form__actions--start-point {
-  // стартова точка без окремого підпису — кнопки вже у спільній висоті ряду
+  // СЃС‚Р°СЂС‚РѕРІР° С‚РѕС‡РєР° Р±РµР· РѕРєСЂРµРјРѕРіРѕ РїС–РґРїРёСЃСѓ вЂ” РєРЅРѕРїРєРё РІР¶Рµ Сѓ СЃРїС–Р»СЊРЅС–Р№ РІРёСЃРѕС‚С– СЂСЏРґСѓ
   margin-bottom: 0;
 }
 
@@ -232,10 +234,12 @@
 
 .request-map {
   width: 100%;
-  height: 280px;
+  min-height: 280px;
+  height: min(50vh, 420px);
   border-radius: 8px;
   border: 1px solid #d1d5db;
   margin-bottom: 12px;
+  overflow: hidden;
 }
 
 .quote-form {
@@ -331,8 +335,22 @@
   background: #f9fafb;
 }
 
-@media (max-width: 980px) {
+@include bp.below-desktop {
   .admin-route-requests__layout {
     grid-template-columns: 1fr;
+  }
+
+  .quote-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-route-requests__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .request-map {
+    min-height: 240px;
+    height: min(42vh, 360px);
   }
 }

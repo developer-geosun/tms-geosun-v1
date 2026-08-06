@@ -1,5 +1,7 @@
 /* You can add global styles to this file, and also import other style files */
 @use 'styles/theme';
+@use 'page-layout';
+@use 'breakpoints' as bp;
 @import 'leaflet/dist/leaflet.css';
 
 html, body {
@@ -194,15 +196,17 @@ mat-button-toggle .mdc-button__label {
   line-height: 1.45;
 }
 
-/* Діалог заявки на фрахт: адаптивна панель (panelClass на `.cdk-overlay-pane`). */
-@media (max-width: 599.98px) {
-  .cdk-overlay-pane.route-freight-request-dialog-shell {
+/* Full-screen form-діалоги на handset (panelClass на `.cdk-overlay-pane`). */
+@include bp.handset {
+  .cdk-overlay-pane.route-freight-request-dialog-shell,
+  .cdk-overlay-pane.dialog-shell--handset-fullscreen {
     max-width: 100vw !important;
     width: 100vw !important;
     margin: 0;
   }
 
-  .cdk-overlay-pane.route-freight-request-dialog-shell .mat-mdc-dialog-container .mat-mdc-dialog-surface {
+  .cdk-overlay-pane.route-freight-request-dialog-shell .mat-mdc-dialog-container .mat-mdc-dialog-surface,
+  .cdk-overlay-pane.dialog-shell--handset-fullscreen .mat-mdc-dialog-container .mat-mdc-dialog-surface {
     max-width: 100vw !important;
     width: 100vw !important;
     min-height: 100dvh;
@@ -212,7 +216,8 @@ mat-button-toggle .mdc-button__label {
     flex-direction: column;
   }
 
-  .cdk-overlay-pane.route-freight-request-dialog-shell .mat-mdc-dialog-content {
+  .cdk-overlay-pane.route-freight-request-dialog-shell .mat-mdc-dialog-content,
+  .cdk-overlay-pane.dialog-shell--handset-fullscreen .mat-mdc-dialog-content {
     flex: 1 1 auto;
     min-height: 0;
     max-height: none !important;

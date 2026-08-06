@@ -31,7 +31,7 @@
       @if (isLoadingSets()) {
         <p>{{ 'pages.adminTollTariffSets.loading' | translate }}</p>
       } @else {
-        <div class="admin-toll-tariff-sets__table-scroll">
+        <div class="admin-toll-tariff-sets__table-scroll table-shell">
           <table mat-table [dataSource]="sets()" class="admin-toll-tariff-sets__table">
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminTollTariffSets.name' | translate }}</th>
@@ -139,7 +139,7 @@
               <p class="admin-toll-tariff-sets__rules-loading">{{ 'pages.adminTollTariffSets.loading' | translate }}</p>
             }
             <div class="admin-toll-tariff-sets__rules-table-panel">
-              <div class="admin-toll-tariff-sets__table-scroll admin-toll-tariff-sets__table-scroll--rules">
+              <div class="admin-toll-tariff-sets__table-scroll admin-toll-tariff-sets__table-scroll--rules table-shell">
                 <table
                   mat-table
                   [dataSource]="rulesDataSource"
@@ -200,7 +200,7 @@
               <mat-paginator
                 #rulesPaginator
                 class="admin-toll-tariff-sets__rules-paginator"
-                [pageSize]="rulesPageSize"
+                [pageSize]="rulesPageSize()"
                 [pageSizeOptions]="rulesPageSizeOptions"
                 [showFirstLastButtons]="true" />
             </div>

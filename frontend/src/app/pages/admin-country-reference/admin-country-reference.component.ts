@@ -2,12 +2,11 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
+  effect,
   inject,
   signal,
   ViewChild
 } from '@angular/core';
-import { MediaMatcher } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -21,6 +20,7 @@ import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatSort, MatSortModule, Sort } from '@angular/material/sort';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CountryReferenceApiService, CountryReferenceContractDto } from '../../core/api';
+import { LayoutService } from '../../core/layout';
 
 @Component({
   selector: 'app-admin-country-reference',
@@ -42,14 +42,12 @@ import { CountryReferenceApiService, CountryReferenceContractDto } from '../../c
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminCountryReferenceComponent implements AfterViewInit {
-  private static readonly MOBILE_MAX_WIDTH_PX = 600;
   private static readonly DESKTOP_DEFAULT_PAGE_SIZE = 10;
-  private static readonly MOBILE_DEFAULT_PAGE_SIZE = 5;
+  private static readonly HANDSET_DEFAULT_PAGE_SIZE = 5;
 
   private readonly countryReferenceApi = inject(CountryReferenceApiService);
   private readonly formBuilder = inject(FormBuilder);
-  private readonly mediaMatcher = inject(MediaMatcher);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly layout = inject(LayoutService);
 
   readonly displayedColumns = ['codeAlpha2', 'codeAlpha3', 'nameUk', 'nameEn', 'nameRu'];
   readonly dataSource = new MatTableDataSource<CountryReferenceContractDto>([]);
@@ -69,7 +67,10 @@ export class AdminCountryReferenceComponent implements AfterViewInit {
 
   constructor() {
     this.dataSource.sortData = this.sortCountries.bind(this);
-    this.bindViewportPageSizeListener();
+    effect(() => {
+      this.layout.isHandset();
+      this.applyDefaultPageSizeForViewport();
+    });
     this.searchForm.controls.search.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged(), takeUntilDestroyed())
       .subscribe(() => void this.reload());
@@ -108,31 +109,16 @@ export class AdminCountryReferenceComponent implements AfterViewInit {
     this.searchForm.patchValue({ search: '' });
   }
 
-  private bindViewportPageSizeListener(): void {
-    const mql = this.mediaMatcher.matchMedia(
-      `(max-width: ${AdminCountryReferenceComponent.MOBILE_MAX_WIDTH_PX}px)`
-    );
-    const onChange = (): void => this.applyDefaultPageSizeForViewport();
-    onChange();
-    mql.addEventListener('change', onChange);
-    this.destroyRef.onDestroy(() => mql.removeEventListener('change', onChange));
-  }
-
   private applyDefaultPageSizeForViewport(): void {
-    const size = this.isMobileViewport()
-      ? AdminCountryReferenceComponent.MOBILE_DEFAULT_PAGE_SIZE
-      : AdminCountryReferenceComponent.DESKTOP_DEFAULT_PAGE_SIZE;
+    const size = this.layout.handsetPageSize(
+      AdminCountryReferenceComponent.DESKTOP_DEFAULT_PAGE_SIZE,
+      AdminCountryReferenceComponent.HANDSET_DEFAULT_PAGE_SIZE
+    );
     this.pageSize.set(size);
     if (this.paginator) {
       this.paginator.pageSize = size;
       this.paginator.pageIndex = 0;
     }
-  }
-
-  private isMobileViewport(): boolean {
-    return this.mediaMatcher.matchMedia(
-      `(max-width: ${AdminCountryReferenceComponent.MOBILE_MAX_WIDTH_PX}px)`
-    ).matches;
   }
 
   private refreshTableData(): void {

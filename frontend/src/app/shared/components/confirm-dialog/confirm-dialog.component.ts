@@ -21,6 +21,16 @@ import { TranslateModule } from '@ngx-translate/core';
       </button>
     </mat-dialog-actions>
   `,
+  styles: `
+    :host {
+      display: block;
+      max-width: min(100vw - 24px, 400px);
+    }
+
+    mat-dialog-actions button {
+      min-height: 48px;
+    }
+  `,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConfirmDialogComponent {

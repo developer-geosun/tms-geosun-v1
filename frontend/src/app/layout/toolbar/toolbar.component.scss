@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 mat-toolbar {
   --mat-toolbar-container-background-color: var(--mat-sys-primary-container);
   --mat-toolbar-container-text-color: var(--mat-sys-on-primary-container);
@@ -10,7 +12,7 @@ mat-toolbar {
   gap: 6px;
   height: auto !important;
   min-height: auto !important;
-  // overflow не на тулбарі — інакше обрізається .logo-hover-icons під логотипом
+  // overflow РЅРµ РЅР° С‚СѓР»Р±Р°СЂС– вЂ” С–РЅР°РєС€Рµ РѕР±СЂС–Р·Р°С”С‚СЊСЃСЏ .logo-hover-icons РїС–Рґ Р»РѕРіРѕС‚РёРїРѕРј
 }
 
 .logo-icons-group,
@@ -81,7 +83,7 @@ app-social-icon {
   flex-shrink: 0;
 }
 
-// Права частина тулбара (без overflow/скролу — випадаючі іконки під логотипом поза цим блоком)
+// РџСЂР°РІР° С‡Р°СЃС‚РёРЅР° С‚СѓР»Р±Р°СЂР° (Р±РµР· overflow/СЃРєСЂРѕР»Сѓ вЂ” РІРёРїР°РґР°СЋС‡С– С–РєРѕРЅРєРё РїС–Рґ Р»РѕРіРѕС‚РёРїРѕРј РїРѕР·Р° С†РёРј Р±Р»РѕРєРѕРј)
 .toolbar-end {
   order: 2;
   display: flex;
@@ -103,7 +105,7 @@ app-social-icon {
   overflow: hidden;
 }
 
-// Кнопка «гамбургер»: за замовчуванням прихована; mat-mini-fab задає display — тому !important
+// РљРЅРѕРїРєР° В«РіР°РјР±СѓСЂРіРµСЂВ»: Р·Р° Р·Р°РјРѕРІС‡СѓРІР°РЅРЅСЏРј РїСЂРёС…РѕРІР°РЅР°; mat-mini-fab Р·Р°РґР°С” display вЂ” С‚РѕРјСѓ !important
 .nav-menu-button.mat-mdc-mini-fab {
   display: none !important;
   flex-shrink: 0;
@@ -123,7 +125,7 @@ app-social-icon {
   line-height: 1;
 }
 
-// Активний пункт: інверсія primary-container ↔ on-primary-container (фон і текст)
+// РђРєС‚РёРІРЅРёР№ РїСѓРЅРєС‚: С–РЅРІРµСЂСЃС–СЏ primary-container в†” on-primary-container (С„РѕРЅ С– С‚РµРєСЃС‚)
 .toolbar-nav .nav-button.nav-button--active.mat-mdc-outlined-button {
   --mdc-outlined-button-label-text-color: var(--mat-sys-primary-container) !important;
   --mat-outlined-button-state-layer-color: var(--mat-sys-primary-container) !important;
@@ -140,9 +142,9 @@ app-social-icon {
   padding: 4px 0 !important;
 }
 
-// Активний пункт бургер-меню задається через [ngStyle] у шаблоні (navMenuActiveStyles) — перебиває MDC
+// РђРєС‚РёРІРЅРёР№ РїСѓРЅРєС‚ Р±СѓСЂРіРµСЂ-РјРµРЅСЋ Р·Р°РґР°С”С‚СЊСЃСЏ С‡РµСЂРµР· [ngStyle] Сѓ С€Р°Р±Р»РѕРЅС– (navMenuActiveStyles) вЂ” РїРµСЂРµР±РёРІР°С” MDC
 
-// Група кнопок авторизації та налаштувань — без переносу та стиснення
+// Р“СЂСѓРїР° РєРЅРѕРїРѕРє Р°РІС‚РѕСЂРёР·Р°С†С–С— С‚Р° РЅР°Р»Р°С€С‚СѓРІР°РЅСЊ вЂ” Р±РµР· РїРµСЂРµРЅРѕСЃСѓ С‚Р° СЃС‚РёСЃРЅРµРЅРЅСЏ
 .toolbar-actions {
   display: flex;
   flex-wrap: nowrap;
@@ -202,7 +204,7 @@ app-social-icon {
   box-shadow: 0 4px 10px rgba(0, 0, 0, .18);
 }
 
-// Кнопка сайту в ряду з соцмережами — той самий масштаб і білий фон
+// РљРЅРѕРїРєР° СЃР°Р№С‚Сѓ РІ СЂСЏРґСѓ Р· СЃРѕС†РјРµСЂРµР¶Р°РјРё вЂ” С‚РѕР№ СЃР°РјРёР№ РјР°СЃС€С‚Р°Р± С– Р±С–Р»РёР№ С„РѕРЅ
 .logo-hover-icons a.company-site-button.mat-mdc-icon-button {
   width: 40px !important;
   height: 40px !important;
@@ -219,7 +221,7 @@ app-social-icon {
   text-decoration: none;
   transition: all .25s cubic-bezier(.4, 0, .2, 1);
 
-  // Інверсія кольорів (специфічність вища за generic :hover нижче)
+  // Р†РЅРІРµСЂСЃС–СЏ РєРѕР»СЊРѕСЂС–РІ (СЃРїРµС†РёС„С–С‡РЅС–СЃС‚СЊ РІРёС‰Р° Р·Р° generic :hover РЅРёР¶С‡Рµ)
   &:hover,
   &:focus-visible {
     background: #006fa6;
@@ -328,7 +330,7 @@ a.company-site-button:active {
   height: 28px;
 }
 
-// Тільки вертикальні розділювачі між сегментами — без подвійної рамки з групою
+// РўС–Р»СЊРєРё РІРµСЂС‚РёРєР°Р»СЊРЅС– СЂРѕР·РґС–Р»СЋРІР°С‡С– РјС–Р¶ СЃРµРіРјРµРЅС‚Р°РјРё вЂ” Р±РµР· РїРѕРґРІС–Р№РЅРѕС— СЂР°РјРєРё Р· РіСЂСѓРїРѕСЋ
 .settings-menu-content mat-button-toggle.ua-button,
 .settings-menu-content mat-button-toggle.en-button,
 .settings-menu-content mat-button-toggle.ru-button {
@@ -382,7 +384,7 @@ a.company-site-button:active {
   outline-offset: 2px;
 }
 
-// Внутрішнє кільце фокусу — outline з offset обрізався б overflow групи і виглядав як темна «Г» на UA
+// Р’РЅСѓС‚СЂС–С€РЅС” РєС–Р»СЊС†Рµ С„РѕРєСѓСЃСѓ вЂ” outline Р· offset РѕР±СЂС–Р·Р°РІСЃСЏ Р± overflow РіСЂСѓРїРё С– РІРёРіР»СЏРґР°РІ СЏРє С‚РµРјРЅР° В«Р“В» РЅР° UA
 .settings-menu-content mat-button-toggle .mat-mdc-button-toggle-button:focus-visible {
   outline: none !important;
   box-shadow: inset 0 0 0 2px var(--mat-sys-primary);
@@ -436,7 +438,7 @@ a.company-site-button:active {
   background-color: var(--preview-bottom, #c7c7c7);
 }
 
-@media (min-width: 600px) {
+@include bp.tablet-up {
   mat-toolbar {
     gap: 8px;
     min-height: 64px !important;
@@ -447,8 +449,8 @@ a.company-site-button:active {
   }
 }
 
-// Широкий екран: лише горизонтальна навігація (бургер прибрано з потоку й з таб-ордеру)
-@media (min-width: 1025px) {
+// РЁРёСЂРѕРєРёР№ РµРєСЂР°РЅ: Р»РёС€Рµ РіРѕСЂРёР·РѕРЅС‚Р°Р»СЊРЅР° РЅР°РІС–РіР°С†С–СЏ (Р±СѓСЂРіРµСЂ РїСЂРёР±СЂР°РЅРѕ Р· РїРѕС‚РѕРєСѓ Р№ Р· С‚Р°Р±-РѕСЂРґРµСЂСѓ)
+@include bp.desktop {
   .toolbar-nav {
     display: flex;
   }
@@ -458,8 +460,8 @@ a.company-site-button:active {
   }
 }
 
-// Вузький екран: лише бургер (рядок кнопок навігації не займає місце)
-@media (max-width: 1024px) {
+// Р’СѓР·СЊРєРёР№ РµРєСЂР°РЅ: Р»РёС€Рµ Р±СѓСЂРіРµСЂ (СЂСЏРґРѕРє РєРЅРѕРїРѕРє РЅР°РІС–РіР°С†С–С— РЅРµ Р·Р°Р№РјР°С” РјС–СЃС†Рµ)
+@include bp.below-desktop {
   .toolbar-nav {
     display: none !important;
   }

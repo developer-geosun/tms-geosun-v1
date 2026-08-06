@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 :host {
   display: flex;
   flex: 1 1 auto;
@@ -42,7 +44,7 @@
     gap: 1rem;
     overflow: hidden;
 
-    @media (max-width: 960px) {
+    @include bp.below-desktop {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: minmax(0, 45vh) minmax(0, 1fr);
       overflow-y: auto;
@@ -76,7 +78,7 @@
     gap: 0.75rem;
     overflow: hidden;
 
-    @media (max-width: 960px) {
+    @include bp.below-desktop {
       grid-template-columns: minmax(0, 1fr);
       grid-template-rows: auto minmax(10rem, 1fr);
     }
@@ -154,7 +156,7 @@
     padding-right: 0.75rem;
     border-right: 1px solid var(--mat-sys-outline-variant, rgba(0, 0, 0, 0.12));
 
-    @media (max-width: 960px) {
+    @include bp.below-desktop {
       padding-right: 0;
       padding-bottom: 0.75rem;
       border-right: none;

@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, DestroyRef, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -24,6 +24,7 @@ import {
   TollTariffSetContractDto,
   UpdateFreightNumericScenarioContractRequest
 } from '../../core/api';
+import { LayoutService } from '../../core/layout';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -55,6 +56,10 @@ export class AdminFreightNumericScenariosComponent {
   private readonly tollTariffSetsApi = inject(TollTariffSetsApiService);
   private readonly dialog = inject(MatDialog);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly layout = inject(LayoutService);
+
+  private static readonly DESKTOP_DEFAULT_PAGE_SIZE = 10;
+  private static readonly HANDSET_DEFAULT_PAGE_SIZE = 5;
 
   readonly seasonModeOptions: SeasonModeContract[] = ['AUTO', 'WINTER', 'NON_WINTER'];
   readonly marginTypeOptions: MarginTypeContract[] = ['PERCENT_OF_COST_BEFORE_MARGIN', 'FIXED_PER_TRIP'];
@@ -69,7 +74,7 @@ export class AdminFreightNumericScenariosComponent {
   readonly editingId = signal<string | null>(null);
 
   readonly pageIndex = signal(0);
-  readonly pageSize = signal(10);
+  readonly pageSize = signal(AdminFreightNumericScenariosComponent.DESKTOP_DEFAULT_PAGE_SIZE);
   readonly pageSizeOptions = [5, 10, 25, 50];
 
   readonly pagedScenarios = computed(() => {
@@ -103,8 +108,22 @@ export class AdminFreightNumericScenariosComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((marginType) => this.syncMarginFieldAvailability(marginType));
     this.syncMarginFieldAvailability(this.scenarioForm.controls.marginType.value);
+    effect(() => {
+      this.layout.isHandset();
+      this.applyDefaultPageSizeForViewport();
+    });
     void this.loadTollTariffSets();
     void this.loadScenarios();
+  }
+
+  private applyDefaultPageSizeForViewport(): void {
+    const size = this.layout.handsetPageSize(
+      AdminFreightNumericScenariosComponent.DESKTOP_DEFAULT_PAGE_SIZE,
+      AdminFreightNumericScenariosComponent.HANDSET_DEFAULT_PAGE_SIZE
+    );
+    this.pageSize.set(size);
+    this.pageIndex.set(0);
+    this.clampPageIndex();
   }
 
   async loadTollTariffSets(): Promise<void> {

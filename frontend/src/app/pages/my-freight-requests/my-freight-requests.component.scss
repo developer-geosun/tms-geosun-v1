@@ -1,6 +1,11 @@
+@use 'breakpoints' as bp;
+
 .my-freight-requests-page {
   min-height: 100%;
-  padding: 1.25rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .my-freight-requests-page__header {
@@ -14,8 +19,10 @@
 
 .my-freight-requests-page__title {
   margin: 0;
-  font-size: 1.5rem;
+  font-size: var(--page-title-size);
   line-height: 1.25;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .my-freight-requests-page__spinner {

@@ -4,3 +4,13 @@
   background-color: var(--mat-sys-error) !important;
   color: var(--mat-sys-on-error) !important;
 }
+
+:host {
+  display: block;
+  max-width: min(100vw - 24px, 400px);
+}
+
+button {
+  min-height: 48px;
+}
+

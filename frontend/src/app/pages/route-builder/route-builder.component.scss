@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 :host {
   display: flex;
   flex-direction: column;
@@ -525,7 +527,7 @@
   box-sizing: border-box;
 }
 
-/* Компактний режим (≤1100px, дзеркалить MediaMatcher у компоненті): сайдбар або карта на весь блок */
+/* Компактний режим (≤compact-split, дзеркалить LayoutService.isCompactSplit): сайдбар або карта на весь блок */
 .freight-layout--compact-sidebar {
   position: relative;
 }
@@ -599,8 +601,8 @@
 /* Обидві кнопки в одному місці — внизу справа (над системним футером / safe area) */
 .route-builder-panel-toggle--open-map,
 .route-builder-panel-toggle--open-sidebar {
-  right: max(16px, env(safe-area-inset-right, 0px));
-  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  right: var(--fab-inset-inline);
+  bottom: var(--fab-inset);
 }
 .toast {
   position: fixed;
@@ -656,7 +658,7 @@
   gap: 2px;
   color: #0f172a;
 }
-@media (max-width: 1100px) {
+@include bp.compact-split {
   .freight-layout {
     display: flex;
     flex-direction: column;
@@ -689,7 +691,7 @@
 }
 
 /* Вузькі екрани: читабельність тексту, кнопки в колонку, менше «жорстких» обрізань */
-@media (max-width: 768px) {
+@include bp.handset {
   .freight-layout:not(.freight-layout--compact-sidebar) .sidebar {
     max-height: min(50vh, 480px);
   }
@@ -724,7 +726,7 @@
   }
 }
 
-@media (max-width: 400px) {
+@include bp.handset {
   .freight-layout:not(.freight-layout--compact-sidebar) .sidebar {
     max-height: min(48vh, 440px);
   }

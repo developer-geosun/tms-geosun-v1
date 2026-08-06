@@ -2,12 +2,11 @@ import {
   AfterViewInit,
   ChangeDetectionStrategy,
   Component,
-  DestroyRef,
+  effect,
   inject,
   signal,
   ViewChild
 } from '@angular/core';
-import { MediaMatcher } from '@angular/cdk/layout';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -24,6 +23,7 @@ import {
   CurrencyContractDto,
   NbuRatesSnapshotContractDto
 } from '../../core/api';
+import { LayoutService } from '../../core/layout';
 
 @Component({
   selector: 'app-admin-currencies',
@@ -46,13 +46,11 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminCurrenciesComponent implements AfterViewInit {
-  private static readonly MOBILE_MAX_WIDTH_PX = 600;
   private static readonly DESKTOP_DEFAULT_PAGE_SIZE = 10;
-  private static readonly MOBILE_DEFAULT_PAGE_SIZE = 5;
+  private static readonly HANDSET_DEFAULT_PAGE_SIZE = 5;
 
   private readonly currenciesApi = inject(CurrenciesApiService);
-  private readonly mediaMatcher = inject(MediaMatcher);
-  private readonly destroyRef = inject(DestroyRef);
+  private readonly layout = inject(LayoutService);
   private readonly formBuilder = inject(FormBuilder);
 
   readonly displayedColumns = [
@@ -89,7 +87,10 @@ export class AdminCurrenciesComponent implements AfterViewInit {
 
   constructor() {
     this.dataSource.sortData = this.sortCurrencies.bind(this);
-    this.bindViewportPageSizeListener();
+    effect(() => {
+      this.layout.isHandset();
+      this.applyDefaultPageSizeForViewport();
+    });
     void this.reload();
   }
 
@@ -198,31 +199,16 @@ export class AdminCurrenciesComponent implements AfterViewInit {
     return new Date(parsed).toLocaleString();
   }
 
-  private bindViewportPageSizeListener(): void {
-    const mql = this.mediaMatcher.matchMedia(
-      `(max-width: ${AdminCurrenciesComponent.MOBILE_MAX_WIDTH_PX}px)`
-    );
-    const onChange = (): void => this.applyDefaultPageSizeForViewport();
-    onChange();
-    mql.addEventListener('change', onChange);
-    this.destroyRef.onDestroy(() => mql.removeEventListener('change', onChange));
-  }
-
   private applyDefaultPageSizeForViewport(): void {
-    const size = this.isMobileViewport()
-      ? AdminCurrenciesComponent.MOBILE_DEFAULT_PAGE_SIZE
-      : AdminCurrenciesComponent.DESKTOP_DEFAULT_PAGE_SIZE;
+    const size = this.layout.handsetPageSize(
+      AdminCurrenciesComponent.DESKTOP_DEFAULT_PAGE_SIZE,
+      AdminCurrenciesComponent.HANDSET_DEFAULT_PAGE_SIZE
+    );
     this.pageSize.set(size);
     if (this.paginator) {
       this.paginator.pageSize = size;
       this.paginator.pageIndex = 0;
     }
-  }
-
-  private isMobileViewport(): boolean {
-    return this.mediaMatcher.matchMedia(
-      `(max-width: ${AdminCurrenciesComponent.MOBILE_MAX_WIDTH_PX}px)`
-    ).matches;
   }
 
   private refreshTableData(): void {

@@ -14,22 +14,21 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CreateRouteRequestContractRequest } from '../../../core/api/route-requests-contracts.model';
 import { RouteRequestsApiService } from '../../../core/api/route-requests-api.service';
 import { parseOptionalFormNumber } from '../../../core/utils/parse-optional-form-number';
+import { getHandsetFriendlyDialogConfig } from '../../utils/handset-friendly-dialog-config';
 
 /** Клас панелі діалогу для глобальних адаптивних стилів (у `styles.scss`). */
 export const ROUTE_FREIGHT_REQUEST_DIALOG_PANEL_CLASS = 'route-freight-request-dialog-shell';
 
 /** Конфігурація `MatDialog` для узгодженого вигляду на routes та route-builder. */
-export function getRouteFreightRequestDialogConfig(data: RouteFreightRequestDialogData): MatDialogConfig<RouteFreightRequestDialogData> {
-  return {
-    width: 'min(520px, calc(100vw - 24px))',
-    maxWidth: '100vw',
+export function getRouteFreightRequestDialogConfig(
+  data: RouteFreightRequestDialogData
+): MatDialogConfig<RouteFreightRequestDialogData> {
+  return getHandsetFriendlyDialogConfig({
     maxHeight: 'min(92vh, 720px)',
-    autoFocus: 'first-tabbable',
-    restoreFocus: true,
     disableClose: true,
     panelClass: ROUTE_FREIGHT_REQUEST_DIALOG_PANEL_CLASS,
     data
-  };
+  });
 }
 
 @Component({

@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 .logo-container {
   display: flex;
   align-items: center;
@@ -62,8 +64,8 @@
   transition: filter 0.3s ease;
 }
 
-// Адаптивність
-@media (max-width: 768px) {
+// РљРѕРјРїР°РєС‚РЅС–С€Рµ Р»РѕРіРѕ РЅР° РїР»Р°РЅС€РµС‚С– С‚Р° handset
+@include bp.below-desktop {
   .logo-container {
     width: 64px;
     height: 64px;

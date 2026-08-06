@@ -43,6 +43,7 @@ import {
   countryReferenceSelectLabel
 } from '../../core/utils/country-reference-localized-name';
 import { LanguageService } from '../../core/services/language.service';
+import { LayoutService } from '../../core/layout';
 import { parseOptionalFormNumber } from '../../core/utils/parse-optional-form-number';
 import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -70,13 +71,15 @@ import { ConfirmDialogComponent } from '../../shared/components/confirm-dialog/c
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AdminTollTariffSetsComponent implements AfterViewInit {
-  private static readonly RULES_DEFAULT_PAGE_SIZE = 10;
+  private static readonly RULES_DESKTOP_PAGE_SIZE = 10;
+  private static readonly RULES_HANDSET_PAGE_SIZE = 5;
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
   private readonly tollApi = inject(TollTariffSetsApiService);
   private readonly countryReferenceApi = inject(CountryReferenceApiService);
   private readonly languageService = inject(LanguageService);
+  private readonly layout = inject(LayoutService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly dialog = inject(MatDialog);
 
@@ -85,7 +88,7 @@ export class AdminTollTariffSetsComponent implements AfterViewInit {
   readonly ruleColumns = ['countryCode', 'countryName', 'tollType', 'rate', 'fixedDays', 'isActive', 'actions'];
   readonly rulesDataSource = new MatTableDataSource<CountryTollRuleContractDto>([]);
   readonly rulesPageSizeOptions = [5, 10, 25, 50];
-  readonly rulesPageSize = AdminTollTariffSetsComponent.RULES_DEFAULT_PAGE_SIZE;
+  readonly rulesPageSize = signal(AdminTollTariffSetsComponent.RULES_DESKTOP_PAGE_SIZE);
   private readonly countries = signal<CountryReferenceContractDto[]>([]);
 
   @ViewChild('rulesPaginator') private rulesPaginator?: MatPaginator;
@@ -172,8 +175,25 @@ export class AdminTollTariffSetsComponent implements AfterViewInit {
       }
     });
 
+    effect(() => {
+      this.layout.isHandset();
+      this.applyDefaultRulesPageSizeForViewport();
+    });
+
     void this.loadCountries();
     void this.loadSets();
+  }
+
+  private applyDefaultRulesPageSizeForViewport(): void {
+    const size = this.layout.handsetPageSize(
+      AdminTollTariffSetsComponent.RULES_DESKTOP_PAGE_SIZE,
+      AdminTollTariffSetsComponent.RULES_HANDSET_PAGE_SIZE
+    );
+    this.rulesPageSize.set(size);
+    if (this.rulesPaginator) {
+      this.rulesPaginator.pageSize = size;
+      this.rulesPaginator.pageIndex = 0;
+    }
   }
 
   ngAfterViewInit(): void {

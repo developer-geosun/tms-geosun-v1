@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 :host {
   display: flex;
   flex: 1 1 auto;
@@ -94,7 +96,7 @@
     flex: 0 1 auto;
     max-height: 100%;
     min-height: 0;
-    overflow-x: hidden;
+    overflow-x: auto;
     overflow-y: auto;
   }
 
@@ -115,7 +117,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@include bp.handset {
   .admin-currencies {
     font-size: 0.8125rem;
     padding: 0.5rem 0.75rem;
@@ -242,47 +244,6 @@
       ::ng-deep .mat-mdc-paginator-navigation-last {
         display: none;
       }
-    }
-  }
-}
-
-@media (max-width: 400px) {
-  .admin-currencies {
-    font-size: 0.75rem;
-
-    &__header h1 {
-      font-size: 0.9375rem;
-    }
-
-    &__actions .mat-mdc-button {
-      font-size: 0.6875rem;
-      padding-inline: 0.625rem;
-    }
-
-    &__table {
-      min-width: 16.5rem;
-      font-size: 0.6875rem;
-
-      .mat-mdc-header-cell,
-      .mat-mdc-cell {
-        font-size: 0.6875rem;
-      }
-
-      .mat-mdc-header-cell,
-      .mat-sort-header-content {
-        font-size: 0.625rem;
-      }
-
-      .mat-column-ratePerUnit {
-        width: 4.75rem;
-      }
-    }
-
-    &__paginator,
-    &__paginator ::ng-deep .mat-mdc-paginator-container,
-    &__paginator ::ng-deep .mat-mdc-paginator-page-size-label,
-    &__paginator ::ng-deep .mat-mdc-paginator-range-label {
-      font-size: 0.6875rem;
     }
   }
 }

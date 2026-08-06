@@ -43,7 +43,7 @@
             | translate: { rateDate: snapshot.rateDate, fetchedAt: formatFetchedAt(snapshot.fetchedAt) }
         }}
       </h2>
-      <div class="admin-currencies__table-scroll">
+      <div class="admin-currencies__table-scroll table-shell">
         <table mat-table [dataSource]="nbuSnapshotSource" class="admin-currencies__table">
           <ng-container matColumnDef="currencyCode">
             <th mat-header-cell *matHeaderCellDef>{{ 'pages.adminCurrencies.code' | translate }}</th>
@@ -81,7 +81,7 @@
   }
 
   <div class="admin-currencies__table-panel">
-    <div class="admin-currencies__table-scroll">
+    <div class="admin-currencies__table-scroll table-shell">
       <table mat-table [dataSource]="dataSource" matSort class="admin-currencies__table">
         <ng-container matColumnDef="code">
           <th mat-header-cell *matHeaderCellDef mat-sort-header="code">

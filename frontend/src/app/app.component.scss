@@ -9,7 +9,9 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
-  padding: 20px;
+  padding: var(--page-padding-block) var(--page-padding-inline);
+  padding-left: max(var(--page-padding-inline), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--page-padding-inline), env(safe-area-inset-right, 0px));
   background-color: var(--mat-sys-surface);
   color: var(--mat-sys-on-surface);
   display: flex;

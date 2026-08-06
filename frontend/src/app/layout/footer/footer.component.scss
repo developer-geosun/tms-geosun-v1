@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 .app-footer {
   background-color: var(--mat-sys-surface-container, #f3f3f3);
   color: var(--mat-sys-on-surface, #1a1a1a);
@@ -78,8 +80,8 @@ app-social-icon:hover {
   }
 }
 
-// Планшеты и больше (от 600px)
-@media (min-width: 600px) {
+// РџР»Р°РЅС€РµС‚Рё С– Р±С–Р»СЊС€Рµ
+@include bp.tablet-up {
   .app-footer {
     padding: 16px 20px;
     min-height: 80px;
@@ -106,8 +108,8 @@ app-social-icon:hover {
   }
 }
 
-// Десктоп (от 768px)
-@media (min-width: 768px) {
+// Р”РµСЃРєС‚РѕРї: С„СѓС‚РµСЂ РІ РѕРґРёРЅ СЂСЏРґРѕРє
+@include bp.desktop {
   .app-footer {
     .footer-content {
       flex-direction: row;

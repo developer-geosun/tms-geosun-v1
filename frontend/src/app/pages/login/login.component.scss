@@ -1,3 +1,5 @@
+@use 'breakpoints' as bp;
+
 .login-page {
   width: 100%;
   min-height: clamp(420px, calc(100vh - 220px), 100%);
@@ -198,7 +200,7 @@ h1 {
   }
 }
 
-@media (max-width: 600px) {
+@include bp.handset {
   .login-page {
     min-height: clamp(360px, calc(100vh - 170px), 100%);
     padding: 14px 10px;
