@@ -183,22 +183,47 @@
 
 .nbu-form--start-point {
   align-items: center;
+  flex-wrap: nowrap;
   gap: 10px;
   width: 100%;
 }
 
 .nbu-form--start-point .mat-mdc-slide-toggle {
-  margin-right: 8px;
-  // довгий підпис тогла не роздуває рядок за межі екрана
+  // тогл зліва, не розтягується — місце лишається під контролі справа
+  flex: 0 1 auto;
+  margin-right: 0;
   max-width: 100%;
-  flex: 1 1 auto;
   min-width: 0;
 }
 
-.nbu-form__actions--start-point {
-  // стартова точка без окремого підпису — кнопки вже у спільній висоті ряду
-  margin-bottom: 0;
+.nbu-form__start-point-controls {
+  // поле адреси + кнопки в один ряд, притиснуті справа
+  display: flex;
+  flex-wrap: nowrap;
+  // як у .nbu-form: верхня межа поля і кнопок на одній лінії
+  align-items: flex-start;
+  gap: 8px;
+  margin-left: auto;
+  min-width: 0;
+  max-width: 100%;
   flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
+.nbu-form--start-point .nbu-form__field--wide {
+  flex: 1 1 14rem;
+  width: auto;
+  max-width: 28rem;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.nbu-form__actions--start-point {
+  // висота як у outline mat-form-field (56px), без зсуву вниз
+  margin-bottom: 0;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-self: flex-start;
 }
 
 .admin-route-requests__nbu-summary {
@@ -793,17 +818,26 @@
   }
 
   .nbu-form--start-point .mat-mdc-slide-toggle {
-    margin-right: 0;
     width: 100%;
   }
 
-  .nbu-form__field--wide {
+  .nbu-form__start-point-controls {
+    flex-direction: column;
+    align-items: stretch;
+    margin-left: 0;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .nbu-form--start-point .nbu-form__field--wide {
     flex: 1 1 auto;
     width: 100%;
+    max-width: 100%;
   }
 
   .nbu-form__actions--start-point {
     flex-direction: column;
+    flex-wrap: wrap;
     height: auto;
     width: 100%;
 

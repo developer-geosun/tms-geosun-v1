@@ -272,21 +272,23 @@
                 {{ 'pages.adminRouteRequests.useStartPoint' | translate }}
               </mat-slide-toggle>
               @if (nbuForm.controls.useStartPoint.value) {
-                <mat-form-field appearance="outline" class="nbu-form__field nbu-form__field--wide">
-                  <mat-label>{{ 'pages.adminRouteRequests.startPointAddress' | translate }}</mat-label>
-                  <input matInput formControlName="startPointAddress" />
-                </mat-form-field>
-                <div class="nbu-form__actions nbu-form__actions--start-point">
-                  <button
-                    mat-stroked-button
-                    type="button"
-                    (click)="setStartPointFromAddress()"
-                    [disabled]="isStartPointGeocoding()">
-                    {{ 'pages.adminRouteRequests.applyStartPointAddress' | translate }}
-                  </button>
-                  <button mat-stroked-button type="button" (click)="clearStartPoint()">
-                    {{ 'pages.adminRouteRequests.clearStartPoint' | translate }}
-                  </button>
+                <div class="nbu-form__start-point-controls">
+                  <mat-form-field appearance="outline" class="nbu-form__field nbu-form__field--wide">
+                    <mat-label>{{ 'pages.adminRouteRequests.startPointAddress' | translate }}</mat-label>
+                    <input matInput formControlName="startPointAddress" />
+                  </mat-form-field>
+                  <div class="nbu-form__actions nbu-form__actions--start-point">
+                    <button
+                      mat-stroked-button
+                      type="button"
+                      (click)="setStartPointFromAddress()"
+                      [disabled]="isStartPointGeocoding()">
+                      {{ 'pages.adminRouteRequests.applyStartPointAddress' | translate }}
+                    </button>
+                    <button mat-stroked-button type="button" (click)="clearStartPoint()">
+                      {{ 'pages.adminRouteRequests.clearStartPoint' | translate }}
+                    </button>
+                  </div>
                 </div>
               }
             </div>
