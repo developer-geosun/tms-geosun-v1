@@ -6,6 +6,11 @@
   gap: 16px;
   padding: 16px;
   color: var(--mat-sys-on-surface);
+  // запобігає горизонтальному «виїзду» сторінки на вузьких екранах
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
 }
 
 .admin-route-requests__header {
@@ -16,6 +21,7 @@
 
   h1 {
     margin: 0;
+    font-size: clamp(1.1rem, 2.5vw, 1.5rem);
     color: var(--mat-sys-on-surface);
   }
 }
@@ -24,30 +30,11 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
-}
+  align-items: center;
 
-.admin-route-requests__filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: flex-start;
-  margin-bottom: 8px;
-
-  // без помилок у фільтрах: прибираємо порожній subscript, щоб ряд був однієї висоти
-  .mat-mdc-form-field-subscript-wrapper {
-    display: none;
-  }
-}
-
-.admin-route-requests__filter-actions {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-  // висота як у mat-form-field outline без subscript
-  height: 56px;
-
-  button {
-    height: 100%;
+  .admin-route-requests__action-btn mat-icon {
+    margin-right: 4px;
+    vertical-align: middle;
   }
 }
 
@@ -57,6 +44,9 @@
   gap: 8px;
   align-items: flex-start;
   margin-bottom: 12px;
+  // не розтягувати батька за межі viewport
+  min-width: 0;
+  max-width: 100%;
 
   // без помилок у цьому рядку: прибираємо порожній subscript для спільної висоти з кнопками
   .mat-mdc-form-field-subscript-wrapper {
@@ -65,12 +55,16 @@
 }
 
 .nbu-form__field {
-  min-width: 200px;
+  min-width: min(200px, 100%);
+  max-width: 100%;
 }
 
 .nbu-form__field--wide {
-  min-width: 320px;
-  flex: 1 1 320px;
+  // гнучка ширина: без жорсткого min-width, щоб не ламати handset
+  flex: 1 1 12rem;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
 }
 
 .nbu-form__actions {
@@ -79,6 +73,8 @@
   gap: 8px;
   align-items: stretch;
   height: 56px;
+  min-width: 0;
+  max-width: 100%;
 
   button {
     height: 100%;
@@ -88,19 +84,50 @@
 .nbu-form--start-point {
   align-items: center;
   gap: 10px;
+  width: 100%;
 }
 
 .nbu-form--start-point .mat-mdc-slide-toggle {
   margin-right: 8px;
+  // довгий підпис тогла не роздуває рядок за межі екрана
+  max-width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .nbu-form__actions--start-point {
   // стартова точка без окремого підпису — кнопки вже у спільній висоті ряду
   margin-bottom: 0;
+  flex: 1 1 auto;
 }
 
 .admin-route-requests__nbu-summary {
+  position: relative;
   margin-bottom: 12px;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.admin-route-requests__nbu-summary-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 16px 8px 0 16px;
+
+  mat-card-title,
+  .mat-mdc-card-title {
+    margin: 0;
+    padding: 8px 0 0;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
+.admin-route-requests__nbu-summary-close {
+  flex-shrink: 0;
+  margin: 0;
 }
 
 .admin-route-requests__nbu-summary-meta {
@@ -108,35 +135,71 @@
   flex-wrap: wrap;
   gap: 4px 8px;
   line-height: 1.4;
-  margin-bottom: 8px;
+  margin: 0 16px 8px;
   color: var(--mat-sys-on-surface-variant);
+  overflow-wrap: anywhere;
 }
 
-.admin-route-requests__nbu-table-wrap {
-  overflow-x: auto;
+// зведена таблиця витрат: desktop — 3 колонки; handset — карткові рядки
+.admin-route-requests__nbu-cost {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   margin-bottom: 12px;
+  min-width: 0;
+  max-width: 100%;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--mat-sys-surface);
 }
 
-.admin-route-requests__nbu-cost-table {
-  width: 100%;
-  min-width: 420px;
+.admin-route-requests__nbu-cost-head,
+.admin-route-requests__nbu-cost-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 8px 12px;
+  align-items: baseline;
+  padding: 10px 12px;
+  min-width: 0;
 }
 
-.admin-route-requests__nbu-cost-table th {
+.admin-route-requests__nbu-cost-head {
   font-weight: 600;
+  font-size: 13px;
   background: var(--mat-sys-surface-container);
   color: var(--mat-sys-on-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  span:not(:first-child) {
+    text-align: right;
+  }
 }
 
-.admin-route-requests__nbu-cost-table td,
-.admin-route-requests__nbu-cost-table th {
-  padding: 10px 12px;
+.admin-route-requests__nbu-cost-row {
   color: var(--mat-sys-on-surface);
-  border-color: var(--mat-sys-outline-variant);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:nth-child(even) {
+    background: var(--mat-sys-surface-container-low);
+  }
 }
 
-.admin-route-requests__nbu-cost-table tr.mat-mdc-row:nth-child(even) td {
-  background: var(--mat-sys-surface-container-low);
+.admin-route-requests__nbu-cost-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-route-requests__nbu-cost-uah,
+.admin-route-requests__nbu-cost-proposal {
+  min-width: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
 }
 
 .nbu-cost-row--subtotal {
@@ -152,10 +215,13 @@
 
 .admin-route-requests__nbu-breakdown-panel {
   margin-top: 4px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .admin-route-requests__nbu-summary-text {
   white-space: pre-wrap;
+  overflow-wrap: anywhere;
   font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
   font-size: 13px;
   line-height: 1.4;
@@ -169,10 +235,31 @@
   padding: 10px;
 }
 
+// дії по розрахунку: не в один «склеєний» ряд
+.admin-route-requests__nbu-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: stretch;
+  padding: 8px 16px 16px !important;
+  margin: 0 !important;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+
+  // скинути стандартні margin Material card-actions
+  .mat-mdc-button-base,
+  button {
+    margin: 0 !important;
+    min-width: 0;
+  }
+}
+
 .admin-route-requests__nbu-history {
   list-style: none;
   padding: 0;
   margin: 0 0 12px;
+  min-width: 0;
 }
 
 .admin-route-requests__nbu-history-item {
@@ -180,6 +267,18 @@
   align-items: center;
   gap: 4px;
   color: var(--mat-sys-on-surface);
+  min-width: 0;
+
+  .mat-mdc-button {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: auto;
+    min-height: 40px;
+    white-space: normal;
+    text-align: left;
+    line-height: 1.3;
+    padding-inline: 8px;
+  }
 }
 
 .admin-route-requests__nbu-history-delete {
@@ -190,6 +289,7 @@
   display: grid;
   grid-template-columns: minmax(280px, 360px) 1fr;
   gap: 16px;
+  min-width: 0;
 }
 
 .admin-route-requests__list {
@@ -266,6 +366,21 @@
   padding: 14px;
   background: var(--mat-sys-surface-container-high);
   color: var(--mat-sys-on-surface);
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+  box-sizing: border-box;
+  // відступ під sticky-toolbar/header при scrollIntoView
+  scroll-margin-top: 72px;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--mat-sys-primary) 55%, transparent);
+    outline-offset: 2px;
+  }
 
   h2,
   h3 {
@@ -382,6 +497,12 @@
   gap: 4px;
   font-size: 14px;
   color: var(--mat-sys-on-surface);
+  min-width: 0;
+
+  li {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
 }
 
 .admin-country-distances {
@@ -411,7 +532,7 @@
 
 @include bp.below-desktop {
   .admin-route-requests__layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .quote-form {
@@ -426,5 +547,145 @@
   .request-map {
     min-height: 240px;
     height: min(42vh, 360px);
+  }
+
+  .nbu-form__field {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .nbu-form__actions {
+    height: auto;
+    width: 100%;
+
+    button {
+      height: auto;
+      min-height: 48px;
+    }
+  }
+
+  // кнопки розрахунку — перенос і повноцінні зони тапу
+  .admin-route-requests__nbu-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    button {
+      width: 100%;
+      height: auto;
+      min-height: 48px;
+      white-space: normal;
+      line-height: 1.25;
+    }
+  }
+
+  // результат розрахунку: повні суми без обрізання колонок
+  .admin-route-requests__nbu-cost-head {
+    display: none;
+  }
+
+  .admin-route-requests__nbu-cost-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+    padding: 12px;
+  }
+
+  .admin-route-requests__nbu-cost-label {
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  .admin-route-requests__nbu-cost-uah,
+  .admin-route-requests__nbu-cost-proposal {
+    display: block;
+    width: 100%;
+    text-align: right;
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  .quote-form__actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+      min-height: 48px;
+    }
+  }
+}
+
+@include bp.handset {
+  .admin-route-requests {
+    padding: 12px;
+  }
+
+  // заголовок: назва + тільки іконки дій
+  .admin-route-requests__header {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .admin-route-requests__header h1 {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-route-requests__actions {
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    gap: 4px;
+
+    .admin-route-requests__action-label {
+      display: none;
+    }
+
+    .admin-route-requests__action-btn {
+      min-width: 44px;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      line-height: 44px;
+
+      mat-icon {
+        margin: 0;
+        vertical-align: middle;
+      }
+    }
+  }
+
+  // стартова точка: колонка на вузькому екрані (toggle + адреса + кнопки)
+  .nbu-form--start-point {
+    flex-direction: column;
+    align-items: stretch;
+    flex-wrap: nowrap;
+  }
+
+  .nbu-form--start-point .mat-mdc-slide-toggle {
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .nbu-form__field--wide {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .nbu-form__actions--start-point {
+    flex-direction: column;
+    height: auto;
+    width: 100%;
+
+    button {
+      width: 100%;
+      height: auto;
+      min-height: 48px;
+      margin: 0;
+      white-space: normal;
+      line-height: 1.25;
+    }
   }
 }

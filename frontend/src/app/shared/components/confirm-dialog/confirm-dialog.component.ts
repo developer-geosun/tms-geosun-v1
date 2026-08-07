@@ -16,7 +16,11 @@ import { TranslateModule } from '@ngx-translate/core';
       <button mat-stroked-button type="button" (click)="close(false)">
         {{ 'common.confirmDialog.cancel' | translate }}
       </button>
-      <button mat-flat-button color="warn" type="button" (click)="close(true)">
+      <button
+        mat-flat-button
+        type="button"
+        class="confirm-dialog__confirm"
+        (click)="close(true)">
         {{ 'common.confirmDialog.confirm' | translate }}
       </button>
     </mat-dialog-actions>
@@ -29,6 +33,16 @@ import { TranslateModule } from '@ngx-translate/core';
 
     mat-dialog-actions button {
       min-height: 48px;
+    }
+
+    /* деструктивна дія: filled з системним error (червоний фон) */
+    .confirm-dialog__confirm {
+      --mdc-filled-button-container-color: var(--mat-sys-error);
+      --mdc-filled-button-label-text-color: var(--mat-sys-on-error);
+      --mat-button-filled-container-color: var(--mat-sys-error);
+      --mat-button-filled-label-text-color: var(--mat-sys-on-error);
+      background-color: var(--mat-sys-error) !important;
+      color: var(--mat-sys-on-error) !important;
     }
   `,
   changeDetection: ChangeDetectionStrategy.OnPush

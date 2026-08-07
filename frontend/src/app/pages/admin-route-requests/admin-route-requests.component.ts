@@ -25,7 +25,6 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
@@ -54,6 +53,10 @@ import {
   SendProposalDialogComponent,
   SendProposalDialogData
 } from './send-proposal-dialog.component';
+import {
+  FilterRouteRequestsDialogComponent,
+  FilterRouteRequestsDialogResult
+} from './filter-route-requests-dialog.component';
 import * as L from 'leaflet';
 
 @Component({
@@ -73,7 +76,6 @@ import * as L from 'leaflet';
     MatCardModule,
     MatExpansionModule,
     MatIconModule,
-    MatTableModule,
     MatSlideToggleModule,
     RouterLink
   ],
@@ -83,6 +85,8 @@ import * as L from 'leaflet';
 })
 export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   @ViewChild('requestMap', { static: false }) private readonly requestMapElement?: ElementRef<HTMLDivElement>;
+  @ViewChild('requestDetails', { static: false })
+  private readonly requestDetailsElement?: ElementRef<HTMLElement>;
 
   private readonly formBuilder = inject(FormBuilder);
   private readonly router = inject(Router);
@@ -93,6 +97,9 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
 
   private static readonly DESKTOP_DEFAULT_PAGE_SIZE = 20;
   private static readonly HANDSET_DEFAULT_PAGE_SIZE = 5;
+
+  /** Попередній handset-стан — effect лише при зміні breakpoint, не при виборі pageSize користувачем. */
+  private lastHandsetViewport: boolean | null = null;
 
   private map: L.Map | null = null;
   private mapRouteLayer: L.Polyline | null = null;
@@ -162,7 +169,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     return preview ? buildNbuCostPreviewDisplay(preview) : null;
   });
 
-  readonly nbuCostTableColumns = ['article', 'uah', 'proposal'];
   readonly selectedDraftQuote = computed(
     () => this.quoteHistory().find((quote) => quote.status === 'draft') ?? null
   );
@@ -176,6 +182,9 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     sort: ['createdAt'],
     order: ['desc']
   });
+
+  /** true, якщо застосовано параметри, відмінні від дефолтних */
+  readonly filtersActive = signal(false);
 
   readonly quoteDraftForm = this.formBuilder.nonNullable.group({
     currency: ['EUR'],
@@ -207,15 +216,19 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
         AdminRouteRequestsComponent.HANDSET_DEFAULT_PAGE_SIZE
       )
     );
+    // Тільки коли змінюється handset↔desktop: не перезаписувати вибір pageSize користувача.
     effect(() => {
-      const size = this.layout.handsetPageSize(
-        AdminRouteRequestsComponent.DESKTOP_DEFAULT_PAGE_SIZE,
-        AdminRouteRequestsComponent.HANDSET_DEFAULT_PAGE_SIZE
-      );
-      if (this.pageSize() === size) {
+      const isHandset = this.layout.isHandset();
+      const previous = this.lastHandsetViewport;
+      this.lastHandsetViewport = isHandset;
+      if (previous === null || previous === isHandset) {
         return;
       }
-      this.pageSize.set(size);
+      this.pageSize.set(
+        isHandset
+          ? AdminRouteRequestsComponent.HANDSET_DEFAULT_PAGE_SIZE
+          : AdminRouteRequestsComponent.DESKTOP_DEFAULT_PAGE_SIZE
+      );
       this.pageIndex.set(0);
       void this.loadRequests();
     });
@@ -293,6 +306,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   }
 
   async applyFilters(): Promise<void> {
+    this.filtersActive.set(this.hasActiveFilters());
     this.pageIndex.set(0);
     await this.loadRequests();
   }
@@ -307,8 +321,49 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       sort: 'createdAt',
       order: 'desc'
     });
+    this.filtersActive.set(false);
     this.pageIndex.set(0);
     await this.loadRequests();
+  }
+
+  async openFiltersDialog(): Promise<void> {
+    const ref = this.dialog.open(
+      FilterRouteRequestsDialogComponent,
+      getHandsetFriendlyDialogConfig({
+        width: 'min(520px, calc(100vw - 24px))',
+        maxHeight: 'min(92vh, 760px)',
+        data: {
+          filters: this.filterForm.getRawValue(),
+          statusOptions: this.statusOptions
+        }
+      })
+    );
+    const result = await firstValueFrom(ref.afterClosed()) as
+      | FilterRouteRequestsDialogResult
+      | undefined;
+    if (!result) {
+      return;
+    }
+    if (result.action === 'reset') {
+      await this.resetFilters();
+      return;
+    }
+    this.filterForm.patchValue(result.values);
+    await this.applyFilters();
+  }
+
+  /** Чи відрізняються поточні фільтри від дефолтних (кнопка — інверсний стиль). */
+  private hasActiveFilters(): boolean {
+    const filters = this.filterForm.getRawValue();
+    return (
+      !!filters.status.trim() ||
+      !!filters.createdFrom.trim() ||
+      !!filters.createdTo.trim() ||
+      !!filters.ownerEmail.trim() ||
+      !!filters.routeTitle.trim() ||
+      filters.sort !== 'createdAt' ||
+      filters.order !== 'desc'
+    );
   }
 
   async onPageChange(event: PageEvent): Promise<void> {
@@ -328,6 +383,21 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.nbuCostSummary.set('');
     this.lastNbuPreview.set(null);
     void this.loadRequestDetails(requestId);
+    this.scrollDetailsIntoView();
+  }
+
+  /** Прокрутка до блоку деталей після вибору картки в черзі (актуально на handset). */
+  private scrollDetailsIntoView(): void {
+    // після оновлення DOM (Active CD / content details)
+    requestAnimationFrame(() => {
+      const el = this.requestDetailsElement?.nativeElement;
+      if (!el) {
+        return;
+      }
+      el.scrollIntoView({ behavior: 'smooth', block: 'start', inline: 'nearest' });
+      // фокус для a11y без видимої обводки (tabindex="-1")
+      el.focus({ preventScroll: true });
+    });
   }
 
   /** Сума пропозиції для картки в черзі (лише QUOTED з поточною котировкою). */
@@ -401,35 +471,6 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  async recalculateCountryBreakdown(): Promise<void> {
-    const selected = this.selectedRequest();
-    const scenarioId = this.nbuForm.controls.scenarioId.value.trim();
-    if (!selected) {
-      return;
-    }
-    if (!scenarioId) {
-      this.nbuActionError.set('pages.adminRouteRequests.nbuScenarioRequired');
-      this.nbuActionErrorDetail.set('');
-      return;
-    }
-    this.nbuActionError.set('');
-    this.nbuActionErrorDetail.set('');
-    this.nbuActionSuccess.set('');
-    this.showNbuRatesLink.set(false);
-    this.quoteActionError.set('');
-    this.quoteActionSuccess.set('');
-    this.isCountryBreakdownLoading.set(true);
-    try {
-      const updated = await this.routeRequestsApi.postAdminCountryBreakdown(selected.id, { scenarioId });
-      this.requests.update((list) => list.map((item) => (item.id === updated.id ? updated : item)));
-      this.nbuActionSuccess.set('pages.adminRouteRequests.countryBreakdownSuccess');
-    } catch (error) {
-      this.handleNbuActionError(error, 'pages.adminRouteRequests.countryBreakdownFailed');
-    } finally {
-      this.isCountryBreakdownLoading.set(false);
-    }
-  }
-
   async runNbuCostPreview(): Promise<void> {
     const selected = this.selectedRequest();
     const scenarioId = this.nbuForm.controls.scenarioId.value.trim();
@@ -449,12 +490,15 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.showNbuRatesLink.set(false);
     this.isNbuPreviewLoading.set(true);
     try {
+      // Backend cost-preview сам перераховує country-breakdown під обраний scenarioId
       const preview = await this.routeRequestsApi.postCostPreview(selected.id, {
         scenarioId,
         calculationDate,
         startPoint: startPoint ?? undefined
       });
       this.applyCostPreview(preview);
+      // Оновлюємо заявку (країни/пробіг) після авто-перерахунку breakdown
+      await this.loadRequestDetails(selected.id);
       await this.loadNbuCostHistory(selected.id);
       this.nbuActionSuccess.set('pages.adminRouteRequests.nbuPreviewSuccess');
     } catch (error) {
@@ -603,6 +647,12 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     } catch {
       this.nbuActionError.set('pages.adminRouteRequests.nbuSummaryCopyFailed');
     }
+  }
+
+  /** Закриває картку підсумку розрахунку (UI), історія на сервері залишається. */
+  closeNbuSummary(): void {
+    this.lastNbuPreview.set(null);
+    this.nbuCostSummary.set('');
   }
 
   async backToMain(): Promise<void> {

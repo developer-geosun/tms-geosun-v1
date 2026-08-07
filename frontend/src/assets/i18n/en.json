@@ -329,6 +329,9 @@
     "adminRouteRequests": {
       "title": "Route requests queue",
       "refresh": "Refresh",
+      "filter": "Filter",
+      "filterTitle": "Filter settings",
+      "filterCancel": "Cancel",
       "backToMain": "Back to main",
       "loading": "Loading requests...",
       "loadFailed": "Failed to load requests",
@@ -396,6 +399,7 @@
       "nbuOpenCurrencies": "Open currencies",
       "nbuSummaryTitle": "Calculation report",
       "nbuResultTitle": "Calculation summary",
+      "nbuCloseResult": "Close calculation",
       "nbuProposalCurrency": "Proposal currency",
       "nbuNbuRateHint": "NBU rate",
       "nbuColArticle": "Item",

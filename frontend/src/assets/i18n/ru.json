@@ -329,6 +329,9 @@
     "adminRouteRequests": {
       "title": "Очередь запросов",
       "refresh": "Обновить",
+      "filter": "Фильтр",
+      "filterTitle": "Настройки фильтра",
+      "filterCancel": "Отмена",
       "backToMain": "На главную",
       "loading": "Загрузка запросов...",
       "loadFailed": "Не удалось загрузить запросы",
@@ -396,6 +399,7 @@
       "nbuOpenCurrencies": "Открыть справочник валют",
       "nbuSummaryTitle": "Отчёт расчёта",
       "nbuResultTitle": "Итог расчёта",
+      "nbuCloseResult": "Закрыть расчёт",
       "nbuProposalCurrency": "Валюта предложения",
       "nbuNbuRateHint": "Курс НБУ",
       "nbuColArticle": "Статья",

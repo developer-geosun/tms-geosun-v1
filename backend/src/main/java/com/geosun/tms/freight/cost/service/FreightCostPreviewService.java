@@ -21,15 +21,16 @@ import com.geosun.tms.routes.domain.FreightQuote;
 import com.geosun.tms.routes.domain.RouteRequest;
 import com.geosun.tms.routes.dto.response.CountryDistanceDto;
 import com.geosun.tms.routes.repository.FreightQuoteRepository;
+import com.geosun.tms.routes.repository.RouteCountryDistanceRepository;
 import com.geosun.tms.routes.repository.RouteRequestRepository;
 import com.geosun.tms.routes.service.CountryBreakdownService;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 @Service
 public class FreightCostPreviewService {
@@ -37,6 +38,7 @@ public class FreightCostPreviewService {
   private final FreightNumericScenarioService scenarioService;
   private final FreightCostCalculationRepository calculationRepository;
   private final CountryBreakdownService countryBreakdownService;
+  private final RouteCountryDistanceRepository routeCountryDistanceRepository;
   private final FreightRouteLengthService routeLengthService;
   private final FreightCostCalculatorService calculatorService;
   private final FreightCostCalculationSummaryBuilder summaryBuilder;
@@ -51,6 +53,7 @@ public class FreightCostPreviewService {
       FreightNumericScenarioService scenarioService,
       FreightCostCalculationRepository calculationRepository,
       CountryBreakdownService countryBreakdownService,
+      RouteCountryDistanceRepository routeCountryDistanceRepository,
       FreightRouteLengthService routeLengthService,
       FreightCostCalculatorService calculatorService,
       FreightCostCalculationSummaryBuilder summaryBuilder,
@@ -63,6 +66,7 @@ public class FreightCostPreviewService {
     this.scenarioService = scenarioService;
     this.calculationRepository = calculationRepository;
     this.countryBreakdownService = countryBreakdownService;
+    this.routeCountryDistanceRepository = routeCountryDistanceRepository;
     this.routeLengthService = routeLengthService;
     this.calculatorService = calculatorService;
     this.summaryBuilder = summaryBuilder;
@@ -80,14 +84,13 @@ public class FreightCostPreviewService {
     if (!scenario.isActive()) {
       throw ApiException.badRequest("VALIDATION_ERROR", "Scenario is not active");
     }
-    validateScenarioMatchesBreakdown(routeRequest, scenario.getId());
-
+    // Перед розрахунком фрахту завжди оновлюємо пробіг по країнах під обраний scenarioId
     List<CountryDistanceDto> countryDistances =
-        countryBreakdownService.listStoredOnly(routeRequest.getRoute());
+        recalculateCountryBreakdownForScenario(routeRequest, scenario.getId());
     if (countryDistances.isEmpty()) {
       throw ApiException.unprocessableEntity(
           "COUNTRY_BREAKDOWN_REQUIRED",
-          "Спочатку виконайте country-breakdown для заявки з обраним scenarioId");
+          "Не вдалося розрахувати пробіг по країнах для маршруту заявки");
     }
 
     FreightRouteLengthService.StartPoint startPoint = resolveStartPoint(request.startPoint());
@@ -194,16 +197,20 @@ public class FreightCostPreviewService {
     calculationRepository.delete(calculation);
   }
 
-  private void validateScenarioMatchesBreakdown(RouteRequest routeRequest, String scenarioId) {
-    if (!StringUtils.hasText(routeRequest.getNbuBreakdownScenarioId())) {
-      throw ApiException.unprocessableEntity(
-          "COUNTRY_BREAKDOWN_REQUIRED", "Спочатку виконайте country-breakdown з scenarioId");
+  /**
+   * Примусово перераховує пробіг по країнах (HERE/GeoJSON) і фіксує scenarioId на заявці. Викликається
+   * з cost-preview — окрема кнопка «Пробіг по країнах» у UI більше не потрібна.
+   */
+  private List<CountryDistanceDto> recalculateCountryBreakdownForScenario(
+      RouteRequest routeRequest, String scenarioId) {
+    Long routeId = routeRequest.getRoute().getId();
+    if (routeId != null) {
+      routeCountryDistanceRepository.deleteByRouteId(routeId);
     }
-    if (!scenarioId.equals(routeRequest.getNbuBreakdownScenarioId())) {
-      throw ApiException.unprocessableEntity(
-          "SCENARIO_BREAKDOWN_MISMATCH",
-          "scenarioId не збігається зі сценарієм country-breakdown заявки");
-    }
+    routeRequest.setNbuBreakdownScenarioId(scenarioId);
+    routeRequest.setNbuBreakdownAt(Instant.now());
+    routeRequestRepository.save(routeRequest);
+    return countryBreakdownService.getOrCalculate(routeRequest.getRoute());
   }
 
   private JsonNode buildBreakdownJson(
