@@ -158,7 +158,9 @@ docker compose --profile dev down --remove-orphans
 
 ```bash
 docker compose --profile dev up -d --build mysql mailhog backend frontend-dev ngrok-dev
+```
 
+```bash
 # остановка dev-профиля
 docker compose --profile dev down --remove-orphans
 ```
