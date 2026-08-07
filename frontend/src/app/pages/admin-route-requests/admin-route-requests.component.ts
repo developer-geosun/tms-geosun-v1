@@ -26,6 +26,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -77,6 +78,7 @@ import * as L from 'leaflet';
     MatExpansionModule,
     MatIconModule,
     MatSlideToggleModule,
+    MatSidenavModule,
     RouterLink
   ],
   templateUrl: './admin-route-requests.component.html',
@@ -118,6 +120,8 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   readonly selectedRequestId = signal<number | null>(null);
   readonly quoteHistory = signal<QuoteContractDto[]>([]);
   readonly quoteLoadError = signal('');
+  /** Спливаюча панель редактора + історії пропозицій. */
+  readonly quotePanelOpen = signal(false);
   readonly isCreatingQuote = signal(false);
   readonly isSendingQuote = signal(false);
   readonly isCountryBreakdownLoading = signal(false);
@@ -242,6 +246,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
           this.nbuCostHistory.set([]);
           this.nbuCostSummary.set('');
           this.lastNbuPreview.set(null);
+          this.closeQuotePanel();
         }
         return;
       }
@@ -374,6 +379,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
 
   selectRequest(requestId: number): void {
     this.selectedRequestId.set(requestId);
+    this.closeQuotePanel();
     this.quoteActionError.set('');
     this.quoteActionSuccess.set('');
     this.nbuActionError.set('');
@@ -384,6 +390,14 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.lastNbuPreview.set(null);
     void this.loadRequestDetails(requestId);
     this.scrollDetailsIntoView();
+  }
+
+  openQuotePanel(): void {
+    this.quotePanelOpen.set(true);
+  }
+
+  closeQuotePanel(): void {
+    this.quotePanelOpen.set(false);
   }
 
   /** Прокрутка до блоку деталей після вибору картки в черзі (актуально на handset). */
@@ -559,6 +573,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     const preview = this.lastNbuPreview();
     if (!preview) {
       this.quoteActionError.set('pages.adminRouteRequests.nbuPreviewRequiredForQuote');
+      this.openQuotePanel();
       return;
     }
     this.quoteActionError.set('');
@@ -568,6 +583,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       internalNote: preview.calculationSummary ?? ''
     });
     this.quoteActionSuccess.set('pages.adminRouteRequests.nbuAppliedToQuote');
+    this.openQuotePanel();
   }
 
   async createQuoteFromNbu(): Promise<void> {
@@ -576,6 +592,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     const calculationId = this.nbuCalculationId(preview);
     if (!selected || !calculationId) {
       this.quoteActionError.set('pages.adminRouteRequests.nbuPreviewRequiredForQuote');
+      this.openQuotePanel();
       return;
     }
     this.quoteActionError.set('');
@@ -589,8 +606,10 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       );
       await this.loadQuoteHistory(selected.id);
       this.quoteActionSuccess.set('pages.adminRouteRequests.quoteDraftCreatedFromNbu');
+      this.openQuotePanel();
     } catch {
       this.quoteActionError.set('pages.adminRouteRequests.quoteCreateFailed');
+      this.openQuotePanel();
     } finally {
       this.isCreatingQuote.set(false);
     }
@@ -602,11 +621,13 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     const calculationId = this.nbuCalculationId(preview);
     if (!selected || !preview || !calculationId) {
       this.quoteActionError.set('pages.adminRouteRequests.nbuPreviewRequiredForQuote');
+      this.openQuotePanel();
       return;
     }
     const requesterEmail = (selected.requesterEmail ?? '').trim();
     if (!requesterEmail) {
       this.quoteActionError.set('pages.adminRouteRequests.sendProposalNoEmail');
+      this.openQuotePanel();
       return;
     }
     this.quoteActionError.set('');
@@ -633,6 +654,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
       await this.loadRequests();
       await this.loadQuoteHistory(selected.id);
       this.quoteActionSuccess.set('pages.adminRouteRequests.sendProposalSuccess');
+      this.openQuotePanel();
     }
   }
 
