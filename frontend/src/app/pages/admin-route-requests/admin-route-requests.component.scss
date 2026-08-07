@@ -1,22 +1,37 @@
 @use 'breakpoints' as bp;
 
+// Сторінка росте за контентом — скрол лише в .content (без вкладеного скролу drawer)
+:host {
+  display: block;
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  min-height: auto;
+  height: auto;
+}
+
 .admin-route-requests {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 12px;
+  // менше верхній відступ — заголовок і кнопки ближче до тулбара
+  padding: 0 8px 16px;
   color: var(--mat-sys-on-surface);
   // запобігає горизонтальному «виїзду» сторінки на вузьких екранах
   min-width: 0;
   max-width: 100%;
+  height: auto;
   overflow-x: clip;
   box-sizing: border-box;
 }
 
 .admin-route-requests__drawer-container {
-  flex: 1 1 auto;
+  // не розтягувати на viewport — інакше з’являється другий (внутрішній) скрол
+  flex: 0 0 auto;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
+  height: auto !important;
   // контейнер не обрізає спливаючий drawer і не ламає layout сторінки
   background: transparent;
 }
@@ -27,6 +42,8 @@
   // внутрішні відступи контенту (header + layout), щоб кнопки не липли до краю
   padding: 0 4px 0 0;
   box-sizing: border-box;
+  // без власного overflow — інакше два скроли справа
+  overflow: visible !important;
 }
 
 .admin-route-requests__quote-drawer {
@@ -720,7 +737,7 @@
 
 @include bp.handset {
   .admin-route-requests {
-    padding: 12px;
+    padding: 0 4px 12px;
   }
 
   // заголовок: назва + тільки іконки дій
