@@ -259,70 +259,78 @@
             </ul>
           }
 
-          <h3>{{ 'pages.adminRouteRequests.routePoints' | translate }}</h3>
-          <div class="nbu-form nbu-form--start-point" [formGroup]="nbuForm">
-            <mat-slide-toggle formControlName="useStartPoint" (change)="onStartPointToggleChange()">
-              {{ 'pages.adminRouteRequests.useStartPoint' | translate }}
-            </mat-slide-toggle>
-            @if (nbuForm.controls.useStartPoint.value) {
-              <mat-form-field appearance="outline" class="nbu-form__field nbu-form__field--wide">
-                <mat-label>{{ 'pages.adminRouteRequests.startPointAddress' | translate }}</mat-label>
-                <input matInput formControlName="startPointAddress" />
-              </mat-form-field>
-              <div class="nbu-form__actions nbu-form__actions--start-point">
-                <button
-                  mat-stroked-button
-                  type="button"
-                  (click)="setStartPointFromAddress()"
-                  [disabled]="isStartPointGeocoding()">
-                  {{ 'pages.adminRouteRequests.applyStartPointAddress' | translate }}
-                </button>
-                <button mat-stroked-button type="button" (click)="clearStartPoint()">
-                  {{ 'pages.adminRouteRequests.clearStartPoint' | translate }}
-                </button>
-              </div>
-            }
-          </div>
-          <div #requestMap class="request-map"></div>
-          @if (displayedRoutePoints().length) {
-            <ul class="admin-route-requests__points">
-              @for (point of displayedRoutePoints(); track point.order + '-' + point.lat + '-' + point.lng) {
-                <li>
-                  {{ point.order }}. {{ point.address }} ({{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }})
-                </li>
-              }
-            </ul>
-          } @else {
-            <p>{{ 'pages.adminRouteRequests.noRoutePoints' | translate }}</p>
-          }
+          <mat-expansion-panel
+            class="admin-route-requests__route-points-panel"
+            [expanded]="true"
+            (afterExpand)="onRoutePointsPanelExpanded()">
+            <mat-expansion-panel-header>
+              <mat-panel-title>{{ 'pages.adminRouteRequests.routePoints' | translate }}</mat-panel-title>
+            </mat-expansion-panel-header>
 
-          @if (!selected.countryDistances.length) {
-            <p>{{ 'pages.adminRouteRequests.countryDistancesEmpty' | translate }}</p>
-          } @else {
-            <p>
-              <strong>{{ 'pages.adminRouteRequests.countryDistanceTotal' | translate }}:</strong>
-              {{ formatCountryDistanceTotalKm(selected.countryDistances) }}
-              {{ 'pages.freightCalculation.km' | translate }}
-            </p>
-            <table class="admin-country-distances">
-              <thead>
-                <tr>
-                  <th>{{ 'pages.adminRouteRequests.countryCode' | translate }}</th>
-                  <th>{{ 'pages.adminRouteRequests.distanceMeters' | translate }}</th>
-                  <th>{{ 'pages.adminRouteRequests.alongRouteOrder' | translate }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                @for (row of selected.countryDistances; track row.countryCode + '-' + $index) {
-                  <tr>
-                    <td>{{ row.countryCode }}</td>
-                    <td>{{ formatCountryDistanceKm(row.distanceMeters) }}</td>
-                    <td>{{ row.alongRouteOrder ?? '—' }}</td>
-                  </tr>
+            <div class="nbu-form nbu-form--start-point" [formGroup]="nbuForm">
+              <mat-slide-toggle formControlName="useStartPoint" (change)="onStartPointToggleChange()">
+                {{ 'pages.adminRouteRequests.useStartPoint' | translate }}
+              </mat-slide-toggle>
+              @if (nbuForm.controls.useStartPoint.value) {
+                <mat-form-field appearance="outline" class="nbu-form__field nbu-form__field--wide">
+                  <mat-label>{{ 'pages.adminRouteRequests.startPointAddress' | translate }}</mat-label>
+                  <input matInput formControlName="startPointAddress" />
+                </mat-form-field>
+                <div class="nbu-form__actions nbu-form__actions--start-point">
+                  <button
+                    mat-stroked-button
+                    type="button"
+                    (click)="setStartPointFromAddress()"
+                    [disabled]="isStartPointGeocoding()">
+                    {{ 'pages.adminRouteRequests.applyStartPointAddress' | translate }}
+                  </button>
+                  <button mat-stroked-button type="button" (click)="clearStartPoint()">
+                    {{ 'pages.adminRouteRequests.clearStartPoint' | translate }}
+                  </button>
+                </div>
+              }
+            </div>
+            <div #requestMap class="request-map"></div>
+            @if (displayedRoutePoints().length) {
+              <ul class="admin-route-requests__points">
+                @for (point of displayedRoutePoints(); track point.order + '-' + point.lat + '-' + point.lng) {
+                  <li>
+                    {{ point.order }}. {{ point.address }} ({{ point.lat.toFixed(5) }}, {{ point.lng.toFixed(5) }})
+                  </li>
                 }
-              </tbody>
-            </table>
-          }
+              </ul>
+            } @else {
+              <p>{{ 'pages.adminRouteRequests.noRoutePoints' | translate }}</p>
+            }
+
+            @if (!selected.countryDistances.length) {
+              <p>{{ 'pages.adminRouteRequests.countryDistancesEmpty' | translate }}</p>
+            } @else {
+              <p>
+                <strong>{{ 'pages.adminRouteRequests.countryDistanceTotal' | translate }}:</strong>
+                {{ formatCountryDistanceTotalKm(selected.countryDistances) }}
+                {{ 'pages.freightCalculation.km' | translate }}
+              </p>
+              <table class="admin-country-distances">
+                <thead>
+                  <tr>
+                    <th>{{ 'pages.adminRouteRequests.countryCode' | translate }}</th>
+                    <th>{{ 'pages.adminRouteRequests.distanceMeters' | translate }}</th>
+                    <th>{{ 'pages.adminRouteRequests.alongRouteOrder' | translate }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (row of selected.countryDistances; track row.countryCode + '-' + $index) {
+                    <tr>
+                      <td>{{ row.countryCode }}</td>
+                      <td>{{ formatCountryDistanceKm(row.distanceMeters) }}</td>
+                      <td>{{ row.alongRouteOrder ?? '—' }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            }
+          </mat-expansion-panel>
         }
       </article>
         </div>

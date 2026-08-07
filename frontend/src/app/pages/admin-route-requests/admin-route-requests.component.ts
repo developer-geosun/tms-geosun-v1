@@ -880,6 +880,16 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     this.scheduleMapResizeFix();
   }
 
+  /** Після розгортання панелі карта могла мати нульовий розмір — оновлюємо Leaflet. */
+  onRoutePointsPanelExpanded(): void {
+    const request = this.selectedRequest();
+    if (request && !this.isLoading()) {
+      this.scheduleMapUpdate(request);
+      return;
+    }
+    this.scheduleMapResizeFix();
+  }
+
   private renderMapForRequest(request: RouteRequestContractDto): void {
     if (!this.map || !request.route) {
       return;
