@@ -11,6 +11,6 @@ window.__APP_CONFIG__ = {
   logoUrl: "https://www.geosun.net.ua",
   isServiceStopped: false,
   // Порожній = relative URL (локальний proxy / gateway). На GitHub Pages підставляється URL backend (ngrok).
-  apiUrl: "https://scavenger-correct-sprinkler.ngrok-free.dev",
+  apiUrl: "https://tattoo-enhance-sprawl.ngrok-free.dev",
   hereApiKey: ""
 };
