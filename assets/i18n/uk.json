@@ -379,6 +379,8 @@
       "filterCreatedFrom": "Створено від",
       "filterCreatedTo": "Створено до",
       "filterOwnerEmail": "Email власника",
+      "filterOwnerEmailClear": "Очистити email",
+      "filterOwnerEmailEmpty": "Немає збігів",
       "filterRouteTitle": "Назва маршруту",
       "filterSort": "Сортування",
       "filterOrder": "Напрямок",
