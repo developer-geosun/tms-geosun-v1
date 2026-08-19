@@ -5,8 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.util.Objects;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geosun.tms.auth.TmsGeosunBackendJavaApplication;
 import com.geosun.tms.auth.domain.user.Role;
@@ -15,6 +13,7 @@ import com.geosun.tms.auth.dto.request.LoginRequest;
 import com.geosun.tms.auth.repository.UserRepository;
 import com.geosun.tms.reference.domain.CountryReference;
 import com.geosun.tms.reference.repository.CountryReferenceRepository;
+import java.util.Objects;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -122,7 +121,6 @@ class CountryReferenceApiIntegrationTest {
   private static String bearer(String token) {
     return "Bearer " + token;
   }
-
 
   private String toJson(Object value) throws Exception {
     return objectMapper.writeValueAsString(value);
