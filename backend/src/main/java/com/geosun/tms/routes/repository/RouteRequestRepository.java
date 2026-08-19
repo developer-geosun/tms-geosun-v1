@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.lang.NonNull;
 
 public interface RouteRequestRepository
@@ -24,4 +25,8 @@ public interface RouteRequestRepository
   @EntityGraph(attributePaths = {"route", "route.points", "user"})
   @NonNull
   Optional<RouteRequest> findById(@NonNull Long id);
+
+  /** Унікальні email власників заявок — довідник для фільтра адмінки. */
+  @Query("select distinct u.email from RouteRequest r join r.user u where u.email is not null")
+  List<String> findDistinctOwnerEmails();
 }

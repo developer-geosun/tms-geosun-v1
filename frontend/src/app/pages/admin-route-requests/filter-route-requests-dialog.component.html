@@ -25,7 +25,33 @@
 
     <mat-form-field appearance="outline" class="filter-route-requests-dialog__field">
       <mat-label>{{ 'pages.adminRouteRequests.filterOwnerEmail' | translate }}</mat-label>
-      <input matInput formControlName="ownerEmail" type="email" autocomplete="email" />
+      <input
+        matInput
+        formControlName="ownerEmail"
+        type="email"
+        autocomplete="off"
+        [matAutocomplete]="ownerEmailAutocomplete"
+      />
+      @if (filterForm.controls.ownerEmail.value) {
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          [attr.aria-label]="'pages.adminRouteRequests.filterOwnerEmailClear' | translate"
+          (click)="clearOwnerEmail()"
+        >
+          <mat-icon>close</mat-icon>
+        </button>
+      } @else {
+        <mat-icon matSuffix>arrow_drop_down</mat-icon>
+      }
+      <mat-autocomplete #ownerEmailAutocomplete="matAutocomplete">
+        @for (email of filteredOwnerEmails(); track email) {
+          <mat-option [value]="email">{{ email }}</mat-option>
+        } @empty {
+          <mat-option disabled>{{ 'pages.adminRouteRequests.filterOwnerEmailEmpty' | translate }}</mat-option>
+        }
+      </mat-autocomplete>
     </mat-form-field>
 
     <mat-form-field appearance="outline" class="filter-route-requests-dialog__field">

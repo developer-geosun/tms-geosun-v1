@@ -379,6 +379,8 @@
       "filterCreatedFrom": "Created from",
       "filterCreatedTo": "Created to",
       "filterOwnerEmail": "Owner email",
+      "filterOwnerEmailClear": "Clear email",
+      "filterOwnerEmailEmpty": "No matches",
       "filterRouteTitle": "Route title",
       "filterSort": "Sort by",
       "filterOrder": "Order",

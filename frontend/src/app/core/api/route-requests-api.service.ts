@@ -75,6 +75,10 @@ export class RouteRequestsApiService {
     );
   }
 
+  async getAdminRouteRequestOwnerEmails(): Promise<string[]> {
+    return firstValueFrom(this.http.get<string[]>(`${this.backendApi.adminRouteRequests}/owner-emails`));
+  }
+
   async getAdminRouteRequestById(requestId: number): Promise<RouteRequestContractDto> {
     return firstValueFrom(
       this.http.get<RouteRequestContractDto>(`${this.backendApi.adminRouteRequests}/${encodeURIComponent(String(requestId))}`)

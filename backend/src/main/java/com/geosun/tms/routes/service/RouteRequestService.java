@@ -134,6 +134,17 @@ public class RouteRequestService {
         result.getSize());
   }
 
+  /** Довідник email власників заявок для випадаючого списку у фільтрі адмінки. */
+  @Transactional(readOnly = true)
+  public List<String> getOwnerEmailsForAdmin() {
+    return routeRequestRepository.findDistinctOwnerEmails().stream()
+        .filter(StringUtils::hasText)
+        .map(email -> email.trim())
+        .distinct()
+        .sorted(String.CASE_INSENSITIVE_ORDER)
+        .toList();
+  }
+
   @Transactional(readOnly = true)
   public RouteRequestDto getRequestByIdForAdmin(Long requestId) {
     if (requestId == null) {

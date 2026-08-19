@@ -211,6 +211,9 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
 
   readonly statusOptions = ['new', 'in_review', 'quoted', 'accepted', 'rejected', 'cancelled', 'expired'];
 
+  /** Довідник email власників для випадаючого списку у фільтрі. */
+  readonly ownerEmailOptions = signal<string[]>([]);
+
   constructor() {
     void this.loadNumericScenarios();
     // LayoutService вже має актуальний viewport (root service).
@@ -332,6 +335,7 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
   }
 
   async openFiltersDialog(): Promise<void> {
+    await this.loadOwnerEmails();
     const ref = this.dialog.open(
       FilterRouteRequestsDialogComponent,
       getHandsetFriendlyDialogConfig({
@@ -339,7 +343,8 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
         maxHeight: 'min(92vh, 760px)',
         data: {
           filters: this.filterForm.getRawValue(),
-          statusOptions: this.statusOptions
+          statusOptions: this.statusOptions,
+          ownerEmailOptions: this.ownerEmailOptions()
         }
       })
     );
@@ -355,6 +360,15 @@ export class AdminRouteRequestsComponent implements AfterViewInit, OnDestroy {
     }
     this.filterForm.patchValue(result.values);
     await this.applyFilters();
+  }
+
+  private async loadOwnerEmails(): Promise<void> {
+    try {
+      this.ownerEmailOptions.set(await this.routeRequestsApi.getAdminRouteRequestOwnerEmails());
+    } catch {
+      // фільтр залишається робочим із ручним введенням email
+      this.ownerEmailOptions.set([]);
+    }
   }
 
   /** Чи відрізняються поточні фільтри від дефолтних (кнопка — інверсний стиль). */
