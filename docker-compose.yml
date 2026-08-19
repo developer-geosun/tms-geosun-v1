@@ -11,7 +11,7 @@ services:
   # База даних для backend-сервісу авторизації
   mysql:
     image: mysql:8.0
-    container_name: tms-auth-mysql
+    container_name: tms-mysql
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-tms_auth}
       MYSQL_USER: ${MYSQL_USER:-tms_user}
@@ -32,7 +32,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: tms-auth-app
+    container_name: tms-backend
     depends_on:
       mailhog:
         condition: service_started
