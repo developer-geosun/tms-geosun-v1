@@ -161,13 +161,11 @@ class CurrencyApiIntegrationTest {
     return "Bearer " + token;
   }
 
-  @SuppressWarnings("null")
   @NonNull
   private static MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 
-  @SuppressWarnings("null")
   @NonNull
   private String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));

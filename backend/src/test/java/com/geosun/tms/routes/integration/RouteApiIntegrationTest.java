@@ -705,15 +705,11 @@ class RouteApiIntegrationTest {
     return point;
   }
 
-  /** writeValueAsString / requireNonNull без Spring @NonNull — приглушуємо Eclipse null-analysis. */
-  @SuppressWarnings("null")
   @NonNull
   private String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
-  /** APPLICATION_JSON / requireNonNull без Spring @NonNull — приглушуємо Eclipse null-analysis. */
-  @SuppressWarnings("null")
   @NonNull
   private static MediaType jsonMediaType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);

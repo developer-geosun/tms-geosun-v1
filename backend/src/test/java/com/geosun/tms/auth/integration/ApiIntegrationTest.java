@@ -571,19 +571,16 @@ class ApiIntegrationTest {
     return matcher.group(1);
   }
 
-  @SuppressWarnings("null")
   @NonNull
   private MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 
-  @SuppressWarnings("null")
   @NonNull
   private String toJson(@NonNull Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
-  @SuppressWarnings("null")
   @NonNull
   private static String responseBody(@NonNull MvcResult result) {
     try {
@@ -630,7 +627,6 @@ class ApiIntegrationTest {
   }
 
   /** getValue() без @NonNull у Mockito — гарантуємо non-null для викликів requireMailText. */
-  @SuppressWarnings("null")
   @NonNull
   private static MimeMessage capturedMail(@NonNull ArgumentCaptor<MimeMessage> mailCap) {
     return Objects.requireNonNull(mailCap.getValue(), "Expected captured MimeMessage");

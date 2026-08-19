@@ -43,7 +43,6 @@ class RouteRequestGeoJsonCountryBreakdownIntegrationTest {
   @Autowired private PasswordEncoder passwordEncoder;
 
   @Test
-  @SuppressWarnings("null")
   void geoJsonProviderCalculatesTransitCountries() throws Exception {
     User user = createUser("rq-geojson-user@example.com", "Secret123", Role.USER);
     User admin = createUser("rq-geojson-admin@example.com", "Secret123", Role.ADMIN);
@@ -70,9 +69,14 @@ class RouteRequestGeoJsonCountryBreakdownIntegrationTest {
             post("/api/v1/admin/route-requests/" + requestId + "/country-breakdown")
                 .header("Authorization", bearer(adminAccess)))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.countryDistances.length()").value(greaterThanOrEqualTo(4)))
+        .andExpect(
+            jsonPath("$.countryDistances.length()")
+                .value(Objects.requireNonNull(greaterThanOrEqualTo(4))))
         .andExpect(jsonPath("$.countryDistances[0].countryCode").value("UA"))
-        .andExpect(jsonPath("$.countryDistances[*].countryCode", hasItems("UA", "PL", "DE", "FR")));
+        .andExpect(
+            jsonPath(
+                "$.countryDistances[*].countryCode",
+                Objects.requireNonNull(hasItems("UA", "PL", "DE", "FR"))));
   }
 
   private String createRoute(String access, String title) throws Exception {
@@ -167,13 +171,13 @@ class RouteRequestGeoJsonCountryBreakdownIntegrationTest {
         List.of(startPoint, finishPoint));
   }
 
-  @SuppressWarnings("null")
-  private @NonNull String toJson(Object value) throws Exception {
+  @NonNull
+  private String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
-  @SuppressWarnings("null")
-  private @NonNull MediaType jsonContentType() {
+  @NonNull
+  private MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 }

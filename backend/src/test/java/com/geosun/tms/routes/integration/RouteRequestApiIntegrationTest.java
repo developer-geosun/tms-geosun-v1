@@ -405,20 +405,20 @@ class RouteRequestApiIntegrationTest {
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
   }
 
-  @SuppressWarnings("null")
-  private @NonNull String toJson(Object value) throws Exception {
+  @NonNull
+  private String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
-  /** APPLICATION_JSON / requireNonNull без Spring @NonNull — приглушуємо Eclipse null-analysis. */
-  @SuppressWarnings("null")
-  private @NonNull MediaType jsonContentType() {
+  @NonNull
+  private MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
 
   /** Mockito any() не анотований @NonNull — обгортаємо для null-analysis. */
   @SuppressWarnings("null")
-  private static @NonNull MimeMessage anyMailMessage() {
+  @NonNull
+  private static MimeMessage anyMailMessage() {
     return any(MimeMessage.class);
   }
 }

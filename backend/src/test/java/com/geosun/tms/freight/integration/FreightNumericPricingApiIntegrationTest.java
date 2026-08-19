@@ -350,12 +350,10 @@ class FreightNumericPricingApiIntegrationTest {
         Map.of("provider", "HERE", "routeHandle", "r-handle", "apiVersion", "v8"));
   }
 
-  @SuppressWarnings("null")
   private @NonNull String toJson(Object value) throws Exception {
     return Objects.requireNonNull(objectMapper.writeValueAsString(value));
   }
 
-  @SuppressWarnings("null")
   private @NonNull MediaType jsonContentType() {
     return Objects.requireNonNull(MediaType.APPLICATION_JSON);
   }
