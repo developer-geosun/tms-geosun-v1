@@ -1,5 +1,5 @@
 # Деплой Angular з frontend/ на гілку gh-pages (GitHub Pages: Settings → Pages → branch gh-pages / root)
-# Frontend на GitHub Pages; API — окремо (зазвичай ngrok-тунель на backend).
+# Frontend на GitHub Pages; API — окремо (ngrok або статична IP, див. PUBLIC_ACCESS_MODE).
 name: Deploy to GitHub Pages
 
 on:
@@ -60,7 +60,7 @@ jobs:
             echo "Error: $CONFIG not found"
             exit 1
           fi
-          # API_URL — публічний URL backend (наприклад https://xxx.ngrok-free.app)
+          # API_URL — публічний URL backend (https://xxx.ngrok-free.app або http://STATIC_IP:8080)
           node <<'NODE'
           const fs = require('fs');
           const configPath = 'frontend/dist/tms-geosun/assets/app-config.js';

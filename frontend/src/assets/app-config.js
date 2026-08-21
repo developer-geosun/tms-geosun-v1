@@ -10,7 +10,7 @@ window.__APP_CONFIG__ = {
   linkedinUrl: "https://www.linkedin.com/in/maksym-horielikov-738347275/",
   logoUrl: "https://www.geosun.net.ua",
   isServiceStopped: false,
-  // Порожній = relative URL (локальний proxy / gateway). На GitHub Pages підставляється URL backend (ngrok).
+  // Порожній = relative URL (локальний proxy / gateway). На GitHub Pages — URL backend (ngrok або статична IP).
   apiUrl: "",
   hereApiKey: ""
 };

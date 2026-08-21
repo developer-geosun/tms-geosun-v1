@@ -14,7 +14,7 @@
 - Backend модуль `routes`: сохранение, чтение списка/деталей (в т.ч. `view=active|all|deleted`), soft delete, блокировка `PUT` после заявки, `duplicate`/`restore`.
 - Backend модуль `route-requests`: создание заявок, список заявок пользователя, admin очередь; пробіг по країнах у відповіді заявки — з БД до явного admin `POST .../country-breakdown` (провайдер расчёта выбирается feature flag: `here` или `geojson`).
 - Backend модуль `quotes`: создание draft, отправка оффера, история офферов и idempotency.
-- Деплой frontend на GitHub Pages через GitHub Actions (`main`/`master`); публичный API — через ngrok (только backend).
+- Деплой frontend на GitHub Pages через GitHub Actions (`main`/`master`); публичный API — по выбору через ngrok или статический IP провайдера (только backend, см. `PUBLIC_ACCESS_MODE` в `.env` / `RUN.md`).
 
 ## Как работает (высокоуровнево)
 

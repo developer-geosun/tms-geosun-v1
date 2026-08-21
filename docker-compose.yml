@@ -70,6 +70,8 @@ services:
       TOKEN_CLEANUP_RETENTION_DAYS: ${TOKEN_CLEANUP_RETENTION_DAYS:-30}
       HERE_API_KEY: ${HERE_API_KEY:-}
       COUNTRY_BREAKDOWN_PROVIDER: ${COUNTRY_BREAKDOWN_PROVIDER:-here}
+      PUBLIC_ACCESS_MODE: ${PUBLIC_ACCESS_MODE:-static-ip}
+      PUBLIC_API_URL: ${PUBLIC_API_URL:-}
     ports:
       - "${SERVER_PORT:-8080}:8080"
 
@@ -100,8 +102,12 @@ services:
     ports:
       - "${GATEWAY_PORT:-8081}:80"
 
-  # Публічний тунель лише для backend API (frontend — на GitHub Pages)
+  # Публічний тунель лише для backend API (режим PUBLIC_ACCESS_MODE=ngrok).
+  # Увімкнення: COMPOSE_PROFILES=ngrok у .env або --profile ngrok.
+  # Режим static-ip: без профілю ngrok; порт SERVER_PORT вже опублікований на хості.
   ngrok:
+    profiles:
+      - ngrok
     image: ngrok/ngrok:latest
     container_name: tms-ngrok
     depends_on:

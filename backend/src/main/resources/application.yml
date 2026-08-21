@@ -51,6 +51,10 @@ springdoc:
   override-with-generic-response: false
 
 app:
+  # Режим публічного доступу (інформаційно; тунель керує Docker Compose-профіль ngrok).
+  public-access:
+    mode: ${PUBLIC_ACCESS_MODE:static-ip}
+    url: ${PUBLIC_API_URL:}
   cors:
     allowed-origin-patterns-extra: ${CORS_ALLOWED_ORIGIN_PATTERNS:}
   security:
